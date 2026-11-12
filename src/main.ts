@@ -10,6 +10,14 @@ import { setLanguage } from './i18n';
 
 setLanguage(navigator.language || 'en');
 
+async function waitForFont(): Promise<void> {
+  try {
+    await Promise.race([document.fonts.load('16px "Silkscreen"'), new Promise((r) => setTimeout(r, 1500))]);
+  } catch { /* fall back to monospace */ }
+}
+
+await waitForFont();
+
 const initial = computeGameSize(window.innerWidth, window.innerHeight);
 
 const game = new Phaser.Game({

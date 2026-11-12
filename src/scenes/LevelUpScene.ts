@@ -14,7 +14,7 @@ export const LEVELUP_EVENTS = { picked: 'levelup:picked', element: 'element:pick
 
 interface Card { title: string; desc: string; level: string; color: number; icon?: string; onPick: () => void; x?: number; y?: number }
 
-const TEXT = { fontFamily: 'monospace', color: '#ffffff', resolution: 4 } as const;
+import { TEXT } from '../ui/style';
 
 export class LevelUpScene extends Phaser.Scene {
   private cards: Card[] = [];
@@ -28,7 +28,7 @@ export class LevelUpScene extends Phaser.Scene {
     this.cards = data.mode === 'upgrade' ? this.upgradeCards(data.choices, data.owned) : this.elementCards();
     const { width: w, height: h } = this.scale.gameSize;
     this.add.rectangle(0, 0, w, h, 0x000000, 0.6).setOrigin(0);
-    this.add.text(w / 2, 18, data.mode === 'upgrade' ? t('choose_upgrade') : t('choose_element'), { ...TEXT, fontSize: '14px' }).setOrigin(0.5);
+    this.add.text(w / 2, 18, data.mode === 'upgrade' ? t('choose_upgrade') : t('choose_element'), { ...TEXT, fontSize: '16px' }).setOrigin(0.5);
 
     const landscape = w >= h;
     const n = this.cards.length;
@@ -59,7 +59,7 @@ export class LevelUpScene extends Phaser.Scene {
     if (landscape) {
       if (card.icon) this.add.image(cx, cy - ch / 2 + 28, card.icon).setScale(2);
       else this.add.circle(cx, cy - ch / 2 + 28, 12, card.color);
-      this.add.text(cx, cy - ch / 2 + 54, card.title, { ...TEXT, fontSize: '10px', align: 'center', wordWrap: wrap }).setOrigin(0.5, 0);
+      this.add.text(cx, cy - ch / 2 + 54, card.title, { ...TEXT, fontSize: '8px', align: 'center', wordWrap: wrap }).setOrigin(0.5, 0);
       this.add.text(cx, cy - ch / 2 + 82, card.level, { ...TEXT, fontSize: '8px', color: '#ffd76a' }).setOrigin(0.5, 0);
       this.add.text(cx, cy - ch / 2 + 98, card.desc, { ...TEXT, fontSize: '8px', color: '#cfc8e6', align: 'center', wordWrap: wrap }).setOrigin(0.5, 0);
       this.add.text(cx, cy + ch / 2 - 12, `${i + 1}`, { ...TEXT, fontSize: '8px', color: '#8a84a0' }).setOrigin(0.5);
@@ -67,7 +67,7 @@ export class LevelUpScene extends Phaser.Scene {
       const left = cx - cw / 2;
       if (card.icon) this.add.image(left + 24, cy, card.icon).setScale(2);
       else this.add.circle(left + 24, cy, 12, card.color);
-      this.add.text(left + 48, cy - ch / 2 + 10, card.title, { ...TEXT, fontSize: '10px', wordWrap: wrap });
+      this.add.text(left + 48, cy - ch / 2 + 10, card.title, { ...TEXT, fontSize: '8px', wordWrap: wrap });
       this.add.text(cx + cw / 2 - 8, cy - ch / 2 + 10, card.level, { ...TEXT, fontSize: '8px', color: '#ffd76a' }).setOrigin(1, 0);
       this.add.text(left + 48, cy - ch / 2 + 30, card.desc, { ...TEXT, fontSize: '8px', color: '#cfc8e6', wordWrap: wrap });
     }

@@ -4,6 +4,8 @@ import { ENEMIES, ENEMY_IDS, PICKUPS, PLAYER_WEAPONS, type EnemyTypeId } from '.
 import { registerDebug, setDebugReady } from '../debug';
 import { EnemyManager } from '../game/EnemyManager';
 import { Hud } from '../game/Hud';
+import { Decor } from '../game/Decor';
+import { Juice } from '../game/Juice';
 import { Evolution } from '../game/Evolution';
 import { createBreath, createElementWeapon, createUltimate, type ElementWeaponId } from '../game/weapons';
 import { lightningStats } from '../game/weapons/LightningBreath';
@@ -41,6 +43,8 @@ export class GameScene extends Phaser.Scene {
   private levelUpOpen = false;
   evolution!: Evolution;
   hud!: Hud;
+  juice!: Juice;
+  decor!: Decor;
   /** Seconds of evolution pause left; counted down with real frame time so a scene pause can't skip it. */
   private evolvePauseLeft = 0;
   private chooseNext: Element | null = null;
@@ -72,7 +76,11 @@ export class GameScene extends Phaser.Scene {
     this.chooseNext = null;
     lightningStats.maxChain = 0;
     this.evolution = new Evolution(this.ctx, () => this.askElement(), (from, to) => this.onEvolved(from, to));
+    this.juice = new Juice(this, this.player);
+    this.decor = new Decor(this);
+    this.enemies.onHit = (e) => this.juice.hit(e.x, e.y);
     this.enemies.onKilled = (e) => {
+      this.juice.death(e.x, e.y);
       this.pickups.dropGem(e.x, e.y, ENEMIES[e.type].xp);
       if (this.rng() < PICKUPS.goldChance) this.pickups.dropGold(e.x, e.y);
       const burst = this.run.owned.fire_burst ?? 0;
@@ -98,6 +106,7 @@ export class GameScene extends Phaser.Scene {
     this.ground.setSize(size.width, size.height);
     this.cameras.main.setSize(size.width, size.height);
     this.hud.layout(size.width, size.height);
+    this.juice.layout(size.width, size.height);
   }
 
   private openPause(): void {
@@ -188,6 +197,7 @@ export class GameScene extends Phaser.Scene {
       this.weapons.push(createUltimate(this.ctx, element));
     }
     this.evolvePauseLeft = PLAYER_WEAPONS.evolution.pause;
+    this.juice.setElement(element, to);
   }
 
   refreshStats(): void {
@@ -266,6 +276,8 @@ export class GameScene extends Phaser.Scene {
     const cam = this.cameras.main;
     this.ground.setTilePosition(cam.scrollX, cam.scrollY);
     this.hud.update(this.run, this.player);
+    this.juice.update(dt, this.now);
+    this.decor.update();
     if (this.player.hp <= 0) this.endRun();
   }
 

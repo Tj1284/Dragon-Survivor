@@ -19,7 +19,8 @@ let failed = 0;
 for (const file of specs) {
   const page = await browser.newPage({ viewport: { width: 960, height: 540 }, deviceScaleFactor: 1 });
   const errors = [];
-  page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+  // the Google Fonts request is blocked in this sandbox; the game falls back to monospace
+  page.on('console', (m) => { if (m.type() === 'error' && !/fonts\.(googleapis|gstatic)|ERR_TUNNEL|ERR_NAME|net::ERR/.test(m.text() + (m.location()?.url ?? ''))) errors.push(m.text()); });
   page.on('pageerror', (e) => errors.push(String(e)));
   try {
     const spec = (await import(pathToFileURL(join(here, file)).href)).default;

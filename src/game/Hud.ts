@@ -6,7 +6,8 @@ import { formatTime } from '../scenes/GameOverScene';
 import type { Player } from './Player';
 import type { RunState } from './RunState';
 
-const TEXT = { fontFamily: 'monospace', color: '#ffffff', resolution: 4, stroke: '#000000', strokeThickness: 2 } as const;
+import { TEXT as BASE_TEXT } from '../ui/style';
+const TEXT = { ...BASE_TEXT, stroke: '#000000', strokeThickness: 3 } as const;
 const HP_W = 60;
 
 /** Screen-space HUD: xp bar on top, hp + level below it, timer centered, gold and pause on the right. */
@@ -29,7 +30,7 @@ export class Hud {
     this.hpBg = fixed(scene.add.rectangle(4, 8, HP_W, 5, 0x000000, 0.6).setOrigin(0));
     this.hpFill = fixed(scene.add.rectangle(4, 8, HP_W, 5, 0xe84a5f).setOrigin(0));
     this.level = fixed(scene.add.text(HP_W + 8, 6, '', { ...TEXT, fontSize: '8px' }));
-    this.timer = fixed(scene.add.text(0, 6, '00:00', { ...TEXT, fontSize: '10px' }).setOrigin(0.5, 0));
+    this.timer = fixed(scene.add.text(0, 6, '00:00', { ...TEXT, fontSize: '8px' }).setOrigin(0.5, 0));
     this.gold = fixed(scene.add.text(0, 7, '', { ...TEXT, fontSize: '8px', color: '#f2c230' }).setOrigin(1, 0));
     this.pauseHit = fixed(scene.add.rectangle(0, 0, 24, 24, 0x000000, 0.35).setStrokeStyle(1, 0xffffff, 0.6));
     this.pauseBars = [fixed(scene.add.rectangle(0, 0, 3, 10, 0xffffff)), fixed(scene.add.rectangle(0, 0, 3, 10, 0xffffff))];

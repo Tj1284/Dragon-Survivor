@@ -35,7 +35,10 @@ export class Pickups {
   dropGem(x: number, y: number, xp: number): void { this.drop('xp', xp, gemKey(xp), x, y); }
   dropGold(x: number, y: number): void { this.drop('gold', 1, 'gold', x + 4, y + 2); }
 
+  private t = 0;
+
   update(dt: number, player: Player, onXp: (n: number) => void, onGold: (n: number) => void): void {
+    this.t += dt;
     const r = player.stats.pickupRadius;
     for (let i = this.active.length - 1; i >= 0; i--) {
       const p = this.active[i];
@@ -45,8 +48,8 @@ export class Pickups {
       if (p.flying && d > 0) {
         const step = Math.min(d, PICKUPS.flySpeed * dt);
         p.x += (dx / d) * step; p.y += (dy / d) * step;
-        p.sprite.setPosition(p.x, p.y);
       }
+      p.sprite.setPosition(p.x, p.y + (p.flying ? 0 : Math.round(Math.sin(this.t * 4 + p.x * 0.1) * 1.5)));
       if (d <= PICKUPS.collectDistance) {
         if (p.kind === 'xp') onXp(p.value); else onGold(p.value);
         this.active[i] = this.active[this.active.length - 1];
