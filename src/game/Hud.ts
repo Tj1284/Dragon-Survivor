@@ -1,4 +1,5 @@
 import * as Phaser from 'phaser';
+import { onTap } from './ui';
 import { t } from '../i18n';
 import { xpToNext } from '../logic/xp';
 import { formatTime } from '../scenes/GameOverScene';
@@ -32,7 +33,7 @@ export class Hud {
     this.gold = fixed(scene.add.text(0, 7, '', { ...TEXT, fontSize: '8px', color: '#f2c230' }).setOrigin(1, 0));
     this.pauseHit = fixed(scene.add.rectangle(0, 0, 24, 24, 0x000000, 0.35).setStrokeStyle(1, 0xffffff, 0.6));
     this.pauseBars = [fixed(scene.add.rectangle(0, 0, 3, 10, 0xffffff)), fixed(scene.add.rectangle(0, 0, 3, 10, 0xffffff))];
-    this.pauseHit.setInteractive({ useHandCursor: true }).on(Phaser.Input.Events.GAMEOBJECT_POINTER_UP, onPause);
+    onTap(this.pauseHit.setInteractive({ useHandCursor: true }), onPause);
     this.layout(scene.scale.gameSize.width, scene.scale.gameSize.height);
   }
 

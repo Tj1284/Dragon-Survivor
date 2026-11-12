@@ -1,4 +1,5 @@
 import * as Phaser from 'phaser';
+import { onTap } from '../game/ui';
 import { DRAGON_SHEETS } from '../assets/manifest';
 import { registerDebug } from '../debug';
 import { t } from '../i18n';
@@ -28,7 +29,7 @@ export class GameOverScene extends Phaser.Scene {
     const btn = this.add.rectangle(w / 2, btnY, 120, 32, 0xe8542a).setStrokeStyle(2, 0xffffff).setInteractive({ useHandCursor: true });
     this.add.text(w / 2, btnY, t('again'), { ...TEXT, fontSize: '14px' }).setOrigin(0.5);
     const again = () => this.scene.start('Game');
-    btn.on(Phaser.Input.Events.GAMEOBJECT_POINTER_UP, again);
+    onTap(btn, again);
     this.input.keyboard?.once('keydown-ENTER', again);
     this.input.keyboard?.once('keydown-SPACE', again);
     registerDebug('againButton', () => ({ x: btn.x, y: btn.y }));

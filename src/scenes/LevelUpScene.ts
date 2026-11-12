@@ -1,4 +1,5 @@
 import * as Phaser from 'phaser';
+import { onTap } from '../game/ui';
 import { COLORS, ICON_SHEETS } from '../assets/manifest';
 import { registerDebug } from '../debug';
 import { t } from '../i18n';
@@ -11,7 +12,7 @@ export type LevelUpData =
 
 export const LEVELUP_EVENTS = { picked: 'levelup:picked', element: 'element:picked' } as const;
 
-interface Card { title: string; desc: string; level: string; color: number; icon?: string; onPick: () => void }
+interface Card { title: string; desc: string; level: string; color: number; icon?: string; onPick: () => void; x?: number; y?: number }
 
 const TEXT = { fontFamily: 'monospace', color: '#ffffff', resolution: 4 } as const;
 
@@ -39,16 +40,18 @@ export class LevelUpScene extends Phaser.Scene {
     });
 
     this.input.keyboard?.on('keydown', (ev: KeyboardEvent) => {
+      if (ev.repeat) return;
       const idx = Number(ev.key) - 1;
       if (idx >= 0 && idx < this.cards.length) this.pick(idx);
     });
-    registerDebug('cards', () => this.cards.map((c) => ({ title: c.title, level: c.level })));
+    registerDebug('cards', () => this.cards.map((c) => ({ title: c.title, level: c.level, x: c.x ?? 0, y: c.y ?? 0 })));
     registerDebug('pick', (i: number) => this.pick(i));
   }
 
   private drawCard(card: Card, i: number, cx: number, cy: number, cw: number, ch: number, landscape: boolean): void {
+    card.x = cx; card.y = cy;
     const bg = this.add.rectangle(cx, cy, cw, ch, 0x2a2638).setStrokeStyle(2, card.color).setInteractive({ useHandCursor: true });
-    bg.on(Phaser.Input.Events.GAMEOBJECT_POINTER_UP, () => this.pick(i));
+    onTap(bg, () => this.pick(i));
     bg.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OVER, () => bg.setFillStyle(0x3a3550));
     bg.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OUT, () => bg.setFillStyle(0x2a2638));
     const wrap = { width: landscape ? cw - 12 : cw - 70 };

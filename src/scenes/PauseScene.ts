@@ -1,4 +1,5 @@
 import * as Phaser from 'phaser';
+import { onTap } from '../game/ui';
 import { registerDebug } from '../debug';
 import { t } from '../i18n';
 
@@ -14,7 +15,7 @@ export class PauseScene extends Phaser.Scene {
     const btn = this.add.rectangle(w / 2, h * 0.6, 130, 32, 0x6cc6f0).setStrokeStyle(2, 0xffffff).setInteractive({ useHandCursor: true });
     this.add.text(w / 2, h * 0.6, t('resume'), { ...TEXT, fontSize: '14px', color: '#10202a' }).setOrigin(0.5);
     const resume = () => { this.scene.stop(); this.scene.resume('Game'); };
-    btn.on(Phaser.Input.Events.GAMEOBJECT_POINTER_UP, resume);
+    onTap(btn, resume);
     this.input.keyboard?.once('keydown-ESC', resume);
     this.input.keyboard?.once('keydown-P', resume);
     registerDebug('resumeButton', () => ({ x: btn.x, y: btn.y }));

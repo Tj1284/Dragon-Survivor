@@ -17,3 +17,9 @@ export async function clickGame(page, x, y) {
   const size = await dbg(page, 'size');
   await page.mouse.click(box.x + (x * box.width) / size.width, box.y + (y * box.height) / size.height);
 }
+/** Converts game (screen-space) coordinates to page coordinates. */
+export async function toPage(page, x, y) {
+  const box = await page.locator('canvas').boundingBox();
+  const size = await dbg(page, 'size');
+  return { x: box.x + (x * box.width) / size.width, y: box.y + (y * box.height) / size.height };
+}
