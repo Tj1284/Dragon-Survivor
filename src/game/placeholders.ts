@@ -14,6 +14,16 @@ export function makePlaceholder(scene: Phaser.Scene, def: SheetDef): void {
   const tex = scene.textures.createCanvas(def.key, w * frames, h);
   if (!tex) return;
   const ctx = tex.getContext();
+  if (def.key === 'ground') {
+    // seamless tile: flat fill with a few darker specks
+    ctx.fillStyle = shade(def.color, 1);
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = shade(def.color, 0.8);
+    for (const [sx, sy] of [[3, 5], [17, 9], [9, 22], [26, 27], [22, 3]]) ctx.fillRect(sx, sy, 2, 1);
+    tex.add(0, 0, 0, 0, w, h);
+    tex.refresh();
+    return;
+  }
   const pad = Math.max(1, Math.floor(w / 8));
   for (let i = 0; i < frames; i++) {
     const x0 = i * w;
