@@ -45,6 +45,7 @@ export class GameScene extends Phaser.Scene {
   private chooseNext: Element | null = null;
   private readonly weaponIds = new Set<string>();
   private pendingExplosions: { x: number; y: number }[] = [];
+  private readonly timings: Record<string, number> = {};
 
   constructor() { super('Game'); }
 
@@ -231,6 +232,16 @@ export class GameScene extends Phaser.Scene {
     registerDebug('frozenCount', () => this.enemies.active.filter((e) => e.alive && this.now < e.ice.frozenUntil).length);
     registerDebug('hud', () => this.hud.positions());
     registerDebug('camera', () => ({ midX: this.cameras.main.midPoint.x, midY: this.cameras.main.midPoint.y }));
+    registerDebug('fps', () => this.game.loop.actualFps);
+    registerDebug('counts', () => ({ enemies: this.enemies.active.filter((e) => e.alive).length, projectiles: this.projectiles.activeCount, pickups: this.pickups.activeCount }));
+    registerDebug('poolStats', () => ({ enemies: this.enemies.createdCount, projectiles: this.projectiles.createdCount, pickups: this.pickups.createdCount }));
+    registerDebug('timings', () => Object.fromEntries(Object.entries(this.timings).map(([k, v]) => [k, Number(v.toFixed(3))])));
+    registerDebug('fireTest', (n: number, life: number) => {
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2;
+        this.projectiles.fire({ x: this.player.x, y: this.player.y, vx: Math.cos(a) * 20, vy: Math.sin(a) * 20, damage: 0, radius: 3, life, owner: 'player', key: 'spit', pierce: 1e9, source: 'test' });
+      }
+    });
     registerDebug('teleport', (x: number, y: number) => { this.player.x = x; this.player.y = y; });
   }
 
@@ -242,15 +253,26 @@ export class GameScene extends Phaser.Scene {
     this.now += dt;
     this.run.elapsed += dt;
     this.player.update(dt, move, this.now);
+    let t0 = performance.now();
     this.enemies.update(dt, this.now, this.run.elapsed, this.player, this.projectiles);
+    t0 = this.time_('enemies', t0);
     for (const w of this.weapons) w.update(dt, this.now);
+    t0 = this.time_('weapons', t0);
     for (const ex of this.pendingExplosions.splice(0)) explode(this.ctx, ex.x, ex.y, PLAYER_WEAPONS.fireBurst.radius, PLAYER_WEAPONS.fireBurst.damage * this.player.stats.damageMult, this.now, 'fire_burst');
     this.projectiles.update(dt, this.enemies, this.player, this.now);
+    this.time_('projectiles', t0);
     this.pickups.update(dt, this.player, (n) => this.gainXp(n), (n) => { this.run.gold += n; });
     const cam = this.cameras.main;
     this.ground.setTilePosition(cam.scrollX, cam.scrollY);
     this.hud.update(this.run, this.player);
     if (this.player.hp <= 0) this.endRun();
+  }
+
+  /** Exponential moving average (ms) of a system's update time, for the debug timings() command. */
+  private time_(name: string, start: number): number {
+    const now = performance.now();
+    this.timings[name] = (this.timings[name] ?? 0) * 0.95 + (now - start) * 0.05;
+    return now;
   }
 
   private endRun(): void {
