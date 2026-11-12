@@ -41,7 +41,8 @@ export class GameScene extends Phaser.Scene {
   private levelUpOpen = false;
   evolution!: Evolution;
   hud!: Hud;
-  private evolvingUntil = 0;
+  /** Seconds of evolution pause left; counted down with real frame time so a scene pause can't skip it. */
+  private evolvePauseLeft = 0;
   private chooseNext: Element | null = null;
   private readonly weaponIds = new Set<string>();
   private pendingExplosions: { x: number; y: number }[] = [];
@@ -67,7 +68,7 @@ export class GameScene extends Phaser.Scene {
     this.weapons = [new Spit(this.ctx)];
     this.weaponIds.clear();
     this.pendingExplosions = [];
-    this.evolvingUntil = 0;
+    this.evolvePauseLeft = 0;
     this.chooseNext = null;
     lightningStats.maxChain = 0;
     this.evolution = new Evolution(this.ctx, () => this.askElement(), (from, to) => this.onEvolved(from, to));
@@ -186,7 +187,7 @@ export class GameScene extends Phaser.Scene {
       this.weaponIds.add('ultimate');
       this.weapons.push(createUltimate(this.ctx, element));
     }
-    this.evolvingUntil = this.time.now + PLAYER_WEAPONS.evolution.pause * 1000;
+    this.evolvePauseLeft = PLAYER_WEAPONS.evolution.pause;
   }
 
   refreshStats(): void {
@@ -249,7 +250,7 @@ export class GameScene extends Phaser.Scene {
     if (this.ended) return;
     const dt = clampDelta(delta) / 1000;
     const move = this.inputCtl.moveVector();
-    if (this.time.now < this.evolvingUntil) return; // short pause while the evolution plays
+    if (this.evolvePauseLeft > 0) { this.evolvePauseLeft -= dt; return; } // short pause while the evolution plays
     this.now += dt;
     this.run.elapsed += dt;
     this.player.update(dt, move, this.now);
