@@ -9,9 +9,10 @@ export interface Projectile {
   x: number; y: number; vx: number; vy: number;
   damage: number; radius: number; life: number;
   owner: ProjectileOwner; key: string; pierce: number;
-  onHit?: (target: Enemy | Player, p: Projectile) => void;
+  /** `now` is the time of impact. */
+  onHit?: (target: Enemy | Player, p: Projectile, now: number) => void;
   /** Called when the projectile expires without being used up (e.g. fire breath leaves a zone). */
-  onExpire?: (p: Projectile) => void;
+  onExpire?: (p: Projectile, now: number) => void;
   /** Source label for debug stats ('spit', 'fire', 'ice', ...). */
   source?: string;
   alive: boolean;
@@ -67,15 +68,15 @@ export class Projectiles {
           if (Math.hypot(e.x - p.x, e.y - p.y) > p.radius + e.radius) continue;
           p.hits.push(e.id);
           enemies.hit(e, p.damage, now, p.source);
-          p.onHit?.(e, p);
+          p.onHit?.(e, p, now);
           if (p.hits.length > p.pierce) { spent = true; break; }
         }
       } else if (Math.hypot(player.x - p.x, player.y - p.y) <= p.radius + player.radius) {
         player.damage(p.damage);
-        p.onHit?.(player, p);
+        p.onHit?.(player, p, now);
         spent = true;
       }
-      if (!spent && p.life <= 0) { p.onExpire?.(p); spent = true; }
+      if (!spent && p.life <= 0) { p.onExpire?.(p, now); spent = true; }
       if (spent) {
         this.active[i] = this.active[this.active.length - 1];
         this.active.pop();

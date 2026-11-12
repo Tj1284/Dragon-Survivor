@@ -21,12 +21,12 @@ export class FireBreath implements Weapon {
     this.cooldown = B.cooldown * player.stats.cooldownMult;
     const dx = target.x - player.x, dy = target.y - player.y;
     const d = Math.hypot(dx, dy) || 1;
-    const leave = (p: { x: number; y: number }) => this.zones.add(p.x, p.y, now);
+    const leave = (p: { x: number; y: number }, at: number) => this.zones.add(p.x, p.y, at);
     projectiles.fire({
       x: player.x, y: player.y, vx: (dx / d) * B.speed, vy: (dy / d) * B.speed,
       damage: B.damage * player.stats.damageMult, radius: 5, life: B.range / B.speed + 0.1,
       owner: 'player', key: 'fire_orb', pierce: 0, source: 'fire',
-      onHit: (_t, p) => leave(p), onExpire: leave,
+      onHit: (_t, p, at) => leave(p, at), onExpire: leave,
     });
   }
 

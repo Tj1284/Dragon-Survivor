@@ -8,7 +8,7 @@ export class FrostShards implements Weapon {
   private timer = 0;
   constructor(private readonly ctx: WeaponCtx) {}
 
-  update(dt: number, now: number): void {
+  update(dt: number): void {
     const F = PLAYER_WEAPONS.frostShards;
     this.timer -= dt;
     if (this.timer > 0) return;
@@ -21,7 +21,7 @@ export class FrostShards implements Weapon {
         x: player.x, y: player.y, vx: Math.cos(a) * F.speed, vy: Math.sin(a) * F.speed,
         damage: F.damage * player.stats.damageMult, radius: 4, life: F.life,
         owner: 'player', key: 'ice_shard', pierce: 0, source: 'frost_shards',
-        onHit: (t) => applyIce(t as Enemy, now),
+        onHit: (t, _p, hitNow) => applyIce(t as Enemy, hitNow),
       });
     }
   }

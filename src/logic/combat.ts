@@ -38,7 +38,7 @@ export function registerIceHit(s: IceStatus, now: number, slowDuration = 2): Ice
   const hitTimes = [...s.hitTimes.filter((t) => now - t <= ICE.window), now];
   const slowUntil = Math.max(s.slowUntil, now + slowDuration);
   if (hitTimes.length >= ICE.freezeHits) {
-    return { hitTimes: [], slowUntil, frozenUntil: now + ICE.freezeDuration };
+    return { hitTimes: [], slowUntil, frozenUntil: Math.max(s.frozenUntil, now + ICE.freezeDuration) };
   }
   return { hitTimes, slowUntil, frozenUntil: s.frozenUntil };
 }

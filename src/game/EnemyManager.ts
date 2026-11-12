@@ -139,7 +139,7 @@ export class EnemyManager {
               e.timer = ENEMY_AI.netter.throwEvery;
               const s = ENEMY_AI.netter.netSpeed;
               projectiles.fire({ x: e.x, y: e.y, vx: (dx / dist) * s, vy: (dy / dist) * s, damage: 0, radius: 6, life: 2, owner: 'enemy', key: 'net', pierce: 0,
-                onHit: () => { player.slowUntil = now + ENEMY_AI.netter.slowDuration; } });
+                onHit: (_t, _p, hitNow) => { player.slowUntil = hitNow + ENEMY_AI.netter.slowDuration; } });
             }
             break;
           case 'cleric': ({ mx, my } = this.keepDistance(dx, dy, dist, ENEMY_AI.cleric.keepDistance));

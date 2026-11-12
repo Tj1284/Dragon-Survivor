@@ -26,3 +26,9 @@ it('hits outside the 2s window do not freeze', () => {
   t = registerIceHit(t, 0); t = registerIceHit(t, 1); t = registerIceHit(t, 3);
   expect(t.frozenUntil).toBe(0);
 });
+
+it('a third ice hit never shortens a longer existing freeze', () => {
+  let s = { ...newIceStatus(), frozenUntil: 10 };
+  s = registerIceHit(s, 5); s = registerIceHit(s, 5.1); s = registerIceHit(s, 5.2);
+  expect(s.frozenUntil).toBe(10);
+});

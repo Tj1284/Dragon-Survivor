@@ -11,7 +11,7 @@ export class IceBreath implements Weapon {
   private cooldown = 0;
   constructor(private readonly ctx: WeaponCtx) {}
 
-  update(dt: number, now: number): void {
+  update(dt: number): void {
     const B = PLAYER_WEAPONS.iceBreath;
     const { player, enemies, projectiles } = this.ctx;
     this.cooldown -= dt;
@@ -27,7 +27,7 @@ export class IceBreath implements Weapon {
         x: player.x, y: player.y, vx: Math.cos(a) * B.speed, vy: Math.sin(a) * B.speed,
         damage: B.damage * player.stats.damageMult, radius: 4, life: B.range / B.speed + 0.1,
         owner: 'player', key: 'ice_shard', pierce: 0, source: 'ice',
-        onHit: (t) => applyIce(t as Enemy, now),
+        onHit: (t, _p, hitNow) => applyIce(t as Enemy, hitNow),
       });
     }
   }

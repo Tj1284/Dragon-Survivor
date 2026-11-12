@@ -203,7 +203,7 @@ export class GameScene extends Phaser.Scene {
   // ---- debug ----
 
   private registerDebugCommands(): void {
-    registerDebug('player', () => ({ x: this.player.x, y: this.player.y, hp: this.player.hp, maxHp: this.player.stats.maxHp, formId: this.player.formId, level: this.run.level, element: this.run.element }));
+    registerDebug('player', () => ({ x: this.player.x, y: this.player.y, hp: this.player.hp, maxHp: this.player.stats.maxHp, formId: this.player.formId, level: this.run.level, element: this.run.element, slowUntil: this.player.slowUntil, now: this.now }));
     registerDebug('run', () => JSON.parse(JSON.stringify(this.run)));
     registerDebug('joystick', () => ({ ...this.inputCtl.joystick }));
     registerDebug('blur', () => this.game.events.emit(Phaser.Core.Events.BLUR));
