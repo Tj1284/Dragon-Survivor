@@ -6,7 +6,7 @@ const e = (id: EnemyTypeId, hp: number, speed: number, damage: number, unlockAt:
   ({ id, hp, speed, damage, unlockAt, weight, xp, radius });
 
 export const ENEMIES: Record<EnemyTypeId, EnemyDef> = {
-  squire: e('squire', 12, 30, 5, 0, 10, 1, 8),
+  squire: e('squire', 10, 30, 5, 0, 10, 1, 8),
   archer: e('archer', 10, 25, 6, 60, 4, 1, 8),
   lancer: e('lancer', 20, 30, 8, 120, 3, 2, 10),
   netter: e('netter', 15, 28, 0, 180, 2, 2, 8),
@@ -24,13 +24,12 @@ export const ENEMY_AI = {
   netter: { range: 110, throwEvery: 4, netSpeed: 100, slowDuration: 1.5 },
   cleric: { keepDistance: 80, healEvery: 2, healAmount: 5, healRange: 60 },
   separation: { radius: 10, maxNeighbors: 4 },
-  maxSpawnsPerFrame: 10,
   despawnFactor: 1.5,
 };
 
 /** Player attacks (Tasks 9-10). */
 export const PLAYER_WEAPONS = {
-  spit: { cooldown: 0.8, range: 160, speed: 220, damage: 10 },
+  spit: { cooldown: 0.7, range: 160, speed: 220, damage: 12 },
   fireBreath: { cooldown: 0.9, range: 160, speed: 180, damage: 14 },
   fireZone: { radius: 18, radiusPerLevel: 0.15, duration: 2, durationPerLevel: 0.5, tick: 0.5, damage: 5, damagePerLevel: 0.25, max: 40 },
   fireBurst: { chancePerLevel: 0.1, radius: 24, damage: 10 },

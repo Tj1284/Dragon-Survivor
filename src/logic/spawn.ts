@@ -1,7 +1,21 @@
 import { ENEMIES, ENEMY_IDS, type EnemyTypeId } from '../config/balance';
 
+/** Enemies the director keeps alive: a gentle start that curves up to the 300 cap near the end of a 10-minute run. */
 export function targetAlive(tSeconds: number): number {
-  return Math.min(300, Math.floor(15 + 0.5 * tSeconds));
+  return Math.min(300, Math.floor(4 + 0.12 * tSeconds + 0.0007 * tSeconds * tSeconds));
+}
+
+/** Spawns per second: enemies trickle in instead of appearing in bursts. */
+export function spawnRate(tSeconds: number): number {
+  return Math.min(12, 1 + tSeconds / 40);
+}
+
+/** Accumulates fractional spawns over time; returns how many to spawn this frame and the budget left. */
+export function stepSpawnBudget(budget: number, dt: number, tSeconds: number, missing: number): { budget: number; count: number } {
+  const next = budget + spawnRate(tSeconds) * dt;
+  if (missing <= 0) return { budget: Math.min(next, 1), count: 0 };
+  const count = Math.min(Math.floor(next + 1e-9), missing);
+  return { budget: next - count, count };
 }
 
 export function hpMult(tSeconds: number): number {

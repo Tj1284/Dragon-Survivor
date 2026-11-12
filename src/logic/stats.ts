@@ -3,7 +3,7 @@ import type { Owned } from './upgrades';
 
 export interface PlayerStats { maxHp: number; speed: number; damageMult: number; cooldownMult: number; pickupRadius: number; regen: number; armor: number }
 
-export const BASE_STATS: PlayerStats = { maxHp: 100, speed: 70, damageMult: 1, cooldownMult: 1, pickupRadius: 24, regen: 0, armor: 0 };
+export const BASE_STATS: PlayerStats = { maxHp: 100, speed: 70, damageMult: 1, cooldownMult: 1, pickupRadius: 40, regen: 0, armor: 0 };
 
 export const STAGE_BONUS: Record<Stage, { maxHp: number; damageMult: number; pickupRadius: number }> = {
   0: { maxHp: 0, damageMult: 1, pickupRadius: 0 },

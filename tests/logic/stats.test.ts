@@ -13,7 +13,10 @@ it('stage bonus and upgrades stack', () => {
 it('speed, pickup, regen and armor follow their upgrades', () => {
   const s = computeStats(1, { swift_wings: 2, magnet: 1, regen: 2, ice_armor: 3 });
   expect(s.speed).toBeCloseTo(70 * 1.16);
-  expect(s.pickupRadius).toBeCloseTo((24 + 8) * 1.2);
+  expect(s.pickupRadius).toBeCloseTo((40 + 8) * 1.2);
   expect(s.regen).toBe(1);
   expect(s.armor).toBe(3);
+});
+it('a fresh hatchling picks gems up from 40 px away', () => {
+  expect(BASE_STATS.pickupRadius).toBe(40);
 });

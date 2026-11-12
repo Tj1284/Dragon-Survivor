@@ -3,7 +3,7 @@ import { ENEMY_SHEETS } from '../assets/manifest';
 import { ENEMIES, ENEMY_AI, type EnemyTypeId } from '../config/balance';
 import { damageMultiplier, newIceStatus, type IceStatus } from '../logic/combat';
 import { Pool } from '../logic/pool';
-import { hpMult, pickEnemyType, spawnPosition, spawnRadius, targetAlive } from '../logic/spawn';
+import { hpMult, pickEnemyType, spawnPosition, spawnRadius, stepSpawnBudget, targetAlive } from '../logic/spawn';
 import { SpatialGrid } from '../logic/spatialGrid';
 import type { Player } from './Player';
 import type { Projectiles } from './Projectiles';
@@ -106,7 +106,7 @@ export class EnemyManager {
 
   update(dt: number, now: number, elapsed: number, player: Player, projectiles: Projectiles): void {
     this.compact();
-    this.spawnUpTo(elapsed, player);
+    this.spawnUpTo(dt, elapsed, player);
     const view = this.scene.scale.gameSize;
     const despawnR = spawnRadius(view.width, view.height) * ENEMY_AI.despawnFactor;
 
@@ -239,11 +239,14 @@ export class EnemyManager {
     }
   }
 
-  private spawnUpTo(elapsed: number, player: Player): void {
+  private spawnBudget = 1; // the first enemy shows up right away
+
+  private spawnUpTo(dt: number, elapsed: number, player: Player): void {
     if (this.spawningPaused) return;
     const view = this.scene.scale.gameSize;
-    const missing = Math.min(ENEMY_AI.maxSpawnsPerFrame, targetAlive(elapsed) - this.active.length);
-    for (let i = 0; i < missing; i++) {
+    const step = stepSpawnBudget(this.spawnBudget, dt, elapsed, targetAlive(elapsed) - this.active.length);
+    this.spawnBudget = step.budget;
+    for (let i = 0; i < step.count; i++) {
       const p = spawnPosition(player.x, player.y, view.width, view.height, this.rng);
       this.spawn(pickEnemyType(elapsed, this.rng), p.x, p.y, elapsed);
     }
