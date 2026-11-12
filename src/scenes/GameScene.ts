@@ -1,8 +1,14 @@
 import * as Phaser from 'phaser';
 import { GROUND } from '../assets/manifest';
-import { ENEMIES, ENEMY_IDS, PICKUPS, type EnemyTypeId } from '../config/balance';
+import { ENEMIES, ENEMY_IDS, PICKUPS, PLAYER_WEAPONS, type EnemyTypeId } from '../config/balance';
 import { registerDebug, setDebugReady } from '../debug';
 import { EnemyManager } from '../game/EnemyManager';
+import { Evolution } from '../game/Evolution';
+import { createBreath, createElementWeapon, createUltimate, type ElementWeaponId } from '../game/weapons';
+import { lightningStats } from '../game/weapons/LightningBreath';
+import { explode } from '../game/weapons/util';
+import { ALL_FORMS } from '../logic/evolution';
+import type { Element, FormId, Stage } from '../logic/types';
 import { InputController } from '../game/InputController';
 import { Pickups } from '../game/Pickups';
 import { Player } from '../game/Player';
@@ -32,6 +38,11 @@ export class GameScene extends Phaser.Scene {
   now = 0;
   private ended = false;
   private levelUpOpen = false;
+  evolution!: Evolution;
+  private evolvingUntil = 0;
+  private chooseNext: Element | null = null;
+  private readonly weaponIds = new Set<string>();
+  private pendingExplosions: { x: number; y: number }[] = [];
 
   constructor() { super('Game'); }
 
@@ -51,9 +62,17 @@ export class GameScene extends Phaser.Scene {
     this.pickups = new Pickups(this);
     this.ctx = { scene: this, player: this.player, enemies: this.enemies, projectiles: this.projectiles, run: this.run };
     this.weapons = [new Spit(this.ctx)];
+    this.weaponIds.clear();
+    this.pendingExplosions = [];
+    this.evolvingUntil = 0;
+    this.chooseNext = null;
+    lightningStats.maxChain = 0;
+    this.evolution = new Evolution(this.ctx, () => this.askElement(), (from, to) => this.onEvolved(from, to));
     this.enemies.onKilled = (e) => {
       this.pickups.dropGem(e.x, e.y, ENEMIES[e.type].xp);
       if (this.rng() < PICKUPS.goldChance) this.pickups.dropGold(e.x, e.y);
+      const burst = this.run.owned.fire_burst ?? 0;
+      if (burst > 0 && this.rng() < PLAYER_WEAPONS.fireBurst.chancePerLevel * burst) this.pendingExplosions.push({ x: e.x, y: e.y });
     };
 
     this.game.events.on(LEVELUP_EVENTS.picked, this.onUpgradePicked, this);
@@ -113,12 +132,46 @@ export class GameScene extends Phaser.Scene {
     this.onUpgradeApplied(choice.id);
   }
 
-  /** Hook for weapons granted by upgrades (Task 10). */
-  protected onUpgradeApplied(_id: string): void {}
+  /** Upgrades that are weapons of their own get created the first time they are picked. */
+  private onUpgradeApplied(id: string): void {
+    const own: ElementWeaponId[] = ['fire_orbit', 'frost_shards', 'thunder_strike', 'frost_aura'];
+    if (!own.includes(id as ElementWeaponId) || this.weaponIds.has(id)) return;
+    this.weaponIds.add(id);
+    this.weapons.push(createElementWeapon(this.ctx, id as ElementWeaponId));
+  }
 
-  /** Runs once every pending level is resolved; evolution hooks in here (Task 10). */
-  protected async afterLevelResolved(): Promise<void> {
+  /** Runs once every pending level is resolved: evolve if a threshold was crossed, then resume. */
+  private async afterLevelResolved(): Promise<void> {
+    await this.evolution.check();
     if (this.scene.isPaused()) this.scene.resume();
+  }
+
+  private askElement(): Promise<Element> {
+    if (this.chooseNext) { const e = this.chooseNext; this.chooseNext = null; return Promise.resolve(e); }
+    return new Promise((resolve) => {
+      this.inputCtl.releaseAll();
+      if (!this.scene.isPaused()) this.scene.pause();
+      this.game.events.once(LEVELUP_EVENTS.element, (el: Element) => {
+        this.scene.stop('LevelUp');
+        resolve(el);
+      });
+      this.scene.launch('LevelUp', { mode: 'element' } satisfies LevelUpData);
+    });
+  }
+
+  private onEvolved(from: Stage, to: Stage): void {
+    this.refreshStats();
+    const element = this.run.element!;
+    if (from === 0) {
+      const spit = this.weapons.findIndex((w) => w instanceof Spit);
+      if (spit >= 0) this.weapons.splice(spit, 1)[0].destroy();
+      this.weapons.unshift(createBreath(this.ctx, element));
+    }
+    if (to === 3 && !this.weaponIds.has('ultimate')) {
+      this.weaponIds.add('ultimate');
+      this.weapons.push(createUltimate(this.ctx, element));
+    }
+    this.evolvingUntil = this.time.now + PLAYER_WEAPONS.evolution.pause * 1000;
   }
 
   refreshStats(): void {
@@ -127,6 +180,9 @@ export class GameScene extends Phaser.Scene {
     const gained = this.player.stats.maxHp - before;
     if (gained > 0) this.player.hp += gained;
     this.player.hp = Math.min(this.player.hp, this.player.stats.maxHp);
+    const ice = PLAYER_WEAPONS.iceBreath;
+    this.enemies.iceSlow = ice.baseSlow + ice.slowPerLevel * (this.run.owned.deep_chill ?? 0);
+    this.enemies.shatterLevel = this.run.owned.shatter ?? 0;
   }
 
   // ---- debug ----
@@ -152,17 +208,27 @@ export class GameScene extends Phaser.Scene {
     registerDebug('addXp', (n: number) => this.gainXp(n));
     registerDebug('give', (id: keyof typeof UPGRADE_BY_ID) => this.applyChoice({ type: 'upgrade', id }));
     registerDebug('pickups', () => this.pickups.active.map((p) => ({ kind: p.kind, x: p.x, y: p.y })));
+    registerDebug('setLevel', (n: number) => { this.run.level = n; this.run.xp = 0; this.run.pendingLevels = 0; void this.afterLevelResolved(); });
+    registerDebug('chooseElementNext', (e: Element) => { this.chooseNext = e; });
+    registerDebug('evolutions', () => this.evolution.count);
+    registerDebug('forceForm', (id: FormId) => this.player.setForm(id));
+    registerDebug('allForms', () => [...ALL_FORMS]);
+    registerDebug('hitsBy', (source: string) => (source === 'lightning' ? lightningStats.maxChain : 0));
+    registerDebug('frozenCount', () => this.enemies.active.filter((e) => e.alive && this.now < e.ice.frozenUntil).length);
     registerDebug('teleport', (x: number, y: number) => { this.player.x = x; this.player.y = y; });
   }
 
   update(_time: number, delta: number): void {
     if (this.ended) return;
     const dt = clampDelta(delta) / 1000;
+    const move = this.inputCtl.moveVector();
+    if (this.time.now < this.evolvingUntil) return; // short pause while the evolution plays
     this.now += dt;
     this.run.elapsed += dt;
-    this.player.update(dt, this.inputCtl.moveVector(), this.now);
+    this.player.update(dt, move, this.now);
     this.enemies.update(dt, this.now, this.run.elapsed, this.player, this.projectiles);
     for (const w of this.weapons) w.update(dt, this.now);
+    for (const ex of this.pendingExplosions.splice(0)) explode(this.ctx, ex.x, ex.y, PLAYER_WEAPONS.fireBurst.radius, PLAYER_WEAPONS.fireBurst.damage * this.player.stats.damageMult, this.now, 'fire_burst');
     this.projectiles.update(dt, this.enemies, this.player, this.now);
     this.pickups.update(dt, this.player, (n) => this.gainXp(n), (n) => { this.run.gold += n; });
     const cam = this.cameras.main;
