@@ -27,3 +27,10 @@ export const ENEMY_AI = {
   maxSpawnsPerFrame: 10,
   despawnFactor: 1.5,
 };
+
+/** Player attacks (Tasks 9-10). */
+export const PLAYER_WEAPONS = {
+  spit: { cooldown: 0.8, range: 160, speed: 220, damage: 10 },
+};
+
+export const PICKUPS = { goldChance: 0.1, flySpeed: 200, collectDistance: 6 };

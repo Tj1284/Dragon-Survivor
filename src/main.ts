@@ -4,6 +4,7 @@ import { computeGameSize } from './logic/viewport';
 import { BootScene } from './scenes/BootScene';
 import { GameScene } from './scenes/GameScene';
 import { GameOverScene } from './scenes/GameOverScene';
+import { LevelUpScene } from './scenes/LevelUpScene';
 import { setLanguage } from './i18n';
 
 setLanguage(navigator.language || 'en');
@@ -22,7 +23,7 @@ const game = new Phaser.Game({
     width: initial.width,
     height: initial.height,
   },
-  scene: [BootScene, GameScene, GameOverScene],
+  scene: [BootScene, GameScene, LevelUpScene, GameOverScene],
 });
 
 installDebug(game);
