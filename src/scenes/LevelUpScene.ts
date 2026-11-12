@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { onTap } from '../game/ui';
+import { onTap, relayoutOnResize } from '../game/ui';
 import { COLORS, ICON_SHEETS } from '../assets/manifest';
 import { registerDebug } from '../debug';
 import { t } from '../i18n';
@@ -24,6 +24,7 @@ export class LevelUpScene extends Phaser.Scene {
 
   create(data: LevelUpData): void {
     this.done = false;
+    relayoutOnResize(this, data);
     this.cards = data.mode === 'upgrade' ? this.upgradeCards(data.choices, data.owned) : this.elementCards();
     const { width: w, height: h } = this.scale.gameSize;
     this.add.rectangle(0, 0, w, h, 0x000000, 0.6).setOrigin(0);

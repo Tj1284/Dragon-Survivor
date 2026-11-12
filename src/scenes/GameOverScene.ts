@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { onTap } from '../game/ui';
+import { onTap, relayoutOnResize } from '../game/ui';
 import { DRAGON_SHEETS } from '../assets/manifest';
 import { registerDebug } from '../debug';
 import { t } from '../i18n';
@@ -18,6 +18,7 @@ export class GameOverScene extends Phaser.Scene {
   constructor() { super('GameOver'); }
 
   create(data: GameOverData): void {
+    relayoutOnResize(this, data);
     const { width: w, height: h } = this.scale.gameSize;
     this.add.rectangle(0, 0, w, h, 0x000000, 0.75).setOrigin(0);
     this.add.text(w / 2, h * 0.16, t('game_over'), { ...TEXT, fontSize: '18px' }).setOrigin(0.5);

@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { onTap } from '../game/ui';
+import { onTap, relayoutOnResize } from '../game/ui';
 import { registerDebug } from '../debug';
 import { t } from '../i18n';
 
@@ -9,6 +9,7 @@ export class PauseScene extends Phaser.Scene {
   constructor() { super('Pause'); }
 
   create(): void {
+    relayoutOnResize(this);
     const { width: w, height: h } = this.scale.gameSize;
     this.add.rectangle(0, 0, w, h, 0x000000, 0.6).setOrigin(0);
     this.add.text(w / 2, h * 0.35, t('paused'), { ...TEXT, fontSize: '18px' }).setOrigin(0.5);
