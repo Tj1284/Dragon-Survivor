@@ -3,6 +3,7 @@ import { GROUND } from '../assets/manifest';
 import { ENEMIES, ENEMY_IDS, PICKUPS, PLAYER_WEAPONS, type EnemyTypeId } from '../config/balance';
 import { registerDebug, setDebugReady } from '../debug';
 import { EnemyManager } from '../game/EnemyManager';
+import { Hud } from '../game/Hud';
 import { Evolution } from '../game/Evolution';
 import { createBreath, createElementWeapon, createUltimate, type ElementWeaponId } from '../game/weapons';
 import { lightningStats } from '../game/weapons/LightningBreath';
@@ -39,6 +40,7 @@ export class GameScene extends Phaser.Scene {
   private ended = false;
   private levelUpOpen = false;
   evolution!: Evolution;
+  hud!: Hud;
   private evolvingUntil = 0;
   private chooseNext: Element | null = null;
   private readonly weaponIds = new Set<string>();
@@ -75,6 +77,9 @@ export class GameScene extends Phaser.Scene {
       if (burst > 0 && this.rng() < PLAYER_WEAPONS.fireBurst.chancePerLevel * burst) this.pendingExplosions.push({ x: e.x, y: e.y });
     };
 
+    this.hud = new Hud(this, () => this.openPause());
+    this.input.keyboard?.on('keydown-ESC', () => this.openPause());
+    this.input.keyboard?.on('keydown-P', () => this.openPause());
     this.game.events.on(LEVELUP_EVENTS.picked, this.onUpgradePicked, this);
     this.scale.on(Phaser.Scale.Events.RESIZE, this.onResize, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
@@ -89,6 +94,15 @@ export class GameScene extends Phaser.Scene {
 
   private onResize(size: Phaser.Structs.Size): void {
     this.ground.setSize(size.width, size.height);
+    this.cameras.main.setSize(size.width, size.height);
+    this.hud.layout(size.width, size.height);
+  }
+
+  private openPause(): void {
+    if (this.ended || this.levelUpOpen || this.scene.isPaused()) return;
+    this.inputCtl.releaseAll();
+    this.scene.pause();
+    this.scene.launch('Pause');
   }
 
   // ---- experience and level-ups ----
@@ -215,6 +229,8 @@ export class GameScene extends Phaser.Scene {
     registerDebug('allForms', () => [...ALL_FORMS]);
     registerDebug('hitsBy', (source: string) => (source === 'lightning' ? lightningStats.maxChain : 0));
     registerDebug('frozenCount', () => this.enemies.active.filter((e) => e.alive && this.now < e.ice.frozenUntil).length);
+    registerDebug('hud', () => this.hud.positions());
+    registerDebug('camera', () => ({ midX: this.cameras.main.midPoint.x, midY: this.cameras.main.midPoint.y }));
     registerDebug('teleport', (x: number, y: number) => { this.player.x = x; this.player.y = y; });
   }
 
@@ -233,6 +249,7 @@ export class GameScene extends Phaser.Scene {
     this.pickups.update(dt, this.player, (n) => this.gainXp(n), (n) => { this.run.gold += n; });
     const cam = this.cameras.main;
     this.ground.setTilePosition(cam.scrollX, cam.scrollY);
+    this.hud.update(this.run, this.player);
     if (this.player.hp <= 0) this.endRun();
   }
 

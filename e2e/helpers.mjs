@@ -5,7 +5,11 @@ export async function open(page, baseUrl, query = '') {
   await page.waitForFunction(() => window.__dbg?.ready === true, null, { timeout: 5000 });
 }
 export async function waitFor(page, predicate, arg, timeout = 5000) {
-  await page.waitForFunction(predicate, arg, { timeout, polling: 50 });
+  try {
+    await page.waitForFunction(predicate, arg, { timeout, polling: 50 });
+  } catch (e) {
+    throw new Error(`timed out (${timeout}ms) waiting for: ${predicate.toString().slice(0, 120)}`);
+  }
 }
 /** Clicks a point given in game (screen-space) coordinates. */
 export async function clickGame(page, x, y) {
