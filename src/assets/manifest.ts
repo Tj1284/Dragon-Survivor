@@ -55,7 +55,7 @@ export const ICON_SHEETS = Object.fromEntries(
   UPGRADES.map((u) => [u.id, sheet(`icon_${u.id}`, `art/icons/${u.id}.png`, 16, 1, COLORS[u.tag])]),
 ) as Record<UpgradeId, SheetDef>;
 
-export const GROUND: SheetDef = sheet('ground', 'assets/tiles/ground.png', 32, 1, 0x3b5b3a);
+export const GROUND: SheetDef = sheet('ground', 'art/tiles/ground.png', 32, 1, 0x3b5b3a);
 
 export const ALL_SHEETS: readonly SheetDef[] = [
   ...Object.values(DRAGON_SHEETS),
