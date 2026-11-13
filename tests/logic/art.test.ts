@@ -25,3 +25,14 @@ it('evolved forms of different elements look different', () => {
   const h = (k: keyof typeof DRAGON_SHEETS) => renderSheet(DRAGON_SHEETS[k]).hash();
   expect(new Set([h('adult_fire'), h('adult_ice'), h('adult_lightning')]).size).toBe(3);
 });
+
+import { lookFor } from '../../src/art/dragon';
+it('generated lightning dragons are yellow, matching the hand-drawn young form', () => {
+  for (const id of ['adult_lightning', 'legendary_lightning'] as const) {
+    const body = lookFor(id).body;
+    const r = (body >> 16) & 0xff, g = (body >> 8) & 0xff, b = body & 0xff;
+    expect(r, id).toBeGreaterThan(200);
+    expect(g, id).toBeGreaterThan(160);
+    expect(b, id).toBeLessThan(120);
+  }
+});

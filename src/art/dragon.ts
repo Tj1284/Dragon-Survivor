@@ -10,7 +10,7 @@ const LOOKS: Record<'none' | 'fire' | 'ice' | 'lightning', Omit<DragonLook, 'sta
   none: { body: 0x6fcf5a, belly: 0xf1e7a8, wing: 0x3f8f3a, membrane: 0x9fe08a, horn: 0xf5ead0, accent: 0xffd36b, eye: 0x1b2b1b },
   fire: { body: 0xd9452b, belly: 0xf7c04a, wing: 0x7a1f22, membrane: 0xf07a3a, horn: 0x3a2020, accent: 0xffd34a, eye: 0xfff1a8 },
   ice: { body: 0x58b4e6, belly: 0xeaf8ff, wing: 0x2b6aa8, membrane: 0xb2e9ff, horn: 0xffffff, accent: 0xd6f6ff, eye: 0x0e2a4a },
-  lightning: { body: 0x5b3d91, belly: 0xf5d742, wing: 0x2a1c52, membrane: 0x9a74e0, horn: 0xf5d742, accent: 0xfff27a, eye: 0xfff27a },
+  lightning: { body: 0xf2c230, belly: 0xfff0c0, wing: 0xb87a14, membrane: 0xf7d96a, horn: 0xfff0c0, accent: 0x2a3a7a, eye: 0x1b1b3a },
 };
 
 /** Wing angle per frame of the 6-frame flight cycle (radians, negative = raised). */
