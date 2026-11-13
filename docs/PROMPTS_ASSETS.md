@@ -93,7 +93,7 @@ Pixel art game pickups on a transparent background, one horizontal row: a small 
 A pixel art game icon, 16x16 pixels, of SYMBOL on a dark rounded square tinted COLOR. Readable at tiny size, bold shapes, no text. [STYLE BLOCK]
 ```
 
-COLOR: purple para las mejoras neutrales, orange-red para fuego, light blue para hielo, yellow para rayo. Los símbolos, de uno en uno, están en la tabla "Mejoras" de `docs/ASSETS.md` (ala, escamas, imán…).
+COLOR: purple para los ataques neutrales y las estadísticas, orange-red para fuego, light blue para hielo, yellow para rayo. Los símbolos, de uno en uno, están en la tabla "Ataques y estadísticas" de `docs/ASSETS.md` (gota, cola, ala, escamas, imán…).
 
 ## Suelo
 
