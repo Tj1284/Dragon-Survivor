@@ -17,7 +17,7 @@ export default async function (page, baseUrl) {
   await page.mouse.up();
   await sleep(300);
   let run = await dbg(page, 'run');
-  if (Object.keys(run.owned).length !== 0) throw new Error('a card was picked by lifting the joystick finger: ' + JSON.stringify(run.owned));
+  if (JSON.stringify(run.owned) !== '{"spit":1}') throw new Error('a card was picked by lifting the joystick finger: ' + JSON.stringify(run.owned));
   if (!(await dbg(page, 'scene')).includes('LevelUp')) throw new Error('level-up screen closed by the finger lift');
 
   // a real tap on a card still works
@@ -25,7 +25,7 @@ export default async function (page, baseUrl) {
   await clickGame(page, cards[1].x, cards[1].y);
   await waitFor(page, () => !window.__dbg.scene().includes('LevelUp'), null, 2000);
   run = await dbg(page, 'run');
-  if (Object.keys(run.owned).length !== 1) throw new Error('tap on a card did not pick it');
+  if (JSON.stringify(run.owned) === '{"spit":1}') throw new Error('tap on a card did not pick it');
 
   // dying mid-drag must not skip the game-over summary
   const again = { x: 240, y: 216 };

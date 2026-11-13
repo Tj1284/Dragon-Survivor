@@ -2,8 +2,11 @@ import type * as Phaser from 'phaser';
 import { PLAYER_WEAPONS } from '../../config/balance';
 import type { Enemy } from '../EnemyManager';
 import type { Weapon, WeaponCtx } from './types';
-import { level } from './util';
+import { params, weaponDamage } from './util';
 
+const KEYS = Array.from({ length: 8 }, (_, i) => `orb${i}`);
+
+/** Orbs circling the dragon. Gold (Anillo solar): 8 orbs, wider and faster. */
 export class FireOrbit implements Weapon {
   private angle = 0;
   private readonly orbs: Phaser.GameObjects.Sprite[] = [];
@@ -13,23 +16,22 @@ export class FireOrbit implements Weapon {
 
   update(dt: number, now: number): void {
     const O = PLAYER_WEAPONS.fireOrbit;
-    const n = level(this.ctx, 'fire_orbit');
-    while (this.orbs.length < n) this.orbs.push(this.ctx.scene.add.sprite(0, 0, 'fire_orb').setDepth(15).play('fire_orb_loop'));
-    this.angle += O.angularSpeed * dt;
+    const p = params(this.ctx, 'fire_orbit');
+    while (this.orbs.length < p.count) this.orbs.push(this.ctx.scene.add.sprite(0, 0, 'fire_orb').setDepth(15).play('fire_orb_loop'));
+    this.angle += p.extra * dt;
     const { player, enemies } = this.ctx;
-    const dmg = O.damage * player.stats.damageMult;
-    this.orbs.forEach((orb, i) => {
+    const dmg = weaponDamage(this.ctx, 'fire_orbit', p.damage);
+    for (let i = 0; i < this.orbs.length; i++) {
       const a = this.angle + (i / this.orbs.length) * Math.PI * 2;
-      const x = player.x + Math.cos(a) * O.radius, y = player.y + Math.sin(a) * O.radius;
-      orb.setPosition(x, y);
+      const x = player.x + Math.cos(a) * p.radius, y = player.y + Math.sin(a) * p.radius;
+      this.orbs[i].setPosition(x, y);
       enemies.inRadius(x, y, O.hitRadius, this.near);
       for (const e of this.near) {
-        const key = `orb${i}`;
-        if ((e.hitCooldowns.get(key) ?? 0) > now) continue;
-        e.hitCooldowns.set(key, now + O.hitCooldown);
+        if ((e.hitCooldowns.get(KEYS[i]) ?? 0) > now) continue;
+        e.hitCooldowns.set(KEYS[i], now + p.cooldown);
         enemies.hit(e, dmg, now, 'fire_orbit');
       }
-    });
+    }
   }
 
   destroy(): void { for (const o of this.orbs) o.destroy(); }

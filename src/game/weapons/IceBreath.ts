@@ -2,34 +2,35 @@ import { PLAYER_WEAPONS } from '../../config/balance';
 import { registerIceHit } from '../../logic/combat';
 import type { Enemy } from '../EnemyManager';
 import type { Weapon, WeaponCtx } from './types';
+import { aimAtNearest, fireFan, isGold, params, weaponDamage } from './util';
 
 export function applyIce(e: Enemy, now: number): void {
   e.ice = registerIceHit(e.ice, now);
 }
 
+export function freeze(e: Enemy, now: number, seconds: number): void {
+  e.ice = { ...e.ice, frozenUntil: Math.max(e.ice.frozenUntil, now + seconds) };
+}
+
+/** Fan of shards that slow and freeze. Gold (Ventisca): a huge fan that pierces. */
 export class IceBreath implements Weapon {
   private cooldown = 0;
   constructor(private readonly ctx: WeaponCtx) {}
 
   update(dt: number): void {
-    const B = PLAYER_WEAPONS.iceBreath;
-    const { player, enemies, projectiles } = this.ctx;
     this.cooldown -= dt;
     if (this.cooldown > 0) return;
-    const target = enemies.nearest(player.x, player.y, B.range);
-    if (!target) return;
-    this.cooldown = B.cooldown * player.stats.cooldownMult;
-    const base = Math.atan2(target.y - player.y, target.x - player.x);
-    const spread = (B.spreadDeg * Math.PI) / 180;
-    for (let i = 0; i < B.shards; i++) {
-      const a = base + (i - (B.shards - 1) / 2) * spread;
-      projectiles.fire({
-        x: player.x, y: player.y, vx: Math.cos(a) * B.speed, vy: Math.sin(a) * B.speed,
-        damage: B.damage * player.stats.damageMult, radius: 4, life: B.range / B.speed + 0.1,
-        owner: 'player', key: 'ice_shard', pierce: 0, source: 'ice',
-        onHit: (t, _p, hitNow) => applyIce(t as Enemy, hitNow),
-      });
-    }
+    const B = PLAYER_WEAPONS.iceBreath;
+    const angle = aimAtNearest(this.ctx, B.range);
+    if (angle === null) return;
+    const p = params(this.ctx, 'ice_breath');
+    const gold = isGold(this.ctx, 'ice_breath');
+    this.cooldown = p.cooldown * this.ctx.player.stats.cooldownMult;
+    fireFan(this.ctx, angle, {
+      key: 'ice_shard', source: 'ice_breath', count: p.count, spreadDeg: B.spreadDeg, speed: B.speed,
+      damage: weaponDamage(this.ctx, 'ice_breath', p.damage), radius: p.radius, life: B.range / B.speed + 0.1, pierce: gold ? 3 : 0,
+      onHit: (t, _p, at) => applyIce(t as Enemy, at),
+    });
   }
 
   destroy(): void {}

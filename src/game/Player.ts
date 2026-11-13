@@ -2,7 +2,7 @@ import type * as Phaser from 'phaser';
 import { DRAGON_SHEETS } from '../assets/manifest';
 import { armorReduce } from '../logic/combat';
 import { hitRadius } from './hitRadius';
-import { computeStats, type PlayerStats } from '../logic/stats';
+import { computeStats, type PlayerStats } from '../logic/attacks';
 import type { FormId } from '../logic/types';
 
 export class Player {

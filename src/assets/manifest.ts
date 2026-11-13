@@ -1,7 +1,7 @@
 import type { EnemyTypeId } from '../config/balance';
 import { ALL_FORMS } from '../logic/evolution';
 import type { FormId, Tag } from '../logic/types';
-import { UPGRADES, type UpgradeId } from '../logic/upgrades';
+import { UPGRADE_IDS, tagOf, type UpgradeId } from '../logic/attacks';
 
 export interface SheetDef { key: string; path: string; frameWidth: number; frameHeight: number; frames: number; color: number }
 
@@ -52,7 +52,7 @@ export const PICKUP_SHEETS: Record<PickupKey, SheetDef> = {
 };
 
 export const ICON_SHEETS = Object.fromEntries(
-  UPGRADES.map((u) => [u.id, sheet(`icon_${u.id}`, `art/icons/${u.id}.png`, 16, 1, COLORS[u.tag])]),
+  UPGRADE_IDS.map((id) => [id, sheet(`icon_${id}`, `art/icons/${id}.png`, 16, 1, COLORS[tagOf(id)])]),
 ) as Record<UpgradeId, SheetDef>;
 
 export const GROUND: SheetDef = sheet('ground', 'art/tiles/ground.png', 32, 1, 0x3b5b3a);

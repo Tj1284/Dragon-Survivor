@@ -1,7 +1,7 @@
 import type * as Phaser from 'phaser';
 import { PLAYER_WEAPONS } from '../../config/balance';
 import type { WeaponCtx } from './types';
-import { explode, level } from './util';
+import { explode, isGold, weaponDamage } from './util';
 
 interface Zone { x: number; y: number; r: number; until: number; nextTick: number; sprite: Phaser.GameObjects.Sprite }
 
@@ -18,30 +18,27 @@ export class FireZones {
     }
   }
 
-  add(x: number, y: number, now: number): void {
+  add(x: number, y: number, now: number, radius: number): void {
     const Z = PLAYER_WEAPONS.fireZone;
     const z = this.zones[this.next];
     this.next = (this.next + 1) % this.zones.length;
-    z.x = x; z.y = y;
-    z.r = Z.radius * (1 + Z.radiusPerLevel * level(this.ctx, 'wider_flames'));
-    z.until = now + Z.duration + Z.durationPerLevel * level(this.ctx, 'ember_trail');
+    z.x = x; z.y = y; z.r = radius;
+    z.until = now + Z.duration * (isGold(this.ctx, 'fire_breath') ? Z.goldDuration : 1);
     z.nextTick = now;
     z.sprite.setPosition(x, y).setVisible(true).setScale(z.r / 16).play('fire_zone_loop');
   }
 
-  update(_dt: number, now: number): void {
+  update(now: number): void {
     const Z = PLAYER_WEAPONS.fireZone;
-    const dmg = Z.damage * (1 + Z.damagePerLevel * level(this.ctx, 'searing')) * this.ctx.player.stats.damageMult;
+    const dmg = weaponDamage(this.ctx, 'fire_breath', Z.damage * (isGold(this.ctx, 'fire_breath') ? Z.goldDamage : 1));
     for (const z of this.zones) {
       if (z.until <= now) { if (z.sprite.visible) z.sprite.setVisible(false).stop(); continue; }
       if (now >= z.nextTick) {
         z.nextTick = now + Z.tick;
-        explode(this.ctx, z.x, z.y, z.r, dmg, now, 'fire');
+        explode(this.ctx, z.x, z.y, z.r, dmg, now, 'fire_breath');
       }
     }
   }
 
-  get activeCount(): number { return this.zones.filter((z) => z.sprite.visible).length; }
-
-  destroy(): void {}
+  destroy(): void { for (const z of this.zones) z.sprite.destroy(); }
 }

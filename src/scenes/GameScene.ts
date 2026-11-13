@@ -7,9 +7,8 @@ import { Hud } from '../game/Hud';
 import { Decor } from '../game/Decor';
 import { Juice } from '../game/Juice';
 import { Evolution } from '../game/Evolution';
-import { createBreath, createElementWeapon, createUltimate, type ElementWeaponId } from '../game/weapons';
+import { createAttack, createUltimate } from '../game/weapons';
 import { lightningStats } from '../game/weapons/LightningBreath';
-import { explode } from '../game/weapons/util';
 import { ALL_FORMS } from '../logic/evolution';
 import type { Element, FormId, Stage } from '../logic/types';
 import { InputController } from '../game/InputController';
@@ -17,12 +16,10 @@ import { Pickups } from '../game/Pickups';
 import { Player } from '../game/Player';
 import { Projectiles } from '../game/Projectiles';
 import { createRunState, type RunState } from '../game/RunState';
-import { Spit } from '../game/weapons/Spit';
 import type { Weapon, WeaponCtx } from '../game/weapons/types';
 import { createRng } from '../logic/rng';
-import { computeStats, FALLBACK } from '../logic/stats';
 import { clampDelta } from '../logic/time';
-import { UPGRADE_BY_ID, rollChoices, type Choice } from '../logic/upgrades';
+import { FALLBACK, computeStats, heldAttacks, rollChoices, spitToBreath, tagOf, type AttackId, type Choice, type UpgradeId } from '../logic/attacks';
 import { applyXp } from '../logic/xp';
 import type { GameOverData } from './GameOverScene';
 import { LEVELUP_EVENTS, type LevelUpData } from './LevelUpScene';
@@ -35,7 +32,10 @@ export class GameScene extends Phaser.Scene {
   projectiles!: Projectiles;
   pickups!: Pickups;
   run!: RunState;
-  weapons: Weapon[] = [];
+  /** One weapon per attack the dragon holds. */
+  attacks = new Map<AttackId, Weapon>();
+  private ultimate: Weapon | null = null;
+  private readonly hitCounts: Record<string, number> = {};
   ctx!: WeaponCtx;
   rng!: () => number;
   now = 0;
@@ -48,8 +48,6 @@ export class GameScene extends Phaser.Scene {
   /** Seconds of evolution pause left; counted down with real frame time so a scene pause can't skip it. */
   private evolvePauseLeft = 0;
   private chooseNext: Element | null = null;
-  private readonly weaponIds = new Set<string>();
-  private pendingExplosions: { x: number; y: number }[] = [];
   private readonly timings: Record<string, number> = {};
 
   constructor() { super('Game'); }
@@ -69,22 +67,24 @@ export class GameScene extends Phaser.Scene {
     this.projectiles = new Projectiles(this);
     this.pickups = new Pickups(this);
     this.ctx = { scene: this, player: this.player, enemies: this.enemies, projectiles: this.projectiles, run: this.run };
-    this.weapons = [new Spit(this.ctx)];
-    this.weaponIds.clear();
-    this.pendingExplosions = [];
+    this.attacks = new Map();
+    this.ultimate = null;
+    for (const k of Object.keys(this.hitCounts)) delete this.hitCounts[k];
+    this.syncWeapons();
     this.evolvePauseLeft = 0;
     this.chooseNext = null;
     lightningStats.maxChain = 0;
     this.evolution = new Evolution(this.ctx, () => this.askElement(), (from, to) => this.onEvolved(from, to));
     this.juice = new Juice(this, this.player);
     this.decor = new Decor(this);
-    this.enemies.onHit = (e) => this.juice.hit(e.x, e.y);
+    this.enemies.onHit = (e, _dmg, source) => {
+      this.juice.hit(e.x, e.y);
+      if (source) this.hitCounts[source] = (this.hitCounts[source] ?? 0) + 1;
+    };
     this.enemies.onKilled = (e) => {
       this.juice.death(e.x, e.y);
       this.pickups.dropGem(e.x, e.y, ENEMIES[e.type].xp);
       if (this.rng() < PICKUPS.goldChance) this.pickups.dropGold(e.x, e.y);
-      const burst = this.run.owned.fire_burst ?? 0;
-      if (burst > 0 && this.rng() < PLAYER_WEAPONS.fireBurst.chancePerLevel * burst) this.pendingExplosions.push({ x: e.x, y: e.y });
     };
 
     this.hud = new Hud(this, () => this.openPause());
@@ -96,7 +96,8 @@ export class GameScene extends Phaser.Scene {
       this.game.events.off(LEVELUP_EVENTS.picked, this.onUpgradePicked, this);
       this.scale.off(Phaser.Scale.Events.RESIZE, this.onResize, this);
       this.inputCtl.destroy();
-      for (const w of this.weapons) w.destroy();
+      for (const w of this.attacks.values()) w.destroy();
+      this.ultimate?.destroy();
     });
     this.registerDebugCommands();
     setDebugReady(true);
@@ -131,7 +132,7 @@ export class GameScene extends Phaser.Scene {
     if (this.run.pendingLevels <= 0) { void this.afterLevelResolved(); return; }
     this.levelUpOpen = true;
     this.inputCtl.releaseAll();
-    const data: LevelUpData = { mode: 'upgrade', choices: rollChoices({ owned: this.run.owned, element: this.run.element }, this.rng), owned: this.run.owned };
+    const data: LevelUpData = { mode: 'upgrade', choices: rollChoices({ owned: this.run.owned, element: this.run.element, gold: this.run.goldAttacks }, this.rng), owned: this.run.owned };
     this.scene.pause();
     this.scene.launch('LevelUp', data);
   }
@@ -151,18 +152,23 @@ export class GameScene extends Phaser.Scene {
       this.run.gold += FALLBACK.gold;
       return;
     }
+    if (choice.type === 'gold') {
+      if (!this.run.goldAttacks.includes(choice.id)) this.run.goldAttacks.push(choice.id);
+      return;
+    }
     this.run.owned[choice.id] = (this.run.owned[choice.id] ?? 0) + 1;
-    this.run.picks.push(UPGRADE_BY_ID[choice.id].tag);
+    this.run.picks.push(tagOf(choice.id));
     this.refreshStats();
-    this.onUpgradeApplied(choice.id);
+    this.syncWeapons();
   }
 
-  /** Upgrades that are weapons of their own get created the first time they are picked. */
-  private onUpgradeApplied(id: string): void {
-    const own: ElementWeaponId[] = ['fire_orbit', 'frost_shards', 'thunder_strike', 'frost_aura'];
-    if (!own.includes(id as ElementWeaponId) || this.weaponIds.has(id)) return;
-    this.weaponIds.add(id);
-    this.weapons.push(createElementWeapon(this.ctx, id as ElementWeaponId));
+  /** Keeps exactly one weapon per held attack: creates the new ones and drops the ones no longer held. */
+  private syncWeapons(): void {
+    const held = heldAttacks(this.run.owned);
+    for (const [id, weapon] of this.attacks) {
+      if (!held.includes(id)) { weapon.destroy(); this.attacks.delete(id); }
+    }
+    for (const id of held) if (!this.attacks.has(id)) this.attacks.set(id, createAttack(this.ctx, id));
   }
 
   /** Runs once every pending level is resolved: evolve if a threshold was crossed, then resume. */
@@ -188,14 +194,11 @@ export class GameScene extends Phaser.Scene {
     this.refreshStats();
     const element = this.run.element!;
     if (from === 0) {
-      const spit = this.weapons.findIndex((w) => w instanceof Spit);
-      if (spit >= 0) this.weapons.splice(spit, 1)[0].destroy();
-      this.weapons.unshift(createBreath(this.ctx, element));
+      // the starting spit turns into the breath of the element, keeping its level and its slot
+      this.run.owned = spitToBreath(this.run.owned, element);
+      this.syncWeapons();
     }
-    if (to === 3 && !this.weaponIds.has('ultimate')) {
-      this.weaponIds.add('ultimate');
-      this.weapons.push(createUltimate(this.ctx, element));
-    }
+    if (to === 3 && !this.ultimate) this.ultimate = createUltimate(this.ctx, element);
     this.evolvePauseLeft = PLAYER_WEAPONS.evolution.pause;
     this.juice.setElement(element, to);
   }
@@ -206,9 +209,6 @@ export class GameScene extends Phaser.Scene {
     const gained = this.player.stats.maxHp - before;
     if (gained > 0) this.player.hp += gained;
     this.player.hp = Math.min(this.player.hp, this.player.stats.maxHp);
-    const ice = PLAYER_WEAPONS.iceBreath;
-    this.enemies.iceSlow = ice.baseSlow + ice.slowPerLevel * (this.run.owned.deep_chill ?? 0);
-    this.enemies.shatterLevel = this.run.owned.shatter ?? 0;
   }
 
   // ---- debug ----
@@ -232,7 +232,10 @@ export class GameScene extends Phaser.Scene {
     registerDebug('setHp', (hp: number) => { this.player.hp = hp; });
     registerDebug('setElapsed', (s: number) => { this.run.elapsed = s; });
     registerDebug('addXp', (n: number) => this.gainXp(n));
-    registerDebug('give', (id: keyof typeof UPGRADE_BY_ID) => this.applyChoice({ type: 'upgrade', id }));
+    registerDebug('give', (id: UpgradeId) => this.applyChoice({ type: 'upgrade', id }));
+    registerDebug('giveGold', (id: AttackId) => this.applyChoice({ type: 'gold', id }));
+    registerDebug('attacks', () => heldAttacks(this.run.owned).map((id) => ({ id, level: this.run.owned[id], gold: this.run.goldAttacks.includes(id) })));
+    registerDebug('hitsBySource', () => ({ ...this.hitCounts }));
     registerDebug('pickups', () => this.pickups.active.map((p) => ({ kind: p.kind, x: p.x, y: p.y })));
     registerDebug('setLevel', (n: number) => { this.run.level = n; this.run.xp = 0; this.run.pendingLevels = 0; void this.afterLevelResolved(); });
     registerDebug('chooseElementNext', (e: Element) => { this.chooseNext = e; });
@@ -267,9 +270,9 @@ export class GameScene extends Phaser.Scene {
     let t0 = performance.now();
     this.enemies.update(dt, this.now, this.run.elapsed, this.player, this.projectiles);
     t0 = this.time_('enemies', t0);
-    for (const w of this.weapons) w.update(dt, this.now);
+    for (const w of this.attacks.values()) w.update(dt, this.now);
+    this.ultimate?.update(dt, this.now);
     t0 = this.time_('weapons', t0);
-    for (const ex of this.pendingExplosions.splice(0)) explode(this.ctx, ex.x, ex.y, PLAYER_WEAPONS.fireBurst.radius, PLAYER_WEAPONS.fireBurst.damage * this.player.stats.damageMult, this.now, 'fire_burst');
     this.projectiles.update(dt, this.enemies, this.player, this.now);
     this.time_('projectiles', t0);
     this.pickups.update(dt, this.player, (n) => this.gainXp(n), (n) => { this.run.gold += n; });

@@ -27,18 +27,16 @@ export const ENEMY_AI = {
   despawnFactor: 1.5,
 };
 
-/** Player attacks (Tasks 9-10). */
+/** Fixed numbers of the player's attacks. Per-level numbers live in src/logic/attacks.ts. */
 export const PLAYER_WEAPONS = {
-  spit: { cooldown: 0.7, range: 160, speed: 220, damage: 12 },
-  fireBreath: { cooldown: 0.9, range: 160, speed: 180, damage: 14 },
-  fireZone: { radius: 18, radiusPerLevel: 0.15, duration: 2, durationPerLevel: 0.5, tick: 0.5, damage: 5, damagePerLevel: 0.25, max: 40 },
-  fireBurst: { chancePerLevel: 0.1, radius: 24, damage: 10 },
-  iceBreath: { cooldown: 0.8, range: 160, speed: 200, damage: 8, shards: 3, spreadDeg: 15, baseSlow: 0.4, slowPerLevel: 0.1 },
-  frostAura: { radius: 40, slowPerLevel: 0.2, maxSlow: 0.6 },
-  lightningBreath: { cooldown: 0.9, cooldownPerLevel: 0.9, range: 140, damage: 12, chainRange: 60, chainRangePerLevel: 0.15, decay: 0.7, decayPerLevel: 0.1, maxDecay: 0.95, scanRadius: 320 },
-  fireOrbit: { radius: 36, angularSpeed: 2, damage: 6, hitCooldown: 0.5, hitRadius: 7 },
-  frostShards: { every: 2, speed: 160, damage: 7, life: 1.2 },
-  thunderStrike: { base: 3.5, perLevel: 0.3, damage: 20, radius: 16 },
+  spit: { range: 160, speed: 220 },
+  fireBreath: { range: 160, speed: 180 },
+  fireZone: { duration: 2, goldDuration: 2, tick: 0.5, damage: 5, goldDamage: 1.5, max: 40 },
+  iceBreath: { range: 160, speed: 200, spreadDeg: 15 },
+  lightningBreath: { range: 140, decay: 0.7, goldDecay: 0.9, scanRadius: 320 },
+  fireOrbit: { hitRadius: 7 },
+  frostShards: { speed: 160, life: 1.2, goldFreeze: 1.5 },
+  frostAura: { goldFreeze: 1.5, goldFreezeEvery: 4 },
   ultimate: { every: 20, fireRadius: 120, fireDamage: 80, iceFreeze: 3, lightningStrikes: 12, lightningDamage: 60 },
   evolution: { pause: 0.8, pushRadius: 100, pushDistance: 60 },
 };

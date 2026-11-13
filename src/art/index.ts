@@ -1,5 +1,5 @@
 import { DRAGON_SHEETS, ENEMY_SHEETS, FX_SHEETS, GROUND, ICON_SHEETS, PICKUP_SHEETS, type SheetDef } from '../assets/manifest';
-import { UPGRADE_BY_ID, type UpgradeId } from '../logic/upgrades';
+import { tagOf, type UpgradeId } from '../logic/attacks';
 import type { FormId } from '../logic/types';
 import { COLORS } from '../assets/manifest';
 import { drawDragon, lookFor } from './dragon';
@@ -20,7 +20,7 @@ function drawFrame(def: SheetDef, frame: number): PixelCanvas {
   if (fxKeys.has(def.key)) return drawFx(def.key, S, frame);
   if (pickupKeys.has(def.key)) return drawPickup(def.key, S, frame);
   const icon = iconIds.get(def.key);
-  if (icon) return drawIcon(icon, COLORS[UPGRADE_BY_ID[icon].tag]);
+  if (icon) return drawIcon(icon, COLORS[tagOf(icon)]);
   if (def.key === GROUND.key) return drawGround(S);
   throw new Error(`no art for ${def.key}`);
 }

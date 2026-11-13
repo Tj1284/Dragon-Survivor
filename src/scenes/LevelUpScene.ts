@@ -4,7 +4,7 @@ import { COLORS, ICON_SHEETS } from '../assets/manifest';
 import { registerDebug } from '../debug';
 import { t } from '../i18n';
 import { ELEMENTS, type Element } from '../logic/types';
-import { UPGRADE_BY_ID, type Choice, type Owned } from '../logic/upgrades';
+import { isAttack, tagOf, type Choice, type Owned } from '../logic/attacks';
 
 export type LevelUpData =
   | { mode: 'upgrade'; choices: Choice[]; owned: Owned }
@@ -12,7 +12,8 @@ export type LevelUpData =
 
 export const LEVELUP_EVENTS = { picked: 'levelup:picked', element: 'element:picked' } as const;
 
-interface Card { title: string; desc: string; level: string; color: number; icon?: string; onPick: () => void; x?: number; y?: number }
+export const GOLD_COLOR = 0xf2c230;
+interface Card { kind: 'attack' | 'stat' | 'gold' | 'fallback' | 'element'; id?: string; title: string; desc: string; level: string; color: number; icon?: string; onPick: () => void; x?: number; y?: number }
 
 import { TEXT } from '../ui/style';
 
@@ -45,7 +46,7 @@ export class LevelUpScene extends Phaser.Scene {
       const idx = Number(ev.key) - 1;
       if (idx >= 0 && idx < this.cards.length) this.pick(idx);
     });
-    registerDebug('cards', () => this.cards.map((c) => ({ title: c.title, level: c.level, x: c.x ?? 0, y: c.y ?? 0 })));
+    registerDebug('cards', () => this.cards.map((c) => ({ type: c.kind === 'gold' ? 'gold' : c.kind === 'fallback' ? 'fallback' : 'upgrade', kind: c.kind, id: c.id, title: c.title, level: c.level, x: c.x ?? 0, y: c.y ?? 0 })));
     registerDebug('pick', (i: number) => this.pick(i));
   }
 
@@ -74,22 +75,28 @@ export class LevelUpScene extends Phaser.Scene {
   }
 
   private upgradeCards(choices: Choice[], owned: Owned): Card[] {
-    return choices.map((c) => {
+    return choices.map((c): Card => {
       if (c.type === 'fallback') {
-        return { title: t('fallback'), desc: t('fallback_d'), level: '', color: COLORS.neutral, onPick: () => this.emitPick(c) };
+        return { kind: 'fallback', title: t('fallback'), desc: t('fallback_d'), level: '', color: COLORS.neutral, onPick: () => this.emitPick(c) };
       }
-      const def = UPGRADE_BY_ID[c.id];
+      if (c.type === 'gold') {
+        return {
+          kind: 'gold', id: c.id, title: t(`gold_${c.id}`), desc: t(`gold_${c.id}_d`), level: t('gold_label'),
+          color: GOLD_COLOR, icon: ICON_SHEETS[c.id].key, onPick: () => this.emitPick(c),
+        };
+      }
       const next = (owned[c.id] ?? 0) + 1;
       return {
+        kind: isAttack(c.id) ? 'attack' : 'stat', id: c.id,
         title: t(`up_${c.id}`), desc: t(`up_${c.id}_d`), level: next === 1 ? t('new') : t('lvl_short', { n: next }),
-        color: COLORS[def.tag], icon: ICON_SHEETS[c.id].key, onPick: () => this.emitPick(c),
+        color: COLORS[tagOf(c.id)], icon: ICON_SHEETS[c.id].key, onPick: () => this.emitPick(c),
       };
     });
   }
 
   private elementCards(): Card[] {
-    return ELEMENTS.map((el: Element) => ({
-      title: t(`el_${el}`), desc: t(`el_${el}_d`), level: '', color: COLORS[el],
+    return ELEMENTS.map((el: Element): Card => ({
+      kind: 'element', id: el, title: t(`el_${el}`), desc: t(`el_${el}_d`), level: '', color: COLORS[el],
       onPick: () => this.game.events.emit(LEVELUP_EVENTS.element, el),
     }));
   }

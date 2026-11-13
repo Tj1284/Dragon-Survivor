@@ -12,13 +12,15 @@ it('returns the key when missing and fills variables', () => {
   expect(t('level_n', { n: 3 })).toBe('Nivel 3');
 });
 
-import { UPGRADES } from '../../src/logic/upgrades';
-it('every upgrade has a name and description in Spanish and English', () => {
+import { ATTACKS, ATTACK_IDS, UPGRADE_IDS } from '../../src/logic/attacks';
+it('every attack, stat and gold evolution has a name and description in Spanish and English', () => {
+  const keys = [
+    ...UPGRADE_IDS.flatMap((id) => [`up_${id}`, `up_${id}_d`]),
+    ...ATTACK_IDS.filter((id) => ATTACKS[id].key).flatMap((id) => [`gold_${id}`, `gold_${id}_d`]),
+    'gold_label',
+  ];
   for (const lang of ['es', 'en']) {
     setLanguage(lang);
-    for (const u of UPGRADES) {
-      expect(t(`up_${u.id}`)).not.toBe(`up_${u.id}`);
-      expect(t(`up_${u.id}_d`)).not.toBe(`up_${u.id}_d`);
-    }
+    for (const key of keys) expect(t(key), `${lang}:${key}`).not.toBe(key);
   }
 });

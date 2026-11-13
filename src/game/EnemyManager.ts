@@ -24,8 +24,8 @@ export class EnemyManager {
   onKilled: (e: Enemy) => void = () => {};
   onHit: (e: Enemy, damage: number, source?: string) => void = () => {};
   spawningPaused = false;
-  /** Slow applied by ice hits (0.4 + 0.1·deep_chill, set by the ice systems). */
-  iceSlow = 0.4;
+  /** Slow applied by ice hits. */
+  iceSlow = 0.5;
   shatterLevel = 0;
 
   private readonly pool: Pool<Enemy>;
