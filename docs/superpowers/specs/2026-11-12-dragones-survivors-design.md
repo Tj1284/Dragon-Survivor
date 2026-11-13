@@ -176,7 +176,7 @@ Efectos y música sencilla, que tienen que poder silenciarse. El usuario no ha d
 **Formato propuesto (propuesta de Claude, a confirmar con el usuario):**
 - PNG con transparencia. Spritesheet en **una fila horizontal por animación**, con frames del mismo tamaño y sin separación.
 - **Pixel art** escalado por enteros. Resolución lógica del juego **480×270** (16:9), escalada en pantalla sin suavizado.
-- Tamaño de frame orientativo: cría 24×24, joven 32×32, adulto 48×48, legendario 64×64. Enemigos 24–32. Jefe 96×96.
+- Tamaño de frame orientativo: cría 32×32 (cambiado el 13-11-2026 para usar el sprite del usuario, que es de 32 px), joven 32×32, adulto 48×48, legendario 64×64. Enemigos 24–32. Jefe 96×96.
 - Los sprites miran a la derecha. El código los voltea para la izquierda.
 
 **Lista:**

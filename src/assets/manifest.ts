@@ -10,7 +10,7 @@ export const COLORS: Record<Tag, number> = { fire: 0xe8542a, ice: 0x6cc6f0, ligh
 const sheet = (key: string, path: string, size: number, frames: number, color: number): SheetDef =>
   ({ key, path, frameWidth: size, frameHeight: size, frames, color });
 
-const DRAGON_SIZE = { hatchling: 24, young: 32, adult: 48, legendary: 64 } as const;
+const DRAGON_SIZE = { hatchling: 32, young: 32, adult: 48, legendary: 64 } as const;
 
 function dragonSheet(id: FormId): SheetDef {
   const [stage, element] = id.split('_') as [keyof typeof DRAGON_SIZE, Tag | undefined];

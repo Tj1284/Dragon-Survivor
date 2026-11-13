@@ -1,6 +1,7 @@
 import type * as Phaser from 'phaser';
 import { DRAGON_SHEETS } from '../assets/manifest';
 import { armorReduce } from '../logic/combat';
+import { hitRadius } from './hitRadius';
 import { computeStats, type PlayerStats } from '../logic/stats';
 import type { FormId } from '../logic/types';
 
@@ -25,7 +26,7 @@ export class Player {
     this.formId = id;
     this.sprite.setTexture(def.key, 0);
     this.sprite.play(`${def.key}_loop`);
-    this.r = def.frameWidth * 0.35;
+    this.r = hitRadius(id);
   }
 
   get radius(): number { return this.r; }

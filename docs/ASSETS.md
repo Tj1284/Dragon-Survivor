@@ -28,7 +28,7 @@ Cría = `hatchling`, joven = `young_*`, adulto = `adult_*`, legendario = `legend
 
 | Archivo | Frame | Frames | Tamaño total del PNG |
 |---|---|---|---|
-| `art/dragons/hatchling.png` | 24×24 | 6 | 144×24 |
+| `art/dragons/hatchling.png` | 32×32 | 6 | 192×32 |
 | `art/dragons/young_fire.png` | 32×32 | 6 | 192×32 |
 | `art/dragons/young_ice.png` | 32×32 | 6 | 192×32 |
 | `art/dragons/young_lightning.png` | 32×32 | 6 | 192×32 |

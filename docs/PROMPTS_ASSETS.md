@@ -23,7 +23,7 @@ Style: clean 16-bit pixel art, limited palette (max 16 colors), 1px dark outline
 
 **Cría** (`hatchling`, el primero que debes hacer):
 ```
-A pixel art sprite sheet of a cute baby dragon flying, 6 frames of a wing-flap loop in one horizontal row. Chubby green body, cream belly, big round eye, tiny horns, small stubby wings, short tail. Friendly and readable at very small size (24x24 pixels per frame). [STYLE BLOCK]
+A pixel art sprite sheet of a cute baby dragon flying, 6 frames of a wing-flap loop in one horizontal row. Chubby green body, cream belly, big round eye, tiny horns, small stubby wings, short tail. Friendly and readable at small size (32x32 pixels per frame). [STYLE BLOCK]
 ```
 
 **Joven** (cambia `ELEMENT` por fire, ice o lightning):

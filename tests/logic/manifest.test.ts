@@ -5,7 +5,7 @@ import { UPGRADES } from '../../src/logic/upgrades';
 
 it('has the 10 dragon forms with the agreed frame sizes', () => {
   expect(Object.keys(DRAGON_SHEETS)).toHaveLength(10);
-  expect(DRAGON_SHEETS.hatchling.frameWidth).toBe(24);
+  expect(DRAGON_SHEETS.hatchling.frameWidth).toBe(32);
   expect(DRAGON_SHEETS.young_fire.frameWidth).toBe(32);
   expect(DRAGON_SHEETS.adult_ice.frameWidth).toBe(48);
   expect(DRAGON_SHEETS.legendary_lightning.frameHeight).toBe(64);
@@ -24,4 +24,11 @@ it('has unique keys and an icon per upgrade', () => {
 it('documents every asset path for the artist', () => {
   const doc = readFileSync('docs/ASSETS.md', 'utf8');
   for (const s of ALL_SHEETS) expect(doc).toContain(s.path);
+});
+
+import { hitRadius } from '../../src/game/hitRadius';
+it('the hatchling keeps its small hit radius even though its sprite is 32 px', () => {
+  expect(hitRadius('hatchling')).toBeCloseTo(8.4);
+  expect(hitRadius('young_fire')).toBeCloseTo(11.2);
+  expect(hitRadius('legendary_ice')).toBeCloseTo(22.4);
 });
