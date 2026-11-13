@@ -52,10 +52,11 @@ export class LevelUpScene extends Phaser.Scene {
 
   private drawCard(card: Card, i: number, cx: number, cy: number, cw: number, ch: number, landscape: boolean): void {
     card.x = cx; card.y = cy;
-    const bg = this.add.rectangle(cx, cy, cw, ch, 0x2a2638).setStrokeStyle(2, card.color).setInteractive({ useHandCursor: true });
+    const fill = card.kind === 'gold' ? 0x3d3210 : 0x2a2638;
+    const bg = this.add.rectangle(cx, cy, cw, ch, fill).setStrokeStyle(2, card.color).setInteractive({ useHandCursor: true });
     onTap(bg, () => this.pick(i));
-    bg.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OVER, () => bg.setFillStyle(0x3a3550));
-    bg.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OUT, () => bg.setFillStyle(0x2a2638));
+    bg.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OVER, () => bg.setFillStyle(card.kind === 'gold' ? 0x5a4a18 : 0x3a3550));
+    bg.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OUT, () => bg.setFillStyle(fill));
     const wrap = { width: landscape ? cw - 12 : cw - 70 };
     if (landscape) {
       if (card.icon) this.add.image(cx, cy - ch / 2 + 28, card.icon).setScale(2);

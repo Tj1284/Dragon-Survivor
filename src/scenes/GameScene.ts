@@ -94,6 +94,7 @@ export class GameScene extends Phaser.Scene {
     };
 
     this.hud = new Hud(this, () => this.openPause());
+    this.hud.refreshAttacks(this.run);
     this.input.keyboard?.on('keydown-ESC', () => this.openPause());
     this.input.keyboard?.on('keydown-P', () => this.openPause());
     this.game.events.on(LEVELUP_EVENTS.picked, this.onUpgradePicked, this);
@@ -160,12 +161,14 @@ export class GameScene extends Phaser.Scene {
     }
     if (choice.type === 'gold') {
       if (!this.run.goldAttacks.includes(choice.id)) this.run.goldAttacks.push(choice.id);
+      this.hud.refreshAttacks(this.run);
       return;
     }
     this.run.owned[choice.id] = (this.run.owned[choice.id] ?? 0) + 1;
     this.run.picks.push(tagOf(choice.id));
     this.refreshStats();
     this.syncWeapons();
+    this.hud.refreshAttacks(this.run);
   }
 
   /** Keeps exactly one weapon per held attack: creates the new ones and drops the ones no longer held. */
@@ -203,6 +206,7 @@ export class GameScene extends Phaser.Scene {
       // the starting spit turns into the breath of the element, keeping its level and its slot
       this.run.owned = spitToBreath(this.run.owned, element);
       this.syncWeapons();
+      this.hud.refreshAttacks(this.run);
     }
     if (to === 3 && !this.ultimate) this.ultimate = createUltimate(this.ctx, element);
     this.evolvePauseLeft = PLAYER_WEAPONS.evolution.pause;
