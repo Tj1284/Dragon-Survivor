@@ -25,17 +25,17 @@ const atk = (id: AttackId, tag: Tag, key: StatId | null, offered: boolean): Atta
 
 export const ATTACKS: Record<AttackId, AttackDef> = {
   spit: atk('spit', 'neutral', null, false),
-  tail_swipe: atk('tail_swipe', 'neutral', 'thick_scales', false),
-  roar: atk('roar', 'neutral', 'armor', false),
+  tail_swipe: atk('tail_swipe', 'neutral', 'thick_scales', true),
+  roar: atk('roar', 'neutral', 'armor', true),
   fire_breath: atk('fire_breath', 'fire', 'fury', false),
   fire_orbit: atk('fire_orbit', 'fire', 'swift_wings', true),
-  meteor: atk('meteor', 'fire', 'magnet', false),
+  meteor: atk('meteor', 'fire', 'magnet', true),
   ice_breath: atk('ice_breath', 'ice', 'quick_breath', false),
   frost_shards: atk('frost_shards', 'ice', 'fury', true),
   frost_aura: atk('frost_aura', 'ice', 'regen', true),
   lightning_breath: atk('lightning_breath', 'lightning', 'quick_breath', false),
   thunder_strike: atk('thunder_strike', 'lightning', 'fury', true),
-  static_field: atk('static_field', 'lightning', 'swift_wings', false),
+  static_field: atk('static_field', 'lightning', 'swift_wings', true),
 };
 
 export const ATTACK_IDS = Object.keys(ATTACKS) as AttackId[];

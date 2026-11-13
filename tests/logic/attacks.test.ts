@@ -79,3 +79,6 @@ it('stats stack with the stage bonus', () => {
   expect(s.speed).toBeCloseTo(70 * 1.16);
   expect(s.regen).toBe(1);
 });
+it('the four new attacks are offered as cards', () => {
+  expect(availableUpgrades(base)).toEqual(expect.arrayContaining(['tail_swipe', 'roar', 'meteor', 'static_field']));
+});

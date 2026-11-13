@@ -6,13 +6,21 @@ import { FrostAura } from './FrostAura';
 import { FrostShards } from './FrostShards';
 import { IceBreath } from './IceBreath';
 import { LightningBreath } from './LightningBreath';
+import { Meteor } from './Meteor';
+import { Roar } from './Roar';
 import { Spit } from './Spit';
+import { StaticField } from './StaticField';
+import { TailSwipe } from './TailSwipe';
 import { ThunderStrike } from './ThunderStrike';
 import type { Weapon, WeaponCtx } from './types';
 import { Ultimate } from './Ultimate';
 
-const FACTORY: Partial<Record<AttackId, new (ctx: WeaponCtx) => Weapon>> = {
+const FACTORY: Record<AttackId, new (ctx: WeaponCtx) => Weapon> = {
   spit: Spit,
+  tail_swipe: TailSwipe,
+  roar: Roar,
+  meteor: Meteor,
+  static_field: StaticField,
   fire_breath: FireBreath,
   fire_orbit: FireOrbit,
   ice_breath: IceBreath,
@@ -23,9 +31,7 @@ const FACTORY: Partial<Record<AttackId, new (ctx: WeaponCtx) => Weapon>> = {
 };
 
 export function createAttack(ctx: WeaponCtx, id: AttackId): Weapon {
-  const Ctor = FACTORY[id];
-  if (!Ctor) throw new Error(`attack ${id} has no weapon yet`);
-  return new Ctor(ctx);
+  return new FACTORY[id](ctx);
 }
 
 export function createUltimate(ctx: WeaponCtx, element: Element): Weapon {

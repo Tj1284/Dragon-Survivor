@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
 import { GROUND } from '../assets/manifest';
 import { ENEMIES, ENEMY_IDS, PICKUPS, PLAYER_WEAPONS, type EnemyTypeId } from '../config/balance';
-import { registerDebug, setDebugReady } from '../debug';
+import { isDebug, registerDebug, setDebugReady } from '../debug';
 import { EnemyManager } from '../game/EnemyManager';
 import { Hud } from '../game/Hud';
 import { Decor } from '../game/Decor';
@@ -9,6 +9,7 @@ import { Juice } from '../game/Juice';
 import { Evolution } from '../game/Evolution';
 import { createAttack, createUltimate } from '../game/weapons';
 import { lightningStats } from '../game/weapons/LightningBreath';
+import { resetWeaponStats, weaponStats } from '../game/weapons/stats';
 import { ALL_FORMS } from '../logic/evolution';
 import type { Element, FormId, Stage } from '../logic/types';
 import { InputController } from '../game/InputController';
@@ -36,6 +37,7 @@ export class GameScene extends Phaser.Scene {
   attacks = new Map<AttackId, Weapon>();
   private ultimate: Weapon | null = null;
   private readonly hitCounts: Record<string, number> = {};
+  private hitLog: { source: string; dx: number; dy: number }[] = [];
   ctx!: WeaponCtx;
   rng!: () => number;
   now = 0;
@@ -49,6 +51,7 @@ export class GameScene extends Phaser.Scene {
   private evolvePauseLeft = 0;
   private chooseNext: Element | null = null;
   private readonly timings: Record<string, number> = {};
+  private readonly debugLog = isDebug();
 
   constructor() { super('Game'); }
 
@@ -74,12 +77,15 @@ export class GameScene extends Phaser.Scene {
     this.evolvePauseLeft = 0;
     this.chooseNext = null;
     lightningStats.maxChain = 0;
+    resetWeaponStats();
+    this.hitLog = [];
     this.evolution = new Evolution(this.ctx, () => this.askElement(), (from, to) => this.onEvolved(from, to));
     this.juice = new Juice(this, this.player);
     this.decor = new Decor(this);
     this.enemies.onHit = (e, _dmg, source) => {
       this.juice.hit(e.x, e.y);
       if (source) this.hitCounts[source] = (this.hitCounts[source] ?? 0) + 1;
+      if (source && this.debugLog && this.hitLog.length < 500) this.hitLog.push({ source, dx: e.x - this.player.x, dy: e.y - this.player.y });
     };
     this.enemies.onKilled = (e) => {
       this.juice.death(e.x, e.y);
@@ -236,6 +242,13 @@ export class GameScene extends Phaser.Scene {
     registerDebug('giveGold', (id: AttackId) => this.applyChoice({ type: 'gold', id }));
     registerDebug('attacks', () => heldAttacks(this.run.owned).map((id) => ({ id, level: this.run.owned[id], gold: this.run.goldAttacks.includes(id) })));
     registerDebug('hitsBySource', () => ({ ...this.hitCounts }));
+    registerDebug('hitLog', () => this.hitLog);
+    registerDebug('clearHitLog', () => { this.hitLog = []; });
+    registerDebug('weaponStats', () => ({ ...weaponStats }));
+    registerDebug('freezeEnemies', () => { for (const e of this.enemies.active) e.ice = { ...e.ice, frozenUntil: 1e9 }; });
+    registerDebug('enemyDistances', () => this.enemies.active.filter((e) => e.alive).map((e) => Math.hypot(e.x - this.player.x, e.y - this.player.y)));
+    registerDebug('stunnedCount', () => this.enemies.active.filter((e) => e.alive && this.now < e.stunUntil).length);
+    registerDebug('setFacing', (dir: number) => this.player.sprite.setFlipX(dir < 0));
     registerDebug('pickups', () => this.pickups.active.map((p) => ({ kind: p.kind, x: p.x, y: p.y })));
     registerDebug('setLevel', (n: number) => { this.run.level = n; this.run.xp = 0; this.run.pendingLevels = 0; void this.afterLevelResolved(); });
     registerDebug('chooseElementNext', (e: Element) => { this.chooseNext = e; });

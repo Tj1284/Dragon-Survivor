@@ -13,6 +13,8 @@ export interface Enemy {
   sprite: Phaser.GameObjects.Sprite; ice: IceStatus; hitCooldowns: Map<string, number>;
   state: 'move' | 'windup' | 'dash'; timer: number; dashX: number; dashY: number;
   contactReadyAt: number; flashUntil: number;
+  /** Stunned enemies don't move or act (gold roar). */
+  stunUntil: number;
   /** Extra slow (0..1) applied this frame by auras; reset every frame. */
   auraSlow: number;
 }
@@ -38,7 +40,7 @@ export class EnemyManager {
         id: 0, type: 'squire', x: 0, y: 0, hp: 0, maxHp: 0, radius: 8, alive: false,
         sprite: scene.add.sprite(0, 0, ENEMY_SHEETS.squire.key).setDepth(5).setVisible(false),
         ice: newIceStatus(), hitCooldowns: new Map(), state: 'move', timer: 0, dashX: 0, dashY: 0,
-        contactReadyAt: 0, flashUntil: 0, auraSlow: 0,
+        contactReadyAt: 0, flashUntil: 0, stunUntil: 0, auraSlow: 0,
       }),
       (e) => { e.alive = false; e.sprite.setVisible(false).stop(); e.hitCooldowns.clear(); },
     );
@@ -59,6 +61,7 @@ export class EnemyManager {
     e.timer = this.rng() * 2;
     e.contactReadyAt = 0;
     e.flashUntil = 0;
+    e.stunUntil = 0;
     e.auraSlow = 0;
     e.sprite.setTexture(ENEMY_SHEETS[type].key, 0).setVisible(true).setPosition(x, y).clearTint();
     e.sprite.setTintMode(Phaser.TintModes.MULTIPLY);
@@ -81,6 +84,14 @@ export class EnemyManager {
       return true;
     }
     return false;
+  }
+
+  /** Pushes an enemy `dist` px directly away from a point. */
+  knockback(e: Enemy, fromX: number, fromY: number, dist: number): void {
+    const dx = e.x - fromX, dy = e.y - fromY;
+    const d = Math.hypot(dx, dy) || 1;
+    e.x += (dx / d) * dist;
+    e.y += (dy / d) * dist;
   }
 
   nearest(x: number, y: number, maxRange: number): Enemy | null {
@@ -119,7 +130,7 @@ export class EnemyManager {
         e.x = p.x; e.y = p.y; e.state = 'move';
         continue;
       }
-      const frozen = now < e.ice.frozenUntil;
+      const frozen = now < e.ice.frozenUntil || now < e.stunUntil;
       const slow = frozen ? 1 : Math.min(0.9, (now < e.ice.slowUntil ? this.iceSlow : 0) + e.auraSlow);
       const speed = def.speed * (1 - slow);
       e.auraSlow = 0;
@@ -168,6 +179,7 @@ export class EnemyManager {
       const frozen = now < e.ice.frozenUntil;
       if (flashing) e.sprite.setTint(0xffffff).setTintMode(Phaser.TintModes.FILL);
       else if (frozen) e.sprite.setTint(0x9fdcff).setTintMode(Phaser.TintModes.MULTIPLY);
+      else if (now < e.stunUntil) e.sprite.setTint(0xfff2a8).setTintMode(Phaser.TintModes.MULTIPLY);
       else if (e.state === 'windup') e.sprite.setTint(0xff8080).setTintMode(Phaser.TintModes.MULTIPLY);
       else e.sprite.clearTint().setTintMode(Phaser.TintModes.MULTIPLY);
     }
