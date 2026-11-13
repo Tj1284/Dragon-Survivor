@@ -78,7 +78,7 @@ El usuario pidió "la que permita subir a CrazyGames". Las tres lo permiten, per
    - Los enemigos sueltan **gemas de experiencia** y **oro**.
 3. **Subida de nivel**: se pausa y se eligen **1 de 3 mejoras**.
 4. **Evolución** en niveles fijos (ver 6.3): una animación corta y vistosa, el sprite cambia y el dragón crece.
-5. **Minuto 10: jefe final.** Al derrotarlo, victoria.
+5. **Minijefes en los minutos 3 y 6, y jefe final en el minuto 10.** Al derrotar al jefe final, victoria. Cada minijefe suelta un cofre con una mejora gratis.
 6. **Fin de partida** (victoria o muerte):
    - Resumen: tiempo, nivel, forma alcanzada y oro.
    - **Rewarded "Duplicar oro"**.
@@ -109,8 +109,48 @@ Cuatro etapas, con 10 formas en total:
 - **Cada evolución** aumenta el tamaño, la vida máxima y el radio de recogida, y potencia el ataque base del elemento. El paso a Legendario desbloquea un **ataque definitivo** automático de su elemento, con un tiempo de recarga largo.
 - **Colección:** cada forma alcanzada por primera vez se guarda para siempre y se ve en la pantalla "Colección", con siluetas de las que faltan. Es el gancho principal para volver.
 
-### 6.4 Mejoras durante la partida
-Pool inicial de unas 18–24 mejoras: unas 5–6 por elemento y unas 6 neutras (velocidad, vida, imán, daño, regeneración, recarga). Cada mejora tiene 3–5 niveles. La lista concreta y los números los fija el constructor y se ajustan probando.
+### 6.4 Ataques, estadísticas y evoluciones doradas (rediseño del 13-11-2026)
+
+Sustituye al sistema anterior de "aliento + armas de elemento + pasivas de elemento". Las mecánicas se inspiran en el género (ataques con niveles que evolucionan al combinarlos con una estadística). Los nombres, personajes y dibujos son propios.
+
+**Enfoques considerados**
+| Enfoque | A favor | En contra | Decisión |
+|---|---|---|---|
+| A. Todos los ataques disparan a la vez | Se juega con un dedo. La pantalla se llena de efectos | Menos decisiones tácticas durante la partida | **Elegido por el usuario** |
+| B. Solo dispara el ataque activo y el jugador cambia entre ellos | Más táctico | En móvil exige un segundo pulgar. Más difícil de entender al llegar | Descartado |
+| C. Mantener el sistema anterior | Ya está hecho | Las mejoras son pequeños porcentajes poco visibles | Descartado |
+
+**Reglas**
+- El dragón lleva **hasta 4 ataques**. Todos disparan solos.
+- Cada ataque tiene **5 niveles**. Cada nivel se nota: más proyectiles, más área o menos recarga, no solo más daño.
+- Hay **7 estadísticas**, con 5 niveles cada una y sin límite de huecos: Furia (+10 % de daño), Escamas gruesas (+20 de vida), Aliento rápido (−8 % de recarga), Alas veloces (+8 % de velocidad), Regeneración (+0,5 de vida/s), Armadura (−1 de daño recibido) e Imán (+20 % de radio de recogida).
+- **Cartas al subir de nivel:** 1 de 3 entre ataque nuevo (si quedan huecos), subir un ataque que ya llevas, subir una estadística o una evolución dorada.
+- **Evolución dorada:** cuando un ataque está a nivel 5 y el jugador tiene al menos un nivel de su estadística clave, la siguiente subida de nivel incluye **seguro** su carta dorada entre las tres. Al cogerla, el ataque se transforma en su versión dorada. El orden en que se consiguen el nivel 5 y la estadística no importa. *(Decisión de Claude: que salga seguro, para que el jugador lo entienda sin leer nada.)*
+- **El escupitajo es el ataque inicial.** Cuando el dragón evoluciona a joven, el escupitajo se convierte en el aliento de su elemento y conserva el nivel. Los alientos no salen como carta.
+- **Elemento del dragón:** se decide como antes, por las cartas de elemento elegidas hasta el nivel 5. Una vez fijado, ya no se ofrecen ataques nuevos de otros elementos, pero los que ya llevas se pueden seguir subiendo y evolucionar.
+- **Afinidad:** los ataques del elemento del dragón hacen un 25 % más de daño. *(Decisión de Claude.)*
+- El ataque definitivo de la forma legendaria se mantiene, automático.
+- Si no queda nada que ofrecer, sale la carta de reserva (curar un 30 % y 5 de oro).
+
+**Lista de ataques** (los números los fija el constructor y se ajustan probando)
+| Ataque | Elemento | Qué hace | Estadística clave | Versión dorada |
+|---|---|---|---|---|
+| Escupitajo | neutral | Proyectil al enemigo más cercano. Ataque inicial | — | Se convierte en aliento al evolucionar |
+| Coletazo | neutral | Golpe en arco alrededor del dragón | Escamas gruesas | Terremoto: onda completa que empuja |
+| Rugido | neutral | Pulso que empuja y daña a los cercanos | Armadura | Rugido atronador: además aturde 1 s |
+| Aliento de fuego | fuego | Bola que deja una zona ardiendo | Furia | Infierno: zonas más grandes que duran más |
+| Orbes de fuego | fuego | Orbes que giran alrededor | Alas veloces | Anillo solar: anillo continuo y más ancho |
+| Meteoro | fuego | Cae sobre un enemigo al azar y explota | Imán | Lluvia de meteoros: tres a la vez |
+| Aliento de hielo | hielo | Abanico de fragmentos que ralentizan y congelan | Aliento rápido | Ventisca: abanico más ancho que atraviesa |
+| Fragmentos de escarcha | hielo | Fragmentos en direcciones al azar | Furia | Lanzas glaciales: atraviesan y congelan al primer golpe |
+| Aura gélida | hielo | Zona alrededor que ralentiza y daña | Regeneración | Cero absoluto: congela a quien entra |
+| Aliento de rayo | rayo | Rayo que salta entre enemigos | Aliento rápido | Tormenta en cadena: el doble de saltos |
+| Relámpago | rayo | Cae un rayo sobre un enemigo al azar | Furia | Juicio del trueno: cae sobre varios |
+| Campo estático | rayo | Descargas periódicas a los enemigos cercanos | Alas veloces | Dinamo: carga más cuanto más te mueves |
+
+**Qué desaparece:** las 11 pasivas de elemento anteriores (brasas, llamas amplias, abrasador, estallido, frío intenso, quebrar, armadura de hielo, salto extra, carga estática, sobrecarga y chispa rápida). Sus efectos pasan a los niveles y a las versiones doradas de los ataques.
+
+**HUD:** una fila con los iconos de los ataques que llevas y su nivel, con borde dorado si están evolucionados.
 
 ### 6.5 Enemigos (cazadragones, estilo cartoon)
 De 6 a 8 tipos que van apareciendo según avanza el tiempo, por ejemplo:
@@ -136,7 +176,7 @@ Efectos y música sencilla, que tienen que poder silenciarse. El usuario no ha d
 **Formato propuesto (propuesta de Claude, a confirmar con el usuario):**
 - PNG con transparencia. Spritesheet en **una fila horizontal por animación**, con frames del mismo tamaño y sin separación.
 - **Pixel art** escalado por enteros. Resolución lógica del juego **480×270** (16:9), escalada en pantalla sin suavizado.
-- Tamaño de frame orientativo: cría 24×24, joven 32×32, adulto 48×48, legendario 64×64. Enemigos 24–32. Jefe 96×96.
+- Tamaño de frame orientativo: cría 32×32 (cambiado el 13-11-2026 para usar el sprite del usuario, que es de 32 px), joven 32×32, adulto 48×48, legendario 64×64. Enemigos 24–32. Jefe 96×96.
 - Los sprites miran a la derecha. El código los voltea para la izquierda.
 
 **Lista:**

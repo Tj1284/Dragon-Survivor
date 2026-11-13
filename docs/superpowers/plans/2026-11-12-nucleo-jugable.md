@@ -66,7 +66,7 @@ dragones/
 
 ---
 
-### Tarea 1: Proyecto base, tamaño de pantalla y pruebas de navegador
+### Task 1: Proyecto base, tamaño de pantalla y pruebas de navegador
 
 **Archivos:**
 - Crear: `package.json`, `tsconfig.json`, `vite.config.ts`, `index.html`, `.gitignore`, `src/main.ts`, `src/debug.ts`, `src/logic/viewport.ts`, `src/scenes/BootScene.ts`, `src/scenes/GameScene.ts` (stub), `e2e/run.mjs`, `e2e/smoke.spec.mjs`
@@ -108,7 +108,7 @@ expect(computeGameSize(1000,1000)).toEqual({width:270,height:270});
 
 ---
 
-### Tarea 2: Tipos, RNG, experiencia y evolución
+### Task 2: Tipos, RNG, experiencia y evolución
 
 **Archivos:**
 - Crear: `src/logic/types.ts`, `src/logic/rng.ts`, `src/logic/xp.ts`, `src/logic/evolution.ts`
@@ -159,7 +159,7 @@ expect(new Set(ALL_FORMS).size).toBe(10);
 
 ---
 
-### Tarea 3: Mejoras y estadísticas
+### Task 3: Mejoras y estadísticas
 
 **Archivos:**
 - Crear: `src/logic/upgrades.ts`, `src/logic/stats.ts`
@@ -236,7 +236,7 @@ expect(s.maxHp).toBe(190); expect(s.damageMult).toBeCloseTo(2.21); expect(s.cool
 
 ---
 
-### Tarea 4: Cuadrícula espacial, pools, combate y tiempo
+### Task 4: Cuadrícula espacial, pools, combate y tiempo
 
 **Archivos:**
 - Crear: `src/logic/spatialGrid.ts`, `src/logic/pool.ts`, `src/logic/combat.ts`, `src/logic/time.ts`
@@ -291,7 +291,7 @@ expect(clampDelta(16)).toBe(16); expect(clampDelta(5000)).toBe(50);
 
 ---
 
-### Tarea 5: Enemigos (datos) y director de oleadas
+### Task 5: Enemigos (datos) y director de oleadas
 
 **Archivos:**
 - Crear: `src/config/balance.ts`, `src/logic/spawn.ts`
@@ -337,7 +337,7 @@ const p=spawnPosition(100,50,480,270,createRng(3)); expect(Math.hypot(p.x-100,p.
 
 ---
 
-### Tarea 6: Manifiesto de assets, provisionales y guía para el artista
+### Task 6: Manifiesto de assets, provisionales y guía para el artista
 
 **Archivos:**
 - Crear: `src/assets/manifest.ts`, `src/game/placeholders.ts`, `docs/ASSETS.md`
@@ -396,7 +396,7 @@ Prueba de navegador `assets.spec.mjs`: con `?debug=1`, `__dbg.textures()` contie
 
 ---
 
-### Tarea 7: Dragón, movimiento, joystick y mundo infinito
+### Task 7: Dragón, movimiento, joystick y mundo infinito
 
 **Archivos:**
 - Crear: `src/logic/joystick.ts`, `src/game/InputController.ts`, `src/game/Player.ts`
@@ -446,7 +446,7 @@ Prueba de navegador `movement.spec.mjs`:
 
 ---
 
-### Tarea 8: Enemigos en pantalla, daño al dragón y fin de partida
+### Task 8: Enemigos en pantalla, daño al dragón y fin de partida
 
 **Archivos:**
 - Crear: `src/game/EnemyManager.ts`, `src/game/Projectiles.ts`, `src/scenes/GameOverScene.ts`, `src/i18n.ts`
@@ -522,7 +522,7 @@ Prueba de navegador `enemies.spec.mjs`:
 
 ---
 
-### Tarea 9: Ataque base, gemas, oro y pantalla de mejoras
+### Task 9: Ataque base, gemas, oro y pantalla de mejoras
 
 **Archivos:**
 - Crear: `src/game/weapons/Spit.ts`, `src/game/Pickups.ts`, `src/scenes/LevelUpScene.ts`
@@ -570,7 +570,7 @@ export class Pickups { constructor(scene: Phaser.Scene); dropGem(x:number, y:num
 
 ---
 
-### Tarea 10: Evolución, alientos de elemento, armas y ataque definitivo
+### Task 10: Evolución, alientos de elemento, armas y ataque definitivo
 
 **Archivos:**
 - Crear: `src/game/Evolution.ts`, `src/game/weapons/FireBreath.ts`, `IceBreath.ts`, `LightningBreath.ts`, `FireOrbit.ts`, `FrostShards.ts`, `ThunderStrike.ts`, `Ultimate.ts`
@@ -642,7 +642,7 @@ export function createUltimate(ctx: WeaponCtx, element: Element): Weapon;
 
 ---
 
-### Tarea 11: HUD, pausa y redimensionado en partida
+### Task 11: HUD, pausa y redimensionado en partida
 
 **Archivos:**
 - Crear: `src/game/Hud.ts`, `src/scenes/PauseScene.ts`
@@ -678,7 +678,7 @@ Todo con `scrollFactor 0`. `layout` se llama en `scale.on('resize')`. La pausa a
 
 ---
 
-### Tarea 12: Rendimiento y tamaño de la build
+### Task 12: Rendimiento y tamaño de la build
 
 **Archivos:**
 - Crear: `e2e/perf.spec.mjs`, `scripts/check-size.mjs`
