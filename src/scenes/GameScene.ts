@@ -325,6 +325,9 @@ export class GameScene extends Phaser.Scene {
     });
     registerDebug('bosses', () => this.bosses.alive());
     registerDebug('damageBoss', (n: number) => { for (const e of this.enemies.active) if (e.boss && e.alive) this.enemies.hit(e, n, this.now, 'debug'); });
+    registerDebug('dropChestAt', (dx: number, dy: number) => this.pickups.dropChest(this.player.x + dx, this.player.y + dy));
+    registerDebug('resetBossFlash', () => { this.enemies.bossFrames = 0; this.enemies.bossFlashFrames = 0; });
+    registerDebug('bossFlashRatio', () => this.enemies.bossFlashFrames / Math.max(1, this.enemies.bossFrames));
     registerDebug('dropChest', () => this.pickups.dropChest(this.player.x, this.player.y));
     registerDebug('clearPickups', () => this.pickups.clear());
     registerDebug('bossPatterns', () => [...this.bosses.patternsUsed]);
@@ -372,6 +375,15 @@ export class GameScene extends Phaser.Scene {
     const cam = this.cameras.main;
     this.ground.setTilePosition(cam.scrollX, cam.scrollY);
     this.hud.update(this.run, this.player);
+    const view = this.cameras.main.worldView;
+    let chest: { dx: number; dy: number } | null = null;
+    let best = Infinity;
+    for (const p of this.pickups.active) {
+      if (p.kind !== 'chest' || view.contains(p.x, p.y)) continue;
+      const d = (p.x - this.player.x) ** 2 + (p.y - this.player.y) ** 2;
+      if (d < best) { best = d; chest = { dx: p.x - this.player.x, dy: p.y - this.player.y }; }
+    }
+    this.hud.pointTo(chest, this.scale.gameSize.width, this.scale.gameSize.height);
     if (this.hintFrom) {
       this.hintFrom.until -= dt;
       if (this.hintFrom.until <= 0 || Math.hypot(this.player.x - this.hintFrom.x, this.player.y - this.hintFrom.y) >= 60) {

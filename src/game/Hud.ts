@@ -33,6 +33,7 @@ export class Hud {
   private readonly bossName: Phaser.GameObjects.Text;
   private bossW = 0;
   private readonly hint: Phaser.GameObjects.Text;
+  private readonly chestArrow: Phaser.GameObjects.Triangle;
   private hintTween: Phaser.Tweens.Tween | null = null;
 
   constructor(scene: Phaser.Scene, onPause: () => void) {
@@ -50,6 +51,7 @@ export class Hud {
     this.bossBg = fixed(scene.add.rectangle(0, 0, 10, 6, 0x000000, 0.65).setOrigin(0.5).setStrokeStyle(1, 0xffffff, 0.7).setVisible(false));
     this.bossFill = fixed(scene.add.rectangle(0, 0, 10, 4, 0xc8302a).setOrigin(0, 0.5).setVisible(false));
     this.bossName = fixed(scene.add.text(0, 0, '', { ...TEXT, fontSize: '8px' }).setOrigin(0.5, 1).setVisible(false));
+    this.chestArrow = fixed(scene.add.triangle(0, 0, 0, -6, 12, 0, 0, 6, 0xf2c230).setStrokeStyle(1, 0x2a1608).setVisible(false));
     this.hint = fixed(scene.add.text(0, 0, '', { ...TEXT, fontSize: '8px', align: 'center', backgroundColor: '#1d1b2acc', padding: { x: 6, y: 4 } }).setOrigin(0.5).setVisible(false));
     for (let i = 0; i < MAX_SLOTS; i++) {
       const x = 13 + i * 21, y = 27;
@@ -78,6 +80,18 @@ export class Hud {
     this.bossFill.setPosition(Math.round(width / 2 - this.bossW / 2), by);
     this.bossName.setPosition(Math.round(width / 2), by - 4);
     this.hint.setPosition(Math.round(width / 2), Math.round(_height * 0.72));
+  }
+
+  /** Points at an off-screen chest from the edge of the screen; pass null to hide. */
+  pointTo(target: { dx: number; dy: number } | null, width: number, height: number): void {
+    if (!target) { this.chestArrow.setVisible(false); return; }
+    const angle = Math.atan2(target.dy, target.dx);
+    const cx = width / 2, cy = height / 2;
+    const margin = 18;
+    const sx = (cx - margin) / Math.max(1e-6, Math.abs(Math.cos(angle)));
+    const sy = (cy - margin) / Math.max(1e-6, Math.abs(Math.sin(angle)));
+    const r = Math.min(sx, sy);
+    this.chestArrow.setVisible(true).setPosition(Math.round(cx + Math.cos(angle) * r), Math.round(cy + Math.sin(angle) * r)).setRotation(angle);
   }
 
   showHint(text: string): void {
@@ -134,6 +148,7 @@ export class Hud {
       pause: { x: this.pauseHit.x, y: this.pauseHit.y },
       bossBar: { visible: this.bossBg.visible, name: this.bossName.text },
       hint: { visible: this.hint.visible, text: this.hint.text },
+      chestArrow: { visible: this.chestArrow.visible, x: this.chestArrow.x, y: this.chestArrow.y },
       attacks: this.slots.filter((s) => s.id !== null).map((s) => ({ id: s.id, level: s.level, gold: s.gold, x: s.frame.x, y: s.frame.y })),
     };
   }
