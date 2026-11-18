@@ -1,4 +1,4 @@
-import type { Element, Stage, Tag } from '../logic/types';
+import type { Element, FormId, Stage, Tag } from '../logic/types';
 import type { AttackId, Owned } from '../logic/attacks';
 
 export interface RunState {
@@ -9,8 +9,12 @@ export interface RunState {
   element: Element | null; stage: Stage; pendingLevels: number;
   /** True once the final boss is beaten. */
   won: boolean;
+  /** Random id: the game-over screen uses it to add a run's gold to the save only once. */
+  id: number;
+  /** Dragon forms reached this run, for the Collection. */
+  forms: FormId[];
 }
 
 export function createRunState(): RunState {
-  return { level: 1, xp: 0, gold: 0, elapsed: 0, owned: { spit: 1 }, picks: [], goldAttacks: [], element: null, stage: 0, pendingLevels: 0, won: false };
+  return { level: 1, xp: 0, gold: 0, elapsed: 0, owned: { spit: 1 }, picks: [], goldAttacks: [], element: null, stage: 0, pendingLevels: 0, won: false, id: Math.floor(Math.random() * 2 ** 31), forms: ['hatchling'] };
 }

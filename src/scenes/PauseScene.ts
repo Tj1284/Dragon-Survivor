@@ -1,5 +1,7 @@
 import * as Phaser from 'phaser';
 import { onTap, relayoutOnResize } from '../game/ui';
+import { describeButtons, makeButton } from '../ui/button';
+import { QUIT_EVENT } from './GameScene';
 import { registerDebug } from '../debug';
 import { t } from '../i18n';
 
@@ -19,6 +21,8 @@ export class PauseScene extends Phaser.Scene {
     onTap(btn, resume);
     this.input.keyboard?.once('keydown-ESC', resume);
     this.input.keyboard?.once('keydown-P', resume);
+    const menu = makeButton(this, 'menu', w / 2, h * 0.6 + 42, 110, 22, t('menu'), 0x5a3f8f, () => this.game.events.emit(QUIT_EVENT), '8px');
     registerDebug('resumeButton', () => ({ x: btn.x, y: btn.y }));
+    registerDebug('buttons', () => [{ id: 'resume', x: btn.x, y: btn.y, enabled: true }, ...describeButtons([menu])]);
   }
 }

@@ -6,6 +6,11 @@ import { GameScene } from './scenes/GameScene';
 import { GameOverScene } from './scenes/GameOverScene';
 import { LevelUpScene } from './scenes/LevelUpScene';
 import { PauseScene } from './scenes/PauseScene';
+import { MenuScene } from './scenes/MenuScene';
+import { LairScene } from './scenes/LairScene';
+import { CollectionScene } from './scenes/CollectionScene';
+import { storage } from './platform/storage';
+import { defaultSave, type SaveData } from './logic/save';
 import { setLanguage } from './i18n';
 
 setLanguage(navigator.language || 'en');
@@ -32,11 +37,14 @@ const game = new Phaser.Game({
     width: initial.width,
     height: initial.height,
   },
-  scene: [BootScene, GameScene, LevelUpScene, PauseScene, GameOverScene],
+  scene: [BootScene, MenuScene, LairScene, CollectionScene, GameScene, LevelUpScene, PauseScene, GameOverScene],
 });
 
 installDebug(game);
 registerDebug('scene', () => game.scene.getScenes(true).map((sc) => sc.scene.key));
+registerDebug('save', () => storage.load());
+registerDebug('resetSave', () => storage.save(defaultSave()));
+registerDebug('setSave', (partial: Partial<SaveData>) => storage.save({ ...storage.load(), ...partial }));
 registerDebug('size', () => ({ width: game.scale.gameSize.width, height: game.scale.gameSize.height }));
 
 window.addEventListener('resize', () => {

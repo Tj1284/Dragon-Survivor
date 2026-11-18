@@ -23,10 +23,15 @@ import { createRunState, type RunState } from '../game/RunState';
 import type { Weapon, WeaponCtx } from '../game/weapons/types';
 import { createRng } from '../logic/rng';
 import { clampDelta } from '../logic/time';
+import { metaBonus, type MetaBonus } from '../logic/meta';
+import { storage } from '../platform/storage';
 import { FALLBACK, computeStats, heldAttacks, rollChoices, spitToBreath, tagOf, type AttackId, type Choice, type UpgradeId } from '../logic/attacks';
 import { applyXp } from '../logic/xp';
 import type { GameOverData } from './GameOverScene';
 import { LEVELUP_EVENTS, type LevelUpData } from './LevelUpScene';
+
+/** Emitted by the pause menu to end the run and go to the game-over screen. */
+export const QUIT_EVENT = 'run:quit';
 
 export class GameScene extends Phaser.Scene {
   player!: Player;
@@ -51,6 +56,8 @@ export class GameScene extends Phaser.Scene {
   bosses!: Bosses;
   /** Seconds left before the victory screen once the final boss is down; 0 = not won yet. */
   private victoryIn = 0;
+  /** Permanent Lair bonuses, read from the save at the start of each run. */
+  private meta!: MetaBonus;
   juice!: Juice;
   decor!: Decor;
   /** Seconds of evolution pause left; counted down with real frame time so a scene pause can't skip it. */
@@ -66,9 +73,12 @@ export class GameScene extends Phaser.Scene {
     this.ended = false;
     this.levelUpOpen = false;
     this.run = createRunState();
+    this.meta = metaBonus(storage.load().meta);
     const { width, height } = this.scale.gameSize;
     this.ground = this.add.tileSprite(0, 0, width, height, GROUND.key).setOrigin(0).setScrollFactor(0).setDepth(-10);
     this.player = new Player(this, 0, 0);
+    this.player.stats = computeStats(0, this.run.owned, this.meta);
+    this.player.hp = this.player.stats.maxHp;
     this.cameras.main.startFollow(this.player.sprite, true);
     this.inputCtl = new InputController(this);
     this.rng = createRng((Math.random() * 2 ** 31) | 0);
@@ -107,9 +117,11 @@ export class GameScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-ESC', () => this.openPause());
     this.input.keyboard?.on('keydown-P', () => this.openPause());
     this.game.events.on(LEVELUP_EVENTS.picked, this.onUpgradePicked, this);
+    this.game.events.on(QUIT_EVENT, this.quitRun, this);
     this.scale.on(Phaser.Scale.Events.RESIZE, this.onResize, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.game.events.off(LEVELUP_EVENTS.picked, this.onUpgradePicked, this);
+      this.game.events.off(QUIT_EVENT, this.quitRun, this);
       this.scale.off(Phaser.Scale.Events.RESIZE, this.onResize, this);
       this.inputCtl.destroy();
       for (const w of this.attacks.values()) w.destroy();
@@ -137,7 +149,7 @@ export class GameScene extends Phaser.Scene {
   // ---- experience and level-ups ----
 
   gainXp(n: number): void {
-    const r = applyXp(this.run, n);
+    const r = applyXp(this.run, n * this.meta.xpMult);
     this.run.level = r.level;
     this.run.xp = r.xp;
     this.run.pendingLevels += r.levelsGained;
@@ -221,11 +233,12 @@ export class GameScene extends Phaser.Scene {
     if (to === 3 && !this.ultimate) this.ultimate = createUltimate(this.ctx, element);
     this.evolvePauseLeft = PLAYER_WEAPONS.evolution.pause;
     this.juice.setElement(element, to);
+    if (!this.run.forms.includes(this.player.formId)) this.run.forms.push(this.player.formId);
   }
 
   refreshStats(): void {
     const before = this.player.stats.maxHp;
-    this.player.stats = computeStats(this.run.stage, this.run.owned);
+    this.player.stats = computeStats(this.run.stage, this.run.owned, this.meta);
     const gained = this.player.stats.maxHp - before;
     if (gained > 0) this.player.hp += gained;
     this.player.hp = Math.min(this.player.hp, this.player.hpLimit);
@@ -280,6 +293,7 @@ export class GameScene extends Phaser.Scene {
       }
     });
     registerDebug('gemXpTotal', () => this.pickups.gemXpTotal());
+    registerDebug('setGold', (n: number) => { this.run.gold = n; });
     registerDebug('bosses', () => this.bosses.alive());
     registerDebug('damageBoss', (n: number) => { for (const e of this.enemies.active) if (e.boss && e.alive) this.enemies.hit(e, n, this.now, 'debug'); });
     registerDebug('dropChest', () => this.pickups.dropChest(this.player.x, this.player.y));
@@ -347,6 +361,13 @@ export class GameScene extends Phaser.Scene {
     return now;
   }
 
+  /** Leaving from the pause menu ends the run normally, so the gold earned so far is kept. */
+  private quitRun(): void {
+    if (this.ended) return;
+    this.scene.stop('Pause');
+    this.endRun();
+  }
+
   private onBossKilled(id: string, x: number, y: number): void {
     this.juice.death(x, y);
     const def = BOSSES.find((b) => b.id === id)!;
@@ -369,7 +390,7 @@ export class GameScene extends Phaser.Scene {
   private endRun(): void {
     this.ended = true;
     this.scene.stop('LevelUp');
-    const data: GameOverData = { time: this.run.elapsed, level: this.run.level, formId: this.player.formId, gold: this.run.gold, won: this.run.won };
+    const data: GameOverData = { time: this.run.elapsed, level: this.run.level, formId: this.player.formId, gold: Math.round(this.run.gold * this.meta.goldMult), won: this.run.won, runId: this.run.id, forms: [...this.run.forms] };
     this.scene.start('GameOver', data);
   }
 }

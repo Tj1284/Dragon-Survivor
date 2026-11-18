@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser';
 import { ALL_SHEETS } from '../assets/manifest';
 import { registerDebug } from '../debug';
+import { storage } from '../platform/storage';
 import { DECOR_KEY, renderDecor, renderSheet } from '../art';
 import { addGlowTexture, addPixel, addPixelTexture, addVignetteTexture } from '../game/textures';
 
@@ -40,6 +41,8 @@ export class BootScene extends Phaser.Scene {
       const first = tex.get(0);
       return { key: def.key, frames: tex.getFrameNames().filter((n) => n !== '__BASE').length, w: first.width, h: first.height, placeholder: placeholderKeys.has(def.key) };
     }));
-    this.scene.start('Game');
+    // the very first visit goes straight into a run; returning players land on the menu (?play=1 skips it for tests)
+    const forcePlay = new URLSearchParams(window.location.search).has('play');
+    this.scene.start(forcePlay || !storage.load().played ? 'Game' : 'Menu');
   }
 }
