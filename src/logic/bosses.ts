@@ -21,6 +21,8 @@ export const BOSSES: BossDef[] = [
 
 export const BOSS_AI = {
   every: 3.5,
+  /** A boss only starts a pattern when the dragon is this close (on screen). */
+  patternRange: 220,
   charge: { windup: 0.6, time: 1, speed: 170 },
   slam: { radius: 70, delay: 0.9, damage: 25 },
   summon: { count: 8, ring: 90 },
@@ -28,6 +30,9 @@ export const BOSS_AI = {
   victoryGold: 50,
   victoryDelay: 1.5,
 };
+
+/** Biggest collision radius of any enemy, bosses included: spatial-grid queries must pad by this. */
+export const MAX_ENEMY_RADIUS = Math.max(...BOSSES.map((b) => b.radius), 12);
 
 /** Bosses whose time has come and that haven't appeared yet, in order. */
 export function bossesDue(elapsed: number, spawned: ReadonlySet<string>): BossDef[] {

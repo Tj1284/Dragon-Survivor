@@ -82,11 +82,30 @@ export default async function (page, baseUrl) {
   await dbg(page, 'pauseSpawns', true);
   await dbg(page, 'clearEnemies');
   if ((await dbg(page, 'player')).maxHp !== 120) throw new Error('vitality should give 120 max health');
+  // skipping a stage (hatchling straight to adult) still records the young form,
+  // and new forms are saved at once, before the run ends
   await dbg(page, 'chooseElementNext', 'fire');
-  await dbg(page, 'setLevel', 5);
-  await waitFor(page, () => window.__dbg.player().formId === 'young_fire', null, 4000);
+  await dbg(page, 'setLevel', 12);
+  await waitFor(page, () => window.__dbg.player().formId === 'adult_fire', null, 4000);
   await sleep(1000);
+  save = await dbg(page, 'save');
+  for (const f of ['young_fire', 'adult_fire']) if (!save.collection.includes(f)) throw new Error(`${f} should be saved right after evolving: ` + JSON.stringify(save.collection));
+
+  // backgrounding the app banks the run's gold; the game-over screen then adds only the rest
+  const goldBefore = save.gold;
+  await dbg(page, 'setGold', 30);
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  save = await dbg(page, 'save');
+  if (save.gold !== goldBefore + 30) throw new Error('gold should be banked when the app goes to the background: ' + save.gold);
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await dbg(page, 'setGold', 34);
   await die(page);
   save = await dbg(page, 'save');
-  if (!save.collection.includes('young_fire')) throw new Error('young_fire should be in the collection: ' + JSON.stringify(save.collection));
+  if (save.gold !== goldBefore + 34) throw new Error('banked gold counted twice or lost: ' + save.gold + ' expected ' + (goldBefore + 34));
 }

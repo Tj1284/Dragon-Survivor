@@ -1,4 +1,5 @@
 import * as Phaser from 'phaser';
+import { MAX_ENEMY_RADIUS } from '../logic/bosses';
 import { Pool } from '../logic/pool';
 import type { Enemy, EnemyManager } from './EnemyManager';
 import type { Player } from './Player';
@@ -61,7 +62,7 @@ export class Projectiles {
       p.sprite.setPosition(p.x, p.y);
       let spent = false;
       if (p.owner === 'player') {
-        enemies.grid.queryRadius(p.x, p.y, p.radius + 12, this.near);
+        enemies.grid.queryRadius(p.x, p.y, p.radius + MAX_ENEMY_RADIUS, this.near);
         for (const idx of this.near) {
           const e = enemies.active[idx];
           if (!e || !e.alive || p.hits.includes(e.id)) continue;

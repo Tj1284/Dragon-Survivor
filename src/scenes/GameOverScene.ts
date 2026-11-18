@@ -8,7 +8,7 @@ import { registerDebug } from '../debug';
 import { t } from '../i18n';
 import type { FormId } from '../logic/types';
 
-export interface GameOverData { time: number; level: number; formId: FormId; gold: number; won: boolean; runId: number; forms: FormId[] }
+export interface GameOverData { time: number; level: number; formId: FormId; gold: number; won: boolean; runId: number; forms: FormId[]; banked: number }
 
 /** Runs already added to the save: rebuilding this screen (e.g. on rotation) must not add the gold twice. */
 const savedRuns = new Set<number>();
@@ -27,7 +27,7 @@ export class GameOverScene extends Phaser.Scene {
     relayoutOnResize(this, data);
     if (!savedRuns.has(data.runId)) {
       savedRuns.add(data.runId);
-      storage.save(addRunResult(storage.load(), { gold: data.gold, time: data.time, won: data.won, forms: data.forms }));
+      storage.save(addRunResult(storage.load(), { gold: data.gold - data.banked, time: data.time, won: data.won, forms: data.forms }));
     }
     const { width: w, height: h } = this.scale.gameSize;
     this.add.rectangle(0, 0, w, h, 0x000000, 0.75).setOrigin(0);

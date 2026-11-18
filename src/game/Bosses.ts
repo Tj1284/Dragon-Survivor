@@ -1,11 +1,14 @@
 import type * as Phaser from 'phaser';
-import { BOSSES, BOSS_AI, type BossDef, type BossId, type BossPattern } from '../logic/bosses';
+import { BOSS_AI, bossesDue, type BossDef, type BossId, type BossPattern } from '../logic/bosses';
 import { hpMult } from '../logic/spawn';
 import type { Enemy, EnemyManager } from './EnemyManager';
 import type { Player } from './Player';
 
 interface Active {
   def: BossDef; e: Enemy;
+  /** The enemy id when it spawned: pooled objects get reused, so a dead boss's object may come back as a squire. */
+  id: number;
+  mark: Phaser.GameObjects.Arc;
   next: number; state: 'chase' | 'windup' | 'charge' | 'slam';
   t: number; dx: number; dy: number; slamX: number; slamY: number; contactReadyAt: number;
 }
@@ -15,10 +18,8 @@ export class Bosses {
   readonly spawned = new Set<BossId>();
   readonly patternsUsed: BossPattern[] = [];
   private readonly list: Active[] = [];
-  private readonly mark: Phaser.GameObjects.Arc;
 
   constructor(private readonly scene: Phaser.Scene, private readonly enemies: EnemyManager, private readonly player: Player) {
-    this.mark = scene.add.circle(0, 0, BOSS_AI.slam.radius, 0xe8402a, 0.18).setStrokeStyle(2, 0xe8402a, 0.9).setDepth(3).setVisible(false);
   }
 
   spawn(def: BossDef, elapsed: number): Enemy {
@@ -27,30 +28,34 @@ export class Bosses {
     const a = Math.random() * Math.PI * 2;
     const r = Math.hypot(view.width, view.height) / 2 + 30;
     const e = this.enemies.spawnBoss(def, this.player.x + Math.cos(a) * r, this.player.y + Math.sin(a) * r, hpMult(elapsed));
-    this.list.push({ def, e, next: 0, state: 'chase', t: 1.5, dx: 0, dy: 0, slamX: 0, slamY: 0, contactReadyAt: 0 });
+    const mark = this.scene.add.circle(0, 0, BOSS_AI.slam.radius, 0xe8402a, 0.18).setStrokeStyle(2, 0xe8402a, 0.9).setDepth(3).setVisible(false);
+    this.list.push({ def, e, id: e.id, mark, next: 0, state: 'chase', t: 1.5, dx: 0, dy: 0, slamX: 0, slamY: 0, contactReadyAt: 0 });
     return e;
   }
 
   /** The boss currently on screen (the newest one), for the health bar. */
   current(): { def: BossDef; e: Enemy } | null {
-    for (let i = this.list.length - 1; i >= 0; i--) if (this.list[i].e.alive) return this.list[i];
+    for (let i = this.list.length - 1; i >= 0; i--) if (this.isAlive(this.list[i])) return this.list[i];
     return null;
   }
 
   alive(): { id: BossId; hp: number; x: number; y: number }[] {
-    return this.list.filter((b) => b.e.alive).map((b) => ({ id: b.def.id, hp: b.e.hp, x: b.e.x, y: b.e.y }));
+    return this.list.filter((b) => this.isAlive(b)).map((b) => ({ id: b.def.id, hp: b.e.hp, x: b.e.x, y: b.e.y }));
   }
 
   update(dt: number, now: number, elapsed: number): void {
-    for (const def of BOSSES) if (elapsed >= def.at && !this.spawned.has(def.id)) this.spawn(def, elapsed);
-    let slamming = false;
+    for (const def of bossesDue(elapsed, this.spawned)) this.spawn(def, elapsed);
     for (let i = this.list.length - 1; i >= 0; i--) {
       const b = this.list[i];
-      if (!b.e.alive) { this.list.splice(i, 1); continue; }
+      if (!this.isAlive(b)) { b.mark.destroy(); this.list.splice(i, 1); continue; }
       this.step(b, dt, now);
-      if (b.state === 'slam') slamming = true;
+      if (b.state !== 'slam') b.mark.setVisible(false);
     }
-    if (!slamming) this.mark.setVisible(false);
+  }
+
+  /** Still the same living boss (its pooled object may have been handed to a new enemy). */
+  private isAlive(b: Active): boolean {
+    return b.e.alive && b.e.id === b.id && b.e.boss === b.def.id;
   }
 
   private step(b: Active, dt: number, now: number): void {
@@ -65,7 +70,8 @@ export class Bosses {
         e.auraSlow = 0;
         e.x += (dx / dist) * def.speed * slow * dt;
         e.y += (dy / dist) * def.speed * slow * dt;
-        if (b.t <= 0) this.startPattern(b, dx / dist, dy / dist);
+        // patterns only start within reach, so the player always sees the warning
+        if (b.t <= 0 && dist <= BOSS_AI.patternRange) this.startPattern(b, dx / dist, dy / dist);
         break;
       }
       case 'windup':
@@ -77,7 +83,7 @@ export class Bosses {
         if (b.t <= 0) this.toChase(b);
         break;
       case 'slam':
-        this.mark.setVisible(true).setPosition(b.slamX, b.slamY).setAlpha(0.5 + 0.5 * Math.sin(now * 20));
+        b.mark.setVisible(true).setPosition(b.slamX, b.slamY).setAlpha(0.5 + 0.5 * Math.sin(now * 20));
         if (b.t <= 0) {
           if (Math.hypot(p.x - b.slamX, p.y - b.slamY) <= BOSS_AI.slam.radius) p.damage(BOSS_AI.slam.damage);
           this.scene.cameras.main.shake(120, 0.006);
@@ -118,5 +124,5 @@ export class Bosses {
     b.t = BOSS_AI.every;
   }
 
-  destroy(): void { this.mark.destroy(); }
+  destroy(): void { for (const b of this.list) b.mark.destroy(); }
 }

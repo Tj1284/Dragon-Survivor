@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
 import { ENEMY_SHEETS } from '../assets/manifest';
 import { ENEMIES, ENEMY_AI, type EnemyTypeId } from '../config/balance';
-import type { BossDef, BossId } from '../logic/bosses';
+import { MAX_ENEMY_RADIUS, type BossDef, type BossId } from '../logic/bosses';
 import { damageMultiplier, newIceStatus, type IceStatus } from '../logic/combat';
 import { Pool } from '../logic/pool';
 import { hpMult, pickEnemyType, spawnPosition, spawnRadius, stepSpawnBudget, targetAlive } from '../logic/spawn';
@@ -123,7 +123,7 @@ export class EnemyManager {
 
   inRadius(x: number, y: number, r: number, out: Enemy[]): Enemy[] {
     out.length = 0;
-    this.grid.queryRadius(x, y, r + 12, this.near);
+    this.grid.queryRadius(x, y, r + MAX_ENEMY_RADIUS, this.near);
     for (const idx of this.near) {
       const e = this.active[idx];
       if (e && e.alive && Math.hypot(e.x - x, e.y - y) <= r + e.radius) out.push(e);

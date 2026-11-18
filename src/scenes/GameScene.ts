@@ -25,6 +25,8 @@ import { createRng } from '../logic/rng';
 import { clampDelta } from '../logic/time';
 import { metaBonus, type MetaBonus } from '../logic/meta';
 import { storage } from '../platform/storage';
+import { addForms, addRunResult } from '../logic/save';
+import { formId } from '../logic/evolution';
 import { FALLBACK, computeStats, heldAttacks, rollChoices, spitToBreath, tagOf, type AttackId, type Choice, type UpgradeId } from '../logic/attacks';
 import { applyXp } from '../logic/xp';
 import type { GameOverData } from './GameOverScene';
@@ -118,10 +120,12 @@ export class GameScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-P', () => this.openPause());
     this.game.events.on(LEVELUP_EVENTS.picked, this.onUpgradePicked, this);
     this.game.events.on(QUIT_EVENT, this.quitRun, this);
+    document.addEventListener('visibilitychange', this.onVisibility);
     this.scale.on(Phaser.Scale.Events.RESIZE, this.onResize, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.game.events.off(LEVELUP_EVENTS.picked, this.onUpgradePicked, this);
       this.game.events.off(QUIT_EVENT, this.quitRun, this);
+      document.removeEventListener('visibilitychange', this.onVisibility);
       this.scale.off(Phaser.Scale.Events.RESIZE, this.onResize, this);
       this.inputCtl.destroy();
       for (const w of this.attacks.values()) w.destroy();
@@ -233,7 +237,12 @@ export class GameScene extends Phaser.Scene {
     if (to === 3 && !this.ultimate) this.ultimate = createUltimate(this.ctx, element);
     this.evolvePauseLeft = PLAYER_WEAPONS.evolution.pause;
     this.juice.setElement(element, to);
-    if (!this.run.forms.includes(this.player.formId)) this.run.forms.push(this.player.formId);
+    // record every stage passed through (a big xp jump can skip one) and save them at once
+    for (let s = from + 1; s <= to; s++) {
+      const f = formId(s as Stage, element);
+      if (!this.run.forms.includes(f)) this.run.forms.push(f);
+    }
+    storage.save(addForms(storage.load(), this.run.forms));
   }
 
   refreshStats(): void {
@@ -294,6 +303,10 @@ export class GameScene extends Phaser.Scene {
     });
     registerDebug('gemXpTotal', () => this.pickups.gemXpTotal());
     registerDebug('setGold', (n: number) => { this.run.gold = n; });
+    registerDebug('shootBossAt', (offset: number) => {
+      const b = this.enemies.active.find((e) => e.boss && e.alive);
+      if (b) this.projectiles.fire({ x: b.x + offset, y: b.y, vx: 0, vy: 0, damage: 10, radius: 3, life: 0.1, owner: 'player', key: 'spit', pierce: 0, source: 'debug' });
+    });
     registerDebug('bosses', () => this.bosses.alive());
     registerDebug('damageBoss', (n: number) => { for (const e of this.enemies.active) if (e.boss && e.alive) this.enemies.hit(e, n, this.now, 'debug'); });
     registerDebug('dropChest', () => this.pickups.dropChest(this.player.x, this.player.y));
@@ -361,6 +374,15 @@ export class GameScene extends Phaser.Scene {
     return now;
   }
 
+  /** Mobile browsers often kill a backgrounded tab: bank the run's gold so far, so it isn't lost. */
+  private readonly onVisibility = (): void => {
+    if (document.visibilityState !== 'hidden' || this.ended || !this.run) return;
+    const earned = Math.round(this.run.gold * this.meta.goldMult) - this.run.bankedGold;
+    if (earned <= 0) return;
+    storage.save(addRunResult(storage.load(), { gold: earned, time: 0, won: false, forms: this.run.forms }));
+    this.run.bankedGold += earned;
+  };
+
   /** Leaving from the pause menu ends the run normally, so the gold earned so far is kept. */
   private quitRun(): void {
     if (this.ended) return;
@@ -390,7 +412,7 @@ export class GameScene extends Phaser.Scene {
   private endRun(): void {
     this.ended = true;
     this.scene.stop('LevelUp');
-    const data: GameOverData = { time: this.run.elapsed, level: this.run.level, formId: this.player.formId, gold: Math.round(this.run.gold * this.meta.goldMult), won: this.run.won, runId: this.run.id, forms: [...this.run.forms] };
+    const data: GameOverData = { time: this.run.elapsed, level: this.run.level, formId: this.player.formId, gold: Math.round(this.run.gold * this.meta.goldMult), won: this.run.won, runId: this.run.id, forms: [...this.run.forms], banked: this.run.bankedGold };
     this.scene.start('GameOver', data);
   }
 }

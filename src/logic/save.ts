@@ -49,6 +49,12 @@ export function serializeSave(s: SaveData): string {
   return JSON.stringify(s);
 }
 
+/** Adds forms to the collection without touching anything else. */
+export function addForms(s: SaveData, forms: readonly FormId[]): SaveData {
+  const missing = forms.filter((f) => !s.collection.includes(f));
+  return missing.length ? { ...s, collection: [...s.collection, ...missing] } : s;
+}
+
 export function addRunResult(s: SaveData, r: { gold: number; time: number; won: boolean; forms: readonly FormId[] }): SaveData {
   const collection = [...s.collection];
   for (const f of r.forms) if (!collection.includes(f)) collection.push(f);
