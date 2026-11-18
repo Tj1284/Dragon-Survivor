@@ -42,13 +42,14 @@ export const FX_SHEETS: Record<FxKey, SheetDef> = {
   fire_orb: fx('fire_orb', 12, 2, COLORS.fire),
 };
 
-export type PickupKey = 'gem_s' | 'gem_m' | 'gem_l' | 'gold';
+export type PickupKey = 'gem_s' | 'gem_m' | 'gem_l' | 'gold' | 'chest';
 const pickup = (key: PickupKey, size: number, frames: number, color: number) => sheet(key, `art/pickups/${key}.png`, size, frames, color);
 export const PICKUP_SHEETS: Record<PickupKey, SheetDef> = {
   gem_s: pickup('gem_s', 6, 1, 0x4fd6a8),
   gem_m: pickup('gem_m', 8, 1, 0x3a9df0),
   gem_l: pickup('gem_l', 10, 1, 0xd05cf0),
   gold: pickup('gold', 8, 2, 0xf2c230),
+  chest: pickup('chest', 16, 2, 0xb8742a),
 };
 
 export const ICON_SHEETS = Object.fromEntries(

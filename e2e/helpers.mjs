@@ -1,5 +1,16 @@
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-export const dbg = (page, fn, ...args) => page.evaluate(([f, a]) => window.__dbg[f](...a), [fn, args]);
+export async function dbg(page, fn, ...args) {
+  try {
+    return await page.evaluate(([f, a]) => window.__dbg[f](...a), [fn, args]);
+  } catch (e) {
+    // add the game state to the error: most failures here mean the run ended or a scene changed unexpectedly
+    const state = await page.evaluate(() => {
+      const safe = (f) => { try { return f(); } catch (err) { return 'ERR ' + err.message; } };
+      return { scenes: safe(() => window.__dbg.scene()), player: safe(() => window.__dbg.player()), over: safe(() => window.__dbg.gameOver?.()), run: safe(() => window.__dbg.run()) };
+    }).catch((err) => 'state unavailable: ' + err.message);
+    throw new Error(`${fn}(${JSON.stringify(args)}) failed: ${e.message} | state: ${JSON.stringify(state)}`);
+  }
+}
 export async function open(page, baseUrl, query = '') {
   await page.goto(baseUrl + '/?debug=1' + query);
   await page.waitForFunction(() => window.__dbg?.ready === true, null, { timeout: 5000 });

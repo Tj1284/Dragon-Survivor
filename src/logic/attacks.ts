@@ -1,3 +1,4 @@
+import { NO_BONUS, type MetaBonus } from './meta';
 import type { Element, Stage, Tag } from './types';
 
 export type AttackId =
@@ -171,15 +172,15 @@ export const STAGE_BONUS: Record<Stage, { maxHp: number; damageMult: number; pic
 
 export const FALLBACK = { healFraction: 0.3, gold: 5 };
 
-export function computeStats(stage: Stage, owned: Owned): PlayerStats {
+export function computeStats(stage: Stage, owned: Owned, meta: MetaBonus = NO_BONUS): PlayerStats {
   const n = (id: StatId) => owned[id] ?? 0;
   const bonus = STAGE_BONUS[stage];
   return {
-    maxHp: BASE_STATS.maxHp + bonus.maxHp + 20 * n('thick_scales'),
-    speed: BASE_STATS.speed * (1 + 0.08 * n('swift_wings')),
-    damageMult: BASE_STATS.damageMult * bonus.damageMult * (1 + 0.1 * n('fury')),
+    maxHp: BASE_STATS.maxHp + bonus.maxHp + 20 * n('thick_scales') + meta.maxHp,
+    speed: BASE_STATS.speed * (1 + 0.08 * n('swift_wings')) * meta.speedMult,
+    damageMult: BASE_STATS.damageMult * bonus.damageMult * (1 + 0.1 * n('fury')) * meta.damageMult,
     cooldownMult: BASE_STATS.cooldownMult * Math.pow(0.92, n('quick_breath')),
-    pickupRadius: (BASE_STATS.pickupRadius + bonus.pickupRadius) * (1 + 0.2 * n('magnet')),
+    pickupRadius: (BASE_STATS.pickupRadius + bonus.pickupRadius) * (1 + 0.2 * n('magnet')) * meta.pickupMult,
     regen: BASE_STATS.regen + 0.5 * n('regen'),
     armor: BASE_STATS.armor + n('armor'),
   };

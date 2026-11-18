@@ -77,6 +77,7 @@ gem_s/m/l = gemas de experiencia pequeña, mediana y grande; gold = moneda de or
 | `art/pickups/gem_m.png` | 8×8 | 1 | 8×8 |
 | `art/pickups/gem_l.png` | 10×10 | 1 | 10×10 |
 | `art/pickups/gold.png` | 8×8 | 2 | 16×8 |
+| `art/pickups/chest.png` | 16×16 | 2 | 32×16 |
 
 ### Iconos de ataques y estadísticas
 

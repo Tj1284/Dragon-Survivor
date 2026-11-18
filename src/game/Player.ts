@@ -13,6 +13,8 @@ export class Player {
   hp = this.stats.maxHp;
   formId: FormId = 'hatchling';
   slowUntil = 0;
+  /** Debug only: setHp() above the normal maximum is kept by regen and stat changes. */
+  debugHpFloor = 0;
   private r = 0;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
@@ -31,12 +33,15 @@ export class Player {
 
   get radius(): number { return this.r; }
 
+  /** Highest health the dragon can have right now. */
+  get hpLimit(): number { return Math.max(this.stats.maxHp, this.debugHpFloor); }
+
   update(dt: number, move: { x: number; y: number }, now: number): void {
     const speed = this.stats.speed * (now < this.slowUntil ? 0.5 : 1);
     this.x += move.x * speed * dt;
     this.y += move.y * speed * dt;
     if (move.x !== 0) this.sprite.setFlipX(move.x < 0);
-    if (this.hp > 0 && this.stats.regen > 0) this.hp = Math.min(this.stats.maxHp, this.hp + this.stats.regen * dt);
+    if (this.hp > 0 && this.stats.regen > 0) this.hp = Math.min(this.hpLimit, this.hp + this.stats.regen * dt);
     this.sprite.setPosition(this.x, this.y);
   }
 

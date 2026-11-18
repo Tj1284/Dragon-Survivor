@@ -81,6 +81,19 @@ function drawFireZone(S: number, frame: number): PixelCanvas {
 export function drawPickup(key: string, S: number, frame: number): PixelCanvas {
   const pc = new PixelCanvas(S, S);
   const c = (S - 1) / 2;
+  if (key === 'chest') {
+    const wood = hex(0x9a5a24), dark = hex(0x5a3010), gold = hex(0xf2c230);
+    const lift = frame % 2;
+    pc.rect(2, 7, 12, 7, wood);
+    pc.rect(2, 7, 12, 1, dark);
+    pc.rect(1, 3 - lift, 14, 4, shade(wood, 1.15));
+    pc.rect(1, 6 - lift, 14, 1, dark);
+    pc.rect(7, 5 - lift, 2, 4, gold);
+    pc.rect(2, 10, 12, 1, gold);
+    if (lift) { pc.set(4, 1, hex(0xfff2a8)); pc.set(11, 0, hex(0xfff2a8)); }
+    pc.outline(hex(0x2a1608));
+    return pc;
+  }
   if (key === 'gold') {
     const rx = frame % 2 ? S * 0.2 : S * 0.42;
     pc.ellipse(c + 0.5, c + 0.5, rx, S * 0.42, hex(0xf2c230));
