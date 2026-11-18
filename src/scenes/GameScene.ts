@@ -263,6 +263,13 @@ export class GameScene extends Phaser.Scene {
     registerDebug('enemyDistances', () => this.enemies.active.filter((e) => e.alive).map((e) => Math.hypot(e.x - this.player.x, e.y - this.player.y)));
     registerDebug('stunnedCount', () => this.enemies.active.filter((e) => e.alive && this.now < e.stunUntil).length);
     registerDebug('setFacing', (dir: number) => this.player.sprite.setFlipX(dir < 0));
+    registerDebug('dropGems', (n: number, xp: number) => {
+      for (let i = 0; i < n; i++) {
+        const a = Math.random() * Math.PI * 2, r = 200 + Math.random() * 200;
+        this.pickups.dropGem(this.player.x + Math.cos(a) * r, this.player.y + Math.sin(a) * r, xp);
+      }
+    });
+    registerDebug('gemXpTotal', () => this.pickups.gemXpTotal());
     registerDebug('pickups', () => this.pickups.active.map((p) => ({ kind: p.kind, x: p.x, y: p.y })));
     registerDebug('setLevel', (n: number) => { this.run.level = n; this.run.xp = 0; this.run.pendingLevels = 0; void this.afterLevelResolved(); });
     registerDebug('chooseElementNext', (e: Element) => { this.chooseNext = e; });

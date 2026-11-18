@@ -117,6 +117,7 @@ export class EnemyManager {
 
   update(dt: number, now: number, elapsed: number, player: Player, projectiles: Projectiles): void {
     this.compact();
+    this.rebuildGrid(); // grid ids are indices into `active`, which compact() just reordered
     this.spawnUpTo(dt, elapsed, player);
     const view = this.scene.scale.gameSize;
     const despawnR = spawnRadius(view.width, view.height) * ENEMY_AI.despawnFactor;

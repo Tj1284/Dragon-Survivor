@@ -11,6 +11,10 @@ export function gemKey(xp: number): PickupKey {
 }
 
 export class Pickups {
+  /** Gems allowed on the ground; beyond this, new xp merges into the oldest gem. */
+  static readonly MAX_GEMS = 250;
+  private gemCount = 0;
+
   private readonly pool: Pool<Pickup>;
   readonly active: Pickup[] = [];
 
@@ -32,7 +36,24 @@ export class Pickups {
     this.active.push(p);
   }
 
-  dropGem(x: number, y: number, xp: number): void { this.drop('xp', xp, gemKey(xp), x, y); }
+  dropGem(x: number, y: number, xp: number): void {
+    if (this.gemCount >= Pickups.MAX_GEMS) {
+      const oldest = this.active.find((p) => p.kind === 'xp');
+      if (oldest) {
+        oldest.value += xp;
+        oldest.sprite.setTexture(PICKUP_SHEETS[gemKey(oldest.value)].key, 0);
+        return;
+      }
+    }
+    this.gemCount++;
+    this.drop('xp', xp, gemKey(xp), x, y);
+  }
+
+  gemXpTotal(): number {
+    let n = 0;
+    for (const p of this.active) if (p.kind === 'xp') n += p.value;
+    return n;
+  }
   dropGold(x: number, y: number): void { this.drop('gold', 1, 'gold', x + 4, y + 2); }
 
   private t = 0;
@@ -51,7 +72,7 @@ export class Pickups {
       }
       p.sprite.setPosition(p.x, p.y + (p.flying ? 0 : Math.round(Math.sin(this.t * 4 + p.x * 0.1) * 1.5)));
       if (d <= PICKUPS.collectDistance) {
-        if (p.kind === 'xp') onXp(p.value); else onGold(p.value);
+        if (p.kind === 'xp') { onXp(p.value); this.gemCount--; } else onGold(p.value);
         this.active[i] = this.active[this.active.length - 1];
         this.active.pop();
         this.pool.release(p);
