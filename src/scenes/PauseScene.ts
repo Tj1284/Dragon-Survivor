@@ -2,6 +2,8 @@ import * as Phaser from 'phaser';
 import { onTap, relayoutOnResize } from '../game/ui';
 import { describeButtons, makeButton } from '../ui/button';
 import { QUIT_EVENT } from './GameScene';
+import { audio } from '../audio';
+import { toggleMute } from '../audio/mute';
 import { registerDebug } from '../debug';
 import { t } from '../i18n';
 
@@ -23,6 +25,9 @@ export class PauseScene extends Phaser.Scene {
     this.input.keyboard?.once('keydown-P', resume);
     const menu = makeButton(this, 'menu', w / 2, h * 0.6 + 42, 110, 22, t('menu'), 0x5a3f8f, () => this.game.events.emit(QUIT_EVENT), '8px');
     registerDebug('resumeButton', () => ({ x: btn.x, y: btn.y }));
-    registerDebug('buttons', () => [{ id: 'resume', x: btn.x, y: btn.y, enabled: true }, ...describeButtons([menu])]);
+    const mute = makeButton(this, 'mute', w / 2, h * 0.6 + 72, 110, 22, t(audio.muted ? 'sound_off' : 'sound_on'), 0x3a4a6a, () => {
+      mute.label.setText(t(toggleMute() ? 'sound_off' : 'sound_on'));
+    }, '8px');
+    registerDebug('buttons', () => [{ id: 'resume', x: btn.x, y: btn.y, enabled: true }, ...describeButtons([menu, mute])]);
   }
 }

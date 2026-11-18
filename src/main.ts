@@ -10,6 +10,7 @@ import { MenuScene } from './scenes/MenuScene';
 import { LairScene } from './scenes/LairScene';
 import { CollectionScene } from './scenes/CollectionScene';
 import { storage } from './platform/storage';
+import { audio } from './audio';
 import { defaultSave, type SaveData } from './logic/save';
 import { setLanguage } from './i18n';
 
@@ -42,6 +43,8 @@ const game = new Phaser.Game({
 
 installDebug(game);
 registerDebug('scene', () => game.scene.getScenes(true).map((sc) => sc.scene.key));
+audio.setMuted(storage.load().muted);
+registerDebug('audio', () => audio.stats());
 registerDebug('save', () => storage.load());
 registerDebug('resetSave', () => storage.save(defaultSave()));
 registerDebug('setSave', (partial: Partial<SaveData>) => storage.save({ ...storage.load(), ...partial }));

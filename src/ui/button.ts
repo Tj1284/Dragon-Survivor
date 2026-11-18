@@ -1,6 +1,7 @@
 import type * as Phaser from 'phaser';
 import { onTap } from '../game/ui';
 import { TEXT } from './style';
+import { audio } from '../audio';
 
 export interface Button {
   id: string;
@@ -31,7 +32,7 @@ export function makeButton(
       label.setAlpha(on ? 1 : 0.55);
     },
   };
-  onTap(bg, () => { if (button.enabled) onPress(); });
+  onTap(bg, () => { if (!button.enabled) return; audio.play('click'); onPress(); });
   return button;
 }
 

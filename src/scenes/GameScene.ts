@@ -26,6 +26,7 @@ import { clampDelta } from '../logic/time';
 import { metaBonus, type MetaBonus } from '../logic/meta';
 import { storage } from '../platform/storage';
 import { hideLoading } from '../ui/loading';
+import { audio } from '../audio';
 import { addForms, addRunResult } from '../logic/save';
 import { formId } from '../logic/evolution';
 import { FALLBACK, computeStats, heldAttacks, rollChoices, spitToBreath, tagOf, type AttackId, type Choice, type UpgradeId } from '../logic/attacks';
@@ -105,6 +106,7 @@ export class GameScene extends Phaser.Scene {
     this.decor = new Decor(this);
     this.enemies.onHit = (e, _dmg, source) => {
       this.juice.hit(e.x, e.y);
+      audio.play('hit');
       if (source) this.hitCounts[source] = (this.hitCounts[source] ?? 0) + 1;
       if (source && this.debugLog && this.hitLog.length < 500) this.hitLog.push({ source, dx: e.x - this.player.x, dy: e.y - this.player.y });
     };
@@ -112,6 +114,7 @@ export class GameScene extends Phaser.Scene {
     this.victoryIn = 0;
     this.enemies.onKilled = (e) => {
       if (e.boss) { this.onBossKilled(e.boss, e.x, e.y); return; }
+      audio.play('kill');
       this.juice.death(e.x, e.y);
       this.pickups.dropGem(e.x, e.y, ENEMIES[e.type].xp);
       if (this.rng() < PICKUPS.goldChance) this.pickups.dropGold(e.x, e.y);
@@ -134,6 +137,7 @@ export class GameScene extends Phaser.Scene {
       for (const w of this.attacks.values()) w.destroy();
       this.ultimate?.destroy();
       this.bosses.destroy();
+      audio.stopMusic();
     });
     this.registerDebugCommands();
     // first run only: teach the controls by play, hide the hint once the dragon has moved
@@ -141,6 +145,7 @@ export class GameScene extends Phaser.Scene {
     if (this.hintFrom) this.hud.showHint(t(this.sys.game.device.input.touch ? 'hint_touch' : 'hint_keys'));
     setDebugReady(true);
     hideLoading();
+    audio.startMusic();
   }
 
   private onResize(size: Phaser.Structs.Size): void {
@@ -174,11 +179,13 @@ export class GameScene extends Phaser.Scene {
     this.inputCtl.releaseAll();
     const data: LevelUpData = { mode: 'upgrade', choices: rollChoices({ owned: this.run.owned, element: this.run.element, gold: this.run.goldAttacks }, this.rng), owned: this.run.owned };
     this.scene.pause();
+    audio.play('levelup');
     this.scene.launch('LevelUp', data);
   }
 
   private onUpgradePicked(choice: Choice): void {
     this.scene.stop('LevelUp');
+    audio.play('pick');
     this.applyChoice(choice);
     this.run.pendingLevels--;
     this.levelUpOpen = false;
@@ -243,6 +250,7 @@ export class GameScene extends Phaser.Scene {
     }
     if (to === 3 && !this.ultimate) this.ultimate = createUltimate(this.ctx, element);
     this.evolvePauseLeft = PLAYER_WEAPONS.evolution.pause;
+    audio.play('evolve');
     this.juice.setElement(element, to);
     // record every stage passed through (a big xp jump can skip one) and save them at once
     for (let s = from + 1; s <= to; s++) {
@@ -359,7 +367,7 @@ export class GameScene extends Phaser.Scene {
     t0 = this.time_('weapons', t0);
     this.projectiles.update(dt, this.enemies, this.player, this.now);
     this.time_('projectiles', t0);
-    this.pickups.update(dt, this.player, (n) => this.gainXp(n), (n) => { this.run.gold += n; }, () => this.openChest());
+    this.pickups.update(dt, this.player, (n) => { audio.play('gem'); this.gainXp(n); }, (n) => { audio.play('gold'); this.run.gold += n; }, () => { audio.play('chest'); this.openChest(); });
     const cam = this.cameras.main;
     this.ground.setTilePosition(cam.scrollX, cam.scrollY);
     this.hud.update(this.run, this.player);

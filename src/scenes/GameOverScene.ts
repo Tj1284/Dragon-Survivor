@@ -2,6 +2,7 @@ import * as Phaser from 'phaser';
 import { relayoutOnResize } from '../game/ui';
 import { addRunResult } from '../logic/save';
 import { storage } from '../platform/storage';
+import { audio } from '../audio';
 import { describeButtons, makeButton } from '../ui/button';
 import { DRAGON_SHEETS } from '../assets/manifest';
 import { registerDebug } from '../debug';
@@ -27,6 +28,7 @@ export class GameOverScene extends Phaser.Scene {
     relayoutOnResize(this, data);
     if (!savedRuns.has(data.runId)) {
       savedRuns.add(data.runId);
+      audio.play(data.won ? 'victory' : 'defeat');
       storage.save(addRunResult(storage.load(), { gold: data.gold - data.banked, time: data.time, won: data.won, forms: data.forms }));
     }
     const { width: w, height: h } = this.scale.gameSize;

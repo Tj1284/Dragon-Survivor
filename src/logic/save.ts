@@ -11,10 +11,12 @@ export interface SaveData {
   wins: number;
   /** False until the first run ends: the very first visit skips the menu. */
   played: boolean;
+  /** Sound off (effects and music). */
+  muted: boolean;
 }
 
 export function defaultSave(): SaveData {
-  return { v: 1, gold: 0, meta: {}, collection: [], bestTime: 0, wins: 0, played: false };
+  return { v: 1, gold: 0, meta: {}, collection: [], bestTime: 0, wins: 0, played: false, muted: false };
 }
 
 const MAX_NUMBER = 1e9;
@@ -32,6 +34,7 @@ export function parseSave(raw: string | null): SaveData {
   s.bestTime = count(d.bestTime);
   s.wins = count(d.wins);
   s.played = d.played === true;
+  s.muted = d.muted === true;
   if (d.meta && typeof d.meta === 'object') {
     for (const [id, level] of Object.entries(d.meta as Record<string, unknown>)) {
       if (!(id in META) || typeof level !== 'number' || !Number.isFinite(level)) continue;
