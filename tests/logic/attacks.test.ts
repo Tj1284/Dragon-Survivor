@@ -87,3 +87,10 @@ it('stats stack with the stage bonus', () => {
 it('the four new attacks are offered as cards', () => {
   expect(availableUpgrades(base)).toEqual(expect.arrayContaining(['tail_swipe', 'roar', 'meteor', 'static_field']));
 });
+
+import { nextOrder } from '../../src/logic/attacks';
+it('HUD order follows acquisition; the breath takes the spit slot', () => {
+  expect(nextOrder(['spit'], { spit: 1, tail_swipe: 1 })).toEqual(['spit', 'tail_swipe']);
+  expect(nextOrder(['spit', 'tail_swipe', 'roar'], { fire_breath: 2, tail_swipe: 1, roar: 1 })).toEqual(['fire_breath', 'tail_swipe', 'roar']);
+  expect(nextOrder(['fire_breath', 'tail_swipe'], { fire_breath: 2, tail_swipe: 1, frost_aura: 1 })).toEqual(['fire_breath', 'tail_swipe', 'frost_aura']);
+});

@@ -29,7 +29,7 @@ import { hideLoading } from '../ui/loading';
 import { audio } from '../audio';
 import { addForms, addRunResult } from '../logic/save';
 import { formId } from '../logic/evolution';
-import { FALLBACK, computeStats, heldAttacks, rollChoices, spitToBreath, tagOf, type AttackId, type Choice, type UpgradeId } from '../logic/attacks';
+import { FALLBACK, computeStats, heldAttacks, nextOrder, rollChoices, spitToBreath, tagOf, type AttackId, type Choice, type UpgradeId } from '../logic/attacks';
 import { applyXp } from '../logic/xp';
 import type { GameOverData } from './GameOverScene';
 import { LEVELUP_EVENTS, type LevelUpData } from './LevelUpScene';
@@ -213,6 +213,7 @@ export class GameScene extends Phaser.Scene {
 
   /** Keeps exactly one weapon per held attack: creates the new ones and drops the ones no longer held. */
   private syncWeapons(): void {
+    this.run.attackOrder = nextOrder(this.run.attackOrder, this.run.owned);
     const held = heldAttacks(this.run.owned);
     for (const [id, weapon] of this.attacks) {
       if (!held.includes(id)) { weapon.destroy(); this.attacks.delete(id); }

@@ -30,17 +30,21 @@ export class LairScene extends Phaser.Scene {
     this.add.text(w / 2, 14, t('lair'), { ...TEXT, fontSize: '16px', color: '#f2c230' }).setOrigin(0.5);
     this.gold = this.add.text(w - 8, 8, '', { ...TEXT, fontSize: '8px', color: '#f2c230' }).setOrigin(1, 0);
 
-    const rowH = Math.min(36, (h - 70) / META_IDS.length);
     const rowW = Math.min(440, w - 16);
+    const narrow = rowW < 360;
+    const rowH = Math.min(narrow ? 52 : 36, (h - 70) / META_IDS.length);
     const left = (w - rowW) / 2;
     META_IDS.forEach((id, i) => {
       const y = 36 + i * rowH + rowH / 2;
+      // name, description (wrapped) and, on narrow screens, the level on its own line
       this.add.rectangle(w / 2, y, rowW, rowH - 4, 0x2a2638).setStrokeStyle(1, 0x5a5470);
       this.add.image(left + 14, y, ICON[id]).setScale(id === 'greed' || id === 'wisdom' ? 1.6 : 1);
-      this.add.text(left + 28, y - 8, t(`meta_${id}`), { ...TEXT, fontSize: '8px' });
-      this.add.text(left + 28, y + 2, t(`meta_${id}_d`), { ...TEXT, fontSize: '8px', color: '#cfc8e6' });
-      this.levels.set(id, this.add.text(left + rowW - 92, y - 8, '', { ...TEXT, fontSize: '8px', color: '#ffd76a' }).setOrigin(1, 0));
-      this.buttons.push(makeButton(this, `buy_${id}`, left + rowW - 44, y, 76, rowH - 10, '', 0x2f8f4a, () => this.buy(id), '8px'));
+      this.add.text(left + 28, y - (narrow ? 19 : 8), t(`meta_${id}`), { ...TEXT, fontSize: '8px' });
+      this.add.text(left + 28, y + (narrow ? -9 : 2), t(`meta_${id}_d`), { ...TEXT, fontSize: '8px', color: '#cfc8e6', wordWrap: { width: rowW - 28 - 90 } });
+      this.levels.set(id, narrow
+        ? this.add.text(left + 28, y + 15, '', { ...TEXT, fontSize: '8px', color: '#ffd76a' })
+        : this.add.text(left + rowW - 92, y - 8, '', { ...TEXT, fontSize: '8px', color: '#ffd76a' }).setOrigin(1, 0));
+      this.buttons.push(makeButton(this, `buy_${id}`, left + rowW - 44, y, 76, Math.min(30, rowH - 10), '', 0x2f8f4a, () => this.buy(id), '8px'));
     });
     this.buttons.push(makeButton(this, 'back', w / 2, h - 16, 100, 22, t('back'), 0x5a3f8f, () => this.scene.start('Menu'), '8px'));
     this.refresh();

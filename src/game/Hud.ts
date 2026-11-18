@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
 import { onTap } from './ui';
 import { ICON_SHEETS } from '../assets/manifest';
-import { MAX_SLOTS, heldAttacks, type AttackId } from '../logic/attacks';
+import { MAX_SLOTS, type AttackId } from '../logic/attacks';
 import { t } from '../i18n';
 import { xpToNext } from '../logic/xp';
 import { formatTime } from '../scenes/GameOverScene';
@@ -109,7 +109,7 @@ export class Hud {
 
   /** Call whenever the held attacks, their levels or their gold state change. */
   refreshAttacks(run: RunState): void {
-    const held = heldAttacks(run.owned);
+    const held = run.attackOrder.filter((id) => (run.owned[id] ?? 0) > 0);
     this.slots.forEach((slot, i) => {
       const id = held[i] ?? null;
       slot.id = id;

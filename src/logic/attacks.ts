@@ -77,6 +77,22 @@ export function availableUpgrades(l: Loadout): UpgradeId[] {
   return out;
 }
 
+/**
+ * Order of the attack icons: the order they were picked. The breath takes the spit's place when the dragon
+ * evolves, and new attacks go to the end, so icons never jump around.
+ */
+export function nextOrder(order: readonly AttackId[], owned: Owned): AttackId[] {
+  const held = heldAttacks(owned);
+  const out: AttackId[] = [];
+  const breath = held.find((id) => id.endsWith('_breath') && !order.includes(id));
+  for (const id of order) {
+    if (held.includes(id)) out.push(id);
+    else if (id === 'spit' && breath) out.push(breath);
+  }
+  for (const id of held) if (!out.includes(id)) out.push(id);
+  return out;
+}
+
 /** Attacks at max level whose key stat is owned and that aren't gold yet, in ATTACK_IDS order. */
 export function eligibleGold(l: Loadout): AttackId[] {
   return ATTACK_IDS.filter((id) => {
