@@ -4,7 +4,7 @@ import { PICKUPS } from '../config/balance';
 import { Pool } from '../logic/pool';
 import type { Player } from './Player';
 
-interface Pickup { kind: 'xp' | 'gold'; value: number; x: number; y: number; flying: boolean; sprite: Phaser.GameObjects.Sprite }
+interface Pickup { kind: 'xp' | 'gold' | 'chest'; value: number; x: number; y: number; flying: boolean; sprite: Phaser.GameObjects.Sprite }
 
 export function gemKey(xp: number): PickupKey {
   return xp >= 5 ? 'gem_l' : xp >= 2 ? 'gem_m' : 'gem_s';
@@ -55,10 +55,17 @@ export class Pickups {
     return n;
   }
   dropGold(x: number, y: number): void { this.drop('gold', 1, 'gold', x + 4, y + 2); }
+  dropChest(x: number, y: number): void { this.drop('chest', 1, 'chest', x, y); }
+
+  clear(): void {
+    for (const p of this.active) this.pool.release(p);
+    this.active.length = 0;
+    this.gemCount = 0;
+  }
 
   private t = 0;
 
-  update(dt: number, player: Player, onXp: (n: number) => void, onGold: (n: number) => void): void {
+  update(dt: number, player: Player, onXp: (n: number) => void, onGold: (n: number) => void, onChest: () => void = () => {}): void {
     this.t += dt;
     const r = player.stats.pickupRadius;
     for (let i = this.active.length - 1; i >= 0; i--) {
@@ -72,7 +79,7 @@ export class Pickups {
       }
       p.sprite.setPosition(p.x, p.y + (p.flying ? 0 : Math.round(Math.sin(this.t * 4 + p.x * 0.1) * 1.5)));
       if (d <= PICKUPS.collectDistance) {
-        if (p.kind === 'xp') { onXp(p.value); this.gemCount--; } else onGold(p.value);
+        if (p.kind === 'xp') { onXp(p.value); this.gemCount--; } else if (p.kind === 'chest') onChest(); else onGold(p.value);
         this.active[i] = this.active[this.active.length - 1];
         this.active.pop();
         this.pool.release(p);

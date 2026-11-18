@@ -28,6 +28,10 @@ export class Hud {
   private readonly pauseBars: Phaser.GameObjects.Rectangle[];
   private width = 0;
   private readonly slots: Slot[] = [];
+  private readonly bossBg: Phaser.GameObjects.Rectangle;
+  private readonly bossFill: Phaser.GameObjects.Rectangle;
+  private readonly bossName: Phaser.GameObjects.Text;
+  private bossW = 0;
 
   constructor(scene: Phaser.Scene, onPause: () => void) {
     const fixed = <T extends Phaser.GameObjects.Components.ScrollFactor & Phaser.GameObjects.Components.Depth>(o: T): T => { o.setScrollFactor(0); o.setDepth(500); return o; };
@@ -41,6 +45,9 @@ export class Hud {
     this.pauseHit = fixed(scene.add.rectangle(0, 0, 24, 24, 0x000000, 0.35).setStrokeStyle(1, 0xffffff, 0.6));
     this.pauseBars = [fixed(scene.add.rectangle(0, 0, 3, 10, 0xffffff)), fixed(scene.add.rectangle(0, 0, 3, 10, 0xffffff))];
     onTap(this.pauseHit.setInteractive({ useHandCursor: true }), onPause);
+    this.bossBg = fixed(scene.add.rectangle(0, 0, 10, 6, 0x000000, 0.65).setOrigin(0.5).setStrokeStyle(1, 0xffffff, 0.7).setVisible(false));
+    this.bossFill = fixed(scene.add.rectangle(0, 0, 10, 4, 0xc8302a).setOrigin(0, 0.5).setVisible(false));
+    this.bossName = fixed(scene.add.text(0, 0, '', { ...TEXT, fontSize: '8px' }).setOrigin(0.5, 1).setVisible(false));
     for (let i = 0; i < MAX_SLOTS; i++) {
       const x = 13 + i * 21, y = 27;
       this.slots.push({
@@ -62,6 +69,20 @@ export class Hud {
     this.pauseBars[0].setPosition(px - 3, py);
     this.pauseBars[1].setPosition(px + 3, py);
     this.gold.setX(width - 32);
+    this.bossW = Math.min(200, width - 80);
+    const by = 52;
+    this.bossBg.setPosition(Math.round(width / 2), by).setSize(this.bossW + 2, 6);
+    this.bossFill.setPosition(Math.round(width / 2 - this.bossW / 2), by);
+    this.bossName.setPosition(Math.round(width / 2), by - 4);
+  }
+
+  /** Shows the boss health bar, or hides it when `ratio` is null. */
+  setBoss(name: string | null, ratio: number): void {
+    const on = name !== null;
+    this.bossBg.setVisible(on); this.bossFill.setVisible(on); this.bossName.setVisible(on);
+    if (!on) return;
+    if (this.bossName.text !== name) this.bossName.setText(name);
+    this.bossFill.setSize(Math.max(0, Math.round(this.bossW * Phaser.Math.Clamp(ratio, 0, 1))), 4);
   }
 
   update(run: RunState, player: Player): void {
@@ -97,6 +118,7 @@ export class Hud {
       xp: { x: this.xpBg.x, y: this.xpBg.y, w: this.xpBg.width },
       gold: { x: this.gold.x, y: this.gold.y },
       pause: { x: this.pauseHit.x, y: this.pauseHit.y },
+      bossBar: { visible: this.bossBg.visible, name: this.bossName.text },
       attacks: this.slots.filter((s) => s.id !== null).map((s) => ({ id: s.id, level: s.level, gold: s.gold, x: s.frame.x, y: s.frame.y })),
     };
   }

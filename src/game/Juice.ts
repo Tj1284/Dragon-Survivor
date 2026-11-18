@@ -36,6 +36,12 @@ export class Juice {
     this.hurtFlash.setSize(width, height);
   }
 
+  /** Full-screen flash that fades out (camera.flash is unavailable in this Phaser build). */
+  flash(color: number, alpha = 0.6): void {
+    this.hurtFlash.setFillStyle(color, 1).setAlpha(alpha);
+    this.scene.time.delayedCall(400, () => this.hurtFlash.setFillStyle(0xff2030, 1));
+  }
+
   hit(x: number, y: number): void {
     if (this.sparksThisFrame >= 6) return; // keep big fights cheap
     this.sparksThisFrame++;

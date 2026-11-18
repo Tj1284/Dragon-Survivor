@@ -4,6 +4,9 @@ import { ENEMIES, ENEMY_IDS, PICKUPS, PLAYER_WEAPONS, type EnemyTypeId } from '.
 import { isDebug, registerDebug, setDebugReady } from '../debug';
 import { EnemyManager } from '../game/EnemyManager';
 import { Hud } from '../game/Hud';
+import { Bosses } from '../game/Bosses';
+import { BOSS_AI, BOSSES } from '../logic/bosses';
+import { t } from '../i18n';
 import { Decor } from '../game/Decor';
 import { Juice } from '../game/Juice';
 import { Evolution } from '../game/Evolution';
@@ -45,6 +48,11 @@ export class GameScene extends Phaser.Scene {
   private levelUpOpen = false;
   evolution!: Evolution;
   hud!: Hud;
+  bosses!: Bosses;
+  /** Seconds left before the victory screen once the final boss is down; 0 = not won yet. */
+  private victoryIn = 0;
+  /** Debug only: health set by setHp() above the normal maximum survives stat recalculation. */
+  private debugHpFloor = 0;
   juice!: Juice;
   decor!: Decor;
   /** Seconds of evolution pause left; counted down with real frame time so a scene pause can't skip it. */
@@ -87,7 +95,11 @@ export class GameScene extends Phaser.Scene {
       if (source) this.hitCounts[source] = (this.hitCounts[source] ?? 0) + 1;
       if (source && this.debugLog && this.hitLog.length < 500) this.hitLog.push({ source, dx: e.x - this.player.x, dy: e.y - this.player.y });
     };
+    this.bosses = new Bosses(this, this.enemies, this.player);
+    this.victoryIn = 0;
+    this.debugHpFloor = 0;
     this.enemies.onKilled = (e) => {
+      if (e.boss) { this.onBossKilled(e.boss, e.x, e.y); return; }
       this.juice.death(e.x, e.y);
       this.pickups.dropGem(e.x, e.y, ENEMIES[e.type].xp);
       if (this.rng() < PICKUPS.goldChance) this.pickups.dropGold(e.x, e.y);
@@ -105,6 +117,7 @@ export class GameScene extends Phaser.Scene {
       this.inputCtl.destroy();
       for (const w of this.attacks.values()) w.destroy();
       this.ultimate?.destroy();
+      this.bosses.destroy();
     });
     this.registerDebugCommands();
     setDebugReady(true);
@@ -218,7 +231,7 @@ export class GameScene extends Phaser.Scene {
     this.player.stats = computeStats(this.run.stage, this.run.owned);
     const gained = this.player.stats.maxHp - before;
     if (gained > 0) this.player.hp += gained;
-    this.player.hp = Math.min(this.player.hp, this.player.stats.maxHp);
+    this.player.hp = Math.min(this.player.hp, Math.max(this.player.stats.maxHp, this.debugHpFloor));
   }
 
   // ---- debug ----
@@ -249,7 +262,7 @@ export class GameScene extends Phaser.Scene {
     registerDebug('enemies', () => this.enemies.active.filter((e) => e.alive).length);
     registerDebug('enemyTypes', () => ENEMY_IDS.filter((id) => this.enemies.active.some((e) => e.alive && e.type === id)));
     registerDebug('setEnemyHp', (hp: number) => { for (const e of this.enemies.active) { e.hp = hp; e.maxHp = Math.max(e.maxHp, hp); } });
-    registerDebug('setHp', (hp: number) => { this.player.hp = hp; });
+    registerDebug('setHp', (hp: number) => { this.player.hp = hp; this.debugHpFloor = hp > this.player.stats.maxHp ? hp : 0; });
     registerDebug('setElapsed', (s: number) => { this.run.elapsed = s; });
     registerDebug('addXp', (n: number) => this.gainXp(n));
     registerDebug('give', (id: UpgradeId) => this.applyChoice({ type: 'upgrade', id }));
@@ -270,6 +283,11 @@ export class GameScene extends Phaser.Scene {
       }
     });
     registerDebug('gemXpTotal', () => this.pickups.gemXpTotal());
+    registerDebug('bosses', () => this.bosses.alive());
+    registerDebug('damageBoss', (n: number) => { for (const e of this.enemies.active) if (e.boss && e.alive) this.enemies.hit(e, n, this.now, 'debug'); });
+    registerDebug('dropChest', () => this.pickups.dropChest(this.player.x, this.player.y));
+    registerDebug('clearPickups', () => this.pickups.clear());
+    registerDebug('bossPatterns', () => [...this.bosses.patternsUsed]);
     registerDebug('pickups', () => this.pickups.active.map((p) => ({ kind: p.kind, x: p.x, y: p.y })));
     registerDebug('setLevel', (n: number) => { this.run.level = n; this.run.xp = 0; this.run.pendingLevels = 0; void this.afterLevelResolved(); });
     registerDebug('chooseElementNext', (e: Element) => { this.chooseNext = e; });
@@ -303,19 +321,26 @@ export class GameScene extends Phaser.Scene {
     this.player.update(dt, move, this.now);
     let t0 = performance.now();
     this.enemies.update(dt, this.now, this.run.elapsed, this.player, this.projectiles);
+    this.bosses.update(dt, this.now, this.run.elapsed);
     t0 = this.time_('enemies', t0);
     for (const w of this.attacks.values()) w.update(dt, this.now);
     this.ultimate?.update(dt, this.now);
     t0 = this.time_('weapons', t0);
     this.projectiles.update(dt, this.enemies, this.player, this.now);
     this.time_('projectiles', t0);
-    this.pickups.update(dt, this.player, (n) => this.gainXp(n), (n) => { this.run.gold += n; });
+    this.pickups.update(dt, this.player, (n) => this.gainXp(n), (n) => { this.run.gold += n; }, () => this.openChest());
     const cam = this.cameras.main;
     this.ground.setTilePosition(cam.scrollX, cam.scrollY);
     this.hud.update(this.run, this.player);
+    const boss = this.bosses.current();
+    this.hud.setBoss(boss ? t(`boss_${boss.def.id}`) : null, boss ? boss.e.hp / boss.e.maxHp : 0);
     this.juice.update(dt, this.now);
     this.decor.update();
-    if (this.player.hp <= 0) this.endRun();
+    if (this.victoryIn > 0) {
+      this.victoryIn -= dt;
+      if (this.victoryIn <= 0) { this.endRun(); return; }
+    }
+    if (this.player.hp <= 0 && !this.run.won) this.endRun();
   }
 
   /** Exponential moving average (ms) of a system's update time, for the debug timings() command. */
@@ -325,10 +350,29 @@ export class GameScene extends Phaser.Scene {
     return now;
   }
 
+  private onBossKilled(id: string, x: number, y: number): void {
+    this.juice.death(x, y);
+    const def = BOSSES.find((b) => b.id === id)!;
+    if (def.final) {
+      this.run.won = true;
+      this.run.gold += BOSS_AI.victoryGold;
+      this.victoryIn = BOSS_AI.victoryDelay;
+      this.juice.flash(0xfff2a8);
+    } else {
+      this.pickups.dropChest(x, y);
+    }
+  }
+
+  /** A chest is one free upgrade: it joins the normal level-up queue without changing the level. */
+  private openChest(): void {
+    this.run.pendingLevels++;
+    this.openNextLevelUp();
+  }
+
   private endRun(): void {
     this.ended = true;
     this.scene.stop('LevelUp');
-    const data: GameOverData = { time: this.run.elapsed, level: this.run.level, formId: this.player.formId, gold: this.run.gold };
+    const data: GameOverData = { time: this.run.elapsed, level: this.run.level, formId: this.player.formId, gold: this.run.gold, won: this.run.won };
     this.scene.start('GameOver', data);
   }
 }

@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser';
 import { ENEMY_SHEETS } from '../assets/manifest';
 import { ENEMIES, ENEMY_AI, type EnemyTypeId } from '../config/balance';
+import type { BossDef, BossId } from '../logic/bosses';
 import { damageMultiplier, newIceStatus, type IceStatus } from '../logic/combat';
 import { Pool } from '../logic/pool';
 import { hpMult, pickEnemyType, spawnPosition, spawnRadius, stepSpawnBudget, targetAlive } from '../logic/spawn';
@@ -17,6 +18,8 @@ export interface Enemy {
   stunUntil: number;
   /** Extra slow (0..1) applied this frame by auras; reset every frame. */
   auraSlow: number;
+  /** Set for bosses: the Bosses system moves them, they never relocate and don't count towards the horde size. */
+  boss: BossId | null;
 }
 
 export class EnemyManager {
@@ -40,7 +43,7 @@ export class EnemyManager {
         id: 0, type: 'squire', x: 0, y: 0, hp: 0, maxHp: 0, radius: 8, alive: false,
         sprite: scene.add.sprite(0, 0, ENEMY_SHEETS.squire.key).setDepth(5).setVisible(false),
         ice: newIceStatus(), hitCooldowns: new Map(), state: 'move', timer: 0, dashX: 0, dashY: 0,
-        contactReadyAt: 0, flashUntil: 0, stunUntil: 0, auraSlow: 0,
+        contactReadyAt: 0, flashUntil: 0, stunUntil: 0, auraSlow: 0, boss: null,
       }),
       (e) => { e.alive = false; e.sprite.setVisible(false).stop(); e.hitCooldowns.clear(); },
     );
@@ -63,10 +66,22 @@ export class EnemyManager {
     e.flashUntil = 0;
     e.stunUntil = 0;
     e.auraSlow = 0;
-    e.sprite.setTexture(ENEMY_SHEETS[type].key, 0).setVisible(true).setPosition(x, y).clearTint();
+    e.boss = null;
+    e.sprite.setTexture(ENEMY_SHEETS[type].key, 0).setVisible(true).setPosition(x, y).setScale(1).setDepth(5).clearTint();
     e.sprite.setTintMode(Phaser.TintModes.MULTIPLY);
     e.sprite.play(`${ENEMY_SHEETS[type].key}_loop`);
     this.active.push(e);
+    return e;
+  }
+
+  spawnBoss(def: BossDef, x: number, y: number, hpScale: number): Enemy {
+    const e = this.spawn(def.sprite === 'boss' ? 'heavy' : def.sprite, x, y, 0);
+    e.boss = def.id;
+    e.maxHp = e.hp = def.hp * hpScale;
+    e.radius = def.radius;
+    e.timer = 1.5;
+    e.sprite.setTexture(ENEMY_SHEETS[def.sprite].key, 0).setScale(def.scale).setDepth(8);
+    e.sprite.play(`${ENEMY_SHEETS[def.sprite].key}_loop`);
     return e;
   }
 
@@ -88,6 +103,7 @@ export class EnemyManager {
 
   /** Pushes an enemy `dist` px directly away from a point. */
   knockback(e: Enemy, fromX: number, fromY: number, dist: number): void {
+    if (e.boss) return; // bosses hold their ground
     const dx = e.x - fromX, dy = e.y - fromY;
     const d = Math.hypot(dx, dy) || 1;
     e.x += (dx / d) * dist;
@@ -123,6 +139,7 @@ export class EnemyManager {
     const despawnR = spawnRadius(view.width, view.height) * ENEMY_AI.despawnFactor;
 
     for (const e of this.active) {
+      if (e.boss) continue; // moved by the Bosses system
       const def = ENEMIES[e.type];
       const dx = player.x - e.x, dy = player.y - e.y;
       const dist = Math.hypot(dx, dy) || 1;
@@ -221,6 +238,7 @@ export class EnemyManager {
     this.rebuildGrid();
     for (let i = 0; i < this.active.length; i++) {
       const e = this.active[i];
+      if (e.boss) continue;
       this.grid.queryRadius(e.x, e.y, S.radius, this.near);
       let n = 0;
       for (const j of this.near) {
@@ -257,7 +275,9 @@ export class EnemyManager {
   private spawnUpTo(dt: number, elapsed: number, player: Player): void {
     if (this.spawningPaused) return;
     const view = this.scene.scale.gameSize;
-    const step = stepSpawnBudget(this.spawnBudget, dt, elapsed, targetAlive(elapsed) - this.active.length);
+    let bosses = 0;
+    for (const e of this.active) if (e.boss) bosses++;
+    const step = stepSpawnBudget(this.spawnBudget, dt, elapsed, targetAlive(elapsed) - (this.active.length - bosses));
     this.spawnBudget = step.budget;
     for (let i = 0; i < step.count; i++) {
       const p = spawnPosition(player.x, player.y, view.width, view.height, this.rng);

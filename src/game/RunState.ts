@@ -7,8 +7,10 @@ export interface RunState {
   /** Attacks that have taken their gold evolution (not to be confused with `gold`, the coins). */
   goldAttacks: AttackId[];
   element: Element | null; stage: Stage; pendingLevels: number;
+  /** True once the final boss is beaten. */
+  won: boolean;
 }
 
 export function createRunState(): RunState {
-  return { level: 1, xp: 0, gold: 0, elapsed: 0, owned: { spit: 1 }, picks: [], goldAttacks: [], element: null, stage: 0, pendingLevels: 0 };
+  return { level: 1, xp: 0, gold: 0, elapsed: 0, owned: { spit: 1 }, picks: [], goldAttacks: [], element: null, stage: 0, pendingLevels: 0, won: false };
 }
