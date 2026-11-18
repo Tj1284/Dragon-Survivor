@@ -13,7 +13,7 @@ export default async function (page, baseUrl) {
   // fire picks → fire line; jumping 5 → 20 skips adult with a single animation
   await fresh(page, baseUrl);
   await dbg(page, 'give', 'fire_orbit');
-  await dbg(page, 'give', 'searing');
+  await dbg(page, 'give', 'fire_orbit');
   await dbg(page, 'setLevel', 5);
   await waitForm(page, 'young_fire');
   if ((await dbg(page, 'run')).element !== 'fire') throw new Error('element should be fire');

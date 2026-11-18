@@ -78,33 +78,31 @@ gem_s/m/l = gemas de experiencia pequeña, mediana y grande; gold = moneda de or
 | `art/pickups/gem_l.png` | 10×10 | 1 | 10×10 |
 | `art/pickups/gold.png` | 8×8 | 2 | 16×8 |
 
-### Iconos de mejoras
+### Iconos de ataques y estadísticas
 
-El nombre de cada icono es el de la mejora (ver tabla de mejoras más abajo).
+El nombre de cada icono es el del ataque o la estadística (ver la tabla de más abajo).
 
 | Archivo | Frame | Frames | Tamaño total del PNG |
 |---|---|---|---|
-| `art/icons/swift_wings.png` | 16×16 | 1 | 16×16 |
-| `art/icons/thick_scales.png` | 16×16 | 1 | 16×16 |
-| `art/icons/magnet.png` | 16×16 | 1 | 16×16 |
-| `art/icons/fury.png` | 16×16 | 1 | 16×16 |
-| `art/icons/quick_breath.png` | 16×16 | 1 | 16×16 |
-| `art/icons/regen.png` | 16×16 | 1 | 16×16 |
+| `art/icons/spit.png` | 16×16 | 1 | 16×16 |
+| `art/icons/tail_swipe.png` | 16×16 | 1 | 16×16 |
+| `art/icons/roar.png` | 16×16 | 1 | 16×16 |
+| `art/icons/fire_breath.png` | 16×16 | 1 | 16×16 |
 | `art/icons/fire_orbit.png` | 16×16 | 1 | 16×16 |
+| `art/icons/meteor.png` | 16×16 | 1 | 16×16 |
+| `art/icons/ice_breath.png` | 16×16 | 1 | 16×16 |
 | `art/icons/frost_shards.png` | 16×16 | 1 | 16×16 |
-| `art/icons/thunder_strike.png` | 16×16 | 1 | 16×16 |
-| `art/icons/ember_trail.png` | 16×16 | 1 | 16×16 |
-| `art/icons/wider_flames.png` | 16×16 | 1 | 16×16 |
-| `art/icons/searing.png` | 16×16 | 1 | 16×16 |
-| `art/icons/fire_burst.png` | 16×16 | 1 | 16×16 |
-| `art/icons/deep_chill.png` | 16×16 | 1 | 16×16 |
-| `art/icons/shatter.png` | 16×16 | 1 | 16×16 |
-| `art/icons/ice_armor.png` | 16×16 | 1 | 16×16 |
 | `art/icons/frost_aura.png` | 16×16 | 1 | 16×16 |
-| `art/icons/extra_jump.png` | 16×16 | 1 | 16×16 |
-| `art/icons/static_charge.png` | 16×16 | 1 | 16×16 |
-| `art/icons/overcharge.png` | 16×16 | 1 | 16×16 |
-| `art/icons/spark_speed.png` | 16×16 | 1 | 16×16 |
+| `art/icons/lightning_breath.png` | 16×16 | 1 | 16×16 |
+| `art/icons/thunder_strike.png` | 16×16 | 1 | 16×16 |
+| `art/icons/static_field.png` | 16×16 | 1 | 16×16 |
+| `art/icons/fury.png` | 16×16 | 1 | 16×16 |
+| `art/icons/thick_scales.png` | 16×16 | 1 | 16×16 |
+| `art/icons/quick_breath.png` | 16×16 | 1 | 16×16 |
+| `art/icons/swift_wings.png` | 16×16 | 1 | 16×16 |
+| `art/icons/regen.png` | 16×16 | 1 | 16×16 |
+| `art/icons/armor.png` | 16×16 | 1 | 16×16 |
+| `art/icons/magnet.png` | 16×16 | 1 | 16×16 |
 
 ### Suelo
 
@@ -114,31 +112,29 @@ Un tile que se repite en todas direcciones: tiene que encajar consigo mismo por 
 |---|---|---|---|
 | `art/tiles/ground.png` | 32×32 | 1 | 32×32 |
 
-## Mejoras (para los iconos)
+## Ataques y estadísticas (para los iconos)
 
-| Icono | Mejora | Elemento |
+| Icono | Qué es | Elemento |
 |---|---|---|
-| swift_wings | Alas veloces: más velocidad | neutral |
-| thick_scales | Escamas gruesas: más vida | neutral |
-| magnet | Imán: recoges desde más lejos | neutral |
-| fury | Furia: más daño | neutral |
-| quick_breath | Aliento rápido: menos recarga | neutral |
-| regen | Regeneración | neutral |
+| spit | Escupitajo: el ataque inicial de la cría | neutral |
+| tail_swipe | Coletazo: golpe en arco | neutral |
+| roar | Rugido: empuja a los cercanos | neutral |
+| fire_breath | Aliento de fuego: bolas que dejan suelo ardiendo | fuego |
 | fire_orbit | Orbes de fuego que giran a tu alrededor | fuego |
-| ember_trail | Brasas: las zonas de fuego duran más | fuego |
-| wider_flames | Llamas amplias: zonas de fuego más grandes | fuego |
-| searing | Abrasador: más daño de quemadura | fuego |
-| fire_burst | Estallido: los enemigos pueden explotar al morir | fuego |
-| frost_shards | Fragmentos de escarcha disparados al azar | hielo |
-| deep_chill | Frío intenso: ralentiza más | hielo |
-| shatter | Quebrar: más daño a enemigos congelados | hielo |
-| ice_armor | Armadura de hielo: menos daño recibido | hielo |
-| frost_aura | Aura gélida: ralentiza a los enemigos cercanos | hielo |
-| thunder_strike | Relámpago que cae sobre un enemigo al azar | rayo |
-| extra_jump | Salto extra: el rayo encadena más enemigos | rayo |
-| static_charge | Carga estática: el rayo salta más lejos | rayo |
-| overcharge | Sobrecarga: el rayo pierde menos daño al saltar | rayo |
-| spark_speed | Chispa rápida: el rayo recarga antes | rayo |
+| meteor | Meteoro que cae y explota | fuego |
+| ice_breath | Aliento de hielo: abanico de fragmentos | hielo |
+| frost_shards | Fragmentos de escarcha en todas direcciones | hielo |
+| frost_aura | Aura gélida: ralentiza a los cercanos | hielo |
+| lightning_breath | Aliento de rayo: salta entre enemigos | rayo |
+| thunder_strike | Relámpago que cae sobre un enemigo | rayo |
+| static_field | Campo estático: descargas cercanas | rayo |
+| fury | Furia: más daño | estadística |
+| thick_scales | Escamas gruesas: más vida | estadística |
+| quick_breath | Aliento rápido: menos recarga | estadística |
+| swift_wings | Alas veloces: más velocidad | estadística |
+| regen | Regeneración | estadística |
+| armor | Armadura: menos daño recibido | estadística |
+| magnet | Imán: recoges desde más lejos | estadística |
 
 ## Prioridad sugerida
 

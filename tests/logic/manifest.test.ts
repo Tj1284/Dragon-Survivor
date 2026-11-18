@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { expect, it } from 'vitest';
 import { ALL_SHEETS, DRAGON_SHEETS, ENEMY_SHEETS, ICON_SHEETS } from '../../src/assets/manifest';
-import { UPGRADES } from '../../src/logic/upgrades';
+import { UPGRADE_IDS } from '../../src/logic/attacks';
 
 it('has the 10 dragon forms with the agreed frame sizes', () => {
   expect(Object.keys(DRAGON_SHEETS)).toHaveLength(10);
@@ -19,7 +19,7 @@ it('has enemies and the boss at their sizes', () => {
 });
 it('has unique keys and an icon per upgrade', () => {
   expect(new Set(ALL_SHEETS.map((s) => s.key)).size).toBe(ALL_SHEETS.length);
-  for (const u of UPGRADES) expect(ICON_SHEETS[u.id]).toBeDefined();
+  for (const id of UPGRADE_IDS) expect(ICON_SHEETS[id]).toBeDefined();
 });
 it('documents every asset path for the artist', () => {
   const doc = readFileSync('docs/ASSETS.md', 'utf8');

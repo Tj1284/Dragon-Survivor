@@ -13,5 +13,5 @@ export default async function (page, baseUrl) {
     const hasArt = existsSync(m.path);
     if (t.placeholder === hasArt) throw new Error(`${m.key}: ${hasArt ? 'art/ PNG was not used' : 'generated art expected'}`);
   }
-  if (manifest.length < 50) throw new Error('manifest too small: ' + manifest.length);
+  if (manifest.length < 45) throw new Error('manifest too small: ' + manifest.length);
 }

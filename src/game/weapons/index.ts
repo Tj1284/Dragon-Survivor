@@ -1,3 +1,4 @@
+import type { AttackId } from '../../logic/attacks';
 import type { Element } from '../../logic/types';
 import { FireBreath } from './FireBreath';
 import { FireOrbit } from './FireOrbit';
@@ -5,23 +6,32 @@ import { FrostAura } from './FrostAura';
 import { FrostShards } from './FrostShards';
 import { IceBreath } from './IceBreath';
 import { LightningBreath } from './LightningBreath';
+import { Meteor } from './Meteor';
+import { Roar } from './Roar';
+import { Spit } from './Spit';
+import { StaticField } from './StaticField';
+import { TailSwipe } from './TailSwipe';
 import { ThunderStrike } from './ThunderStrike';
 import type { Weapon, WeaponCtx } from './types';
 import { Ultimate } from './Ultimate';
 
-export function createBreath(ctx: WeaponCtx, element: Element): Weapon {
-  if (element === 'fire') return new FireBreath(ctx);
-  if (element === 'ice') return new IceBreath(ctx);
-  return new LightningBreath(ctx);
-}
+const FACTORY: Record<AttackId, new (ctx: WeaponCtx) => Weapon> = {
+  spit: Spit,
+  tail_swipe: TailSwipe,
+  roar: Roar,
+  meteor: Meteor,
+  static_field: StaticField,
+  fire_breath: FireBreath,
+  fire_orbit: FireOrbit,
+  ice_breath: IceBreath,
+  frost_shards: FrostShards,
+  frost_aura: FrostAura,
+  lightning_breath: LightningBreath,
+  thunder_strike: ThunderStrike,
+};
 
-export type ElementWeaponId = 'fire_orbit' | 'frost_shards' | 'thunder_strike' | 'frost_aura';
-
-export function createElementWeapon(ctx: WeaponCtx, id: ElementWeaponId): Weapon {
-  if (id === 'fire_orbit') return new FireOrbit(ctx);
-  if (id === 'frost_shards') return new FrostShards(ctx);
-  if (id === 'frost_aura') return new FrostAura(ctx);
-  return new ThunderStrike(ctx);
+export function createAttack(ctx: WeaponCtx, id: AttackId): Weapon {
+  return new FACTORY[id](ctx);
 }
 
 export function createUltimate(ctx: WeaponCtx, element: Element): Weapon {

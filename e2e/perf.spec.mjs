@@ -6,9 +6,13 @@ export default async function (page, baseUrl) {
   await dbg(page, 'clearEnemies');
   await dbg(page, 'setHp', 1e9);
   await dbg(page, 'chooseElementNext', 'ice');
-  for (let i = 0; i < 5; i++) await dbg(page, 'give', 'frost_shards');
+  // the four attacks at max level and gold (risk 5)
+  for (const id of ['spit', 'frost_shards', 'frost_aura', 'tail_swipe']) for (let i = 0; i < 5; i++) await dbg(page, 'give', id);
   await dbg(page, 'setLevel', 12);
   await waitFor(page, () => window.__dbg.player().formId === 'adult_ice', null, 4000);
+  for (const id of ['ice_breath', 'frost_shards', 'frost_aura', 'tail_swipe']) await dbg(page, 'giveGold', id);
+  const held = await dbg(page, 'attacks');
+  if (held.length !== 4 || held.some((h) => !h.gold || h.level < 5)) throw new Error('perf setup: expected 4 gold attacks: ' + JSON.stringify(held));
   await dbg(page, 'spawn', 'squire', 300, 150);
   await dbg(page, 'setEnemyHp', 1e6);
   // warm the projectile pool, let it drain, then fill the screen with 200 long-lived projectiles
