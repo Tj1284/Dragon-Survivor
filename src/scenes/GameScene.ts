@@ -236,6 +236,16 @@ export class GameScene extends Phaser.Scene {
       }
     });
     registerDebug('clearEnemies', () => this.enemies.clear());
+    // test targets in one call, so no attack can hit them before they are tough and frozen
+    registerDebug('spawnDummies', (type: EnemyTypeId, n: number, dist: number) => {
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2;
+        const e = this.enemies.spawn(type, this.player.x + Math.cos(a) * dist, this.player.y + Math.sin(a) * dist, this.run.elapsed);
+        e.hp = e.maxHp = 1e6;
+        e.ice = { ...e.ice, frozenUntil: 1e9 };
+      }
+    });
+    registerDebug('spawnAt', (type: EnemyTypeId, dx: number, dy: number) => { this.enemies.spawn(type, this.player.x + dx, this.player.y + dy, this.run.elapsed); });
     registerDebug('enemies', () => this.enemies.active.filter((e) => e.alive).length);
     registerDebug('enemyTypes', () => ENEMY_IDS.filter((id) => this.enemies.active.some((e) => e.alive && e.type === id)));
     registerDebug('setEnemyHp', (hp: number) => { for (const e of this.enemies.active) { e.hp = hp; e.maxHp = Math.max(e.maxHp, hp); } });

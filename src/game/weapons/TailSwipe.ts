@@ -1,5 +1,6 @@
 import type * as Phaser from 'phaser';
 import type { Enemy } from '../EnemyManager';
+import { weaponStats } from './stats';
 import type { Weapon, WeaponCtx } from './types';
 import { isGold, params, weaponDamage } from './util';
 
@@ -21,13 +22,19 @@ export class TailSwipe implements Weapon {
     const { player, enemies } = this.ctx;
     const p = params(this.ctx, 'tail_swipe');
     const gold = isGold(this.ctx, 'tail_swipe');
-    enemies.inRadius(player.x, player.y, p.radius, this.near);
-    if (this.near.length === 0) return; // wait for someone to be in reach
-    this.timer = p.cooldown * player.stats.cooldownMult;
     const facing = player.sprite.flipX ? -1 : 1;
+    enemies.inRadius(player.x, player.y, p.radius, this.near);
+    // keep only the enemies the swing can reach: the facing half, or everyone when gold
+    if (!gold) {
+      for (let i = this.near.length - 1; i >= 0; i--) {
+        if ((this.near[i].x - player.x) * facing < -4) { this.near[i] = this.near[this.near.length - 1]; this.near.pop(); }
+      }
+    }
+    if (this.near.length === 0) return; // hold the swing until someone is in reach
+    this.timer = p.cooldown * player.stats.cooldownMult;
+    weaponStats.tailSwings++;
     const dmg = weaponDamage(this.ctx, 'tail_swipe', p.damage);
     for (const e of this.near) {
-      if (!gold && (e.x - player.x) * facing < -4) continue;
       enemies.hit(e, dmg, now, 'tail_swipe');
       if (gold) enemies.knockback(e, player.x, player.y, p.extra);
     }

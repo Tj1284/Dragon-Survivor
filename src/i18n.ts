@@ -10,7 +10,7 @@ const es: Dict = {
   el_ice: 'Hielo', el_ice_d: 'Ralentiza y congela',
   el_lightning: 'Rayo', el_lightning_d: 'Salta entre enemigos',
   // attacks
-  up_spit: 'Escupitajo', up_spit_d: 'Más daño y más proyectiles',
+  up_spit: 'Escupitajo', up_spit_d: 'Dispara al enemigo más cercano',
   up_tail_swipe: 'Coletazo', up_tail_swipe_d: 'Golpea en arco hacia donde miras',
   up_roar: 'Rugido', up_roar_d: 'Empuja y daña a los cercanos',
   up_fire_breath: 'Aliento de fuego', up_fire_breath_d: 'Bolas que dejan suelo ardiendo',
@@ -53,7 +53,7 @@ const en: Dict = {
   el_fire: 'Fire', el_fire_d: 'Leaves burning zones',
   el_ice: 'Ice', el_ice_d: 'Slows and freezes',
   el_lightning: 'Lightning', el_lightning_d: 'Chains between enemies',
-  up_spit: 'Spit', up_spit_d: 'More damage and more shots',
+  up_spit: 'Spit', up_spit_d: 'Shoots the nearest enemy',
   up_tail_swipe: 'Tail swipe', up_tail_swipe_d: 'Hits in an arc where you face',
   up_roar: 'Roar', up_roar_d: 'Pushes and hurts nearby enemies',
   up_fire_breath: 'Fire breath', up_fire_breath_d: 'Fireballs that leave burning ground',

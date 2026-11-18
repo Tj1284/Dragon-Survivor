@@ -119,9 +119,9 @@ type Row = { damage: number[]; cooldown: number[]; count: number[]; radius: numb
 const five = (v: number): number[] => [v, v, v, v, v];
 
 const TABLE: Record<AttackId, Row> = {
-  spit: { damage: [12, 15, 15, 19, 19], cooldown: [0.7, 0.7, 0.65, 0.6, 0.55], count: [1, 1, 2, 2, 3], radius: five(4), extra: five(0) },
-  fire_breath: { damage: [14, 17, 17, 21, 21], cooldown: [0.9, 0.9, 0.85, 0.8, 0.75], count: [1, 1, 2, 2, 3], radius: five(5), extra: [18, 18, 21, 21, 24] },
-  ice_breath: { damage: [8, 10, 10, 12, 12], cooldown: [0.8, 0.8, 0.75, 0.7, 0.65], count: [3, 3, 4, 4, 5], radius: five(4), extra: five(0) },
+  spit: { damage: [12, 15, 15, 19, 19], cooldown: [0.7, 0.65, 0.65, 0.6, 0.55], count: [1, 1, 2, 2, 3], radius: five(4), extra: five(0) },
+  fire_breath: { damage: [14, 17, 17, 21, 21], cooldown: [0.9, 0.85, 0.85, 0.8, 0.75], count: [1, 1, 2, 2, 3], radius: five(5), extra: [18, 18, 21, 21, 24] },
+  ice_breath: { damage: [8, 10, 10, 12, 12], cooldown: [0.8, 0.75, 0.75, 0.7, 0.65], count: [3, 3, 4, 4, 5], radius: five(4), extra: five(0) },
   lightning_breath: { damage: [12, 14, 14, 17, 17], cooldown: [0.9, 0.85, 0.8, 0.75, 0.7], count: five(1), radius: five(60), extra: [3, 3, 4, 5, 6] },
   tail_swipe: { damage: [16, 20, 24, 28, 34], cooldown: [1.6, 1.5, 1.4, 1.3, 1.2], count: five(1), radius: [34, 36, 40, 44, 48], extra: five(0) },
   roar: { damage: [8, 10, 12, 14, 16], cooldown: [4, 3.7, 3.4, 3.1, 2.8], count: five(1), radius: [50, 55, 60, 65, 70], extra: [30, 34, 38, 42, 46] },

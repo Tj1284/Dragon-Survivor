@@ -9,10 +9,8 @@ async function fresh(page, baseUrl) {
 }
 async function dummies(page, n, dist) {
   await dbg(page, 'clearEnemies');
-  await dbg(page, 'spawn', 'squire', n, dist);
-  await dbg(page, 'setEnemyHp', 1e6);
-  await dbg(page, 'freezeEnemies');
   await dbg(page, 'clearHitLog');
+  await dbg(page, 'spawnDummies', 'squire', n, dist);
 }
 const hitsOf = async (page, source) => (await dbg(page, 'hitLog')).filter((h) => h.source === source);
 
@@ -26,11 +24,23 @@ export default async function (page, baseUrl) {
   let hits = await hitsOf(page, 'tail_swipe');
   if (hits.length === 0) throw new Error('tail swipe never hit');
   if (hits.some((h) => h.dx < -5)) throw new Error('tail swipe hit enemies behind the dragon: ' + JSON.stringify(hits.filter((h) => h.dx < -5)[0]));
+  // with every enemy behind the dragon it must hold the swing instead of wasting it
+  await dbg(page, 'clearEnemies');
+  for (const dy of [-10, 0, 10]) await dbg(page, 'spawnAt', 'squire', -25, dy);
+  await dbg(page, 'setEnemyHp', 1e6);
+  await dbg(page, 'freezeEnemies');
+  const swingsBefore = (await dbg(page, 'weaponStats')).tailSwings;
+  await sleep(2500);
+  if ((await dbg(page, 'weaponStats')).tailSwings !== swingsBefore) throw new Error('tail swipe swung at nothing with all enemies behind');
+  await dbg(page, 'clearHitLog');
+  await dbg(page, 'setFacing', -1);
+  await waitFor(page, () => window.__dbg.hitLog().some((h) => h.source === 'tail_swipe'), null, 400);
+  await dbg(page, 'setFacing', 1);
   await dbg(page, 'giveGold', 'tail_swipe');
   await dummies(page, 6, 25);
   await sleep(3000);
   hits = await hitsOf(page, 'tail_swipe');
-  if (!hits.some((h) => h.dx < -5) || !hits.some((h) => h.dx > 5)) throw new Error('gold tail swipe should hit all around');
+  if (!hits.some((h) => h.dx < -5) || !hits.some((h) => h.dx > 5)) throw new Error('gold tail swipe should hit all around: ' + JSON.stringify({ hits: hits.map((h) => [Math.round(h.dx), Math.round(h.dy)]), stats: await dbg(page, 'weaponStats'), attacks: await dbg(page, 'attacks'), dist: (await dbg(page, 'enemyDistances')).map(Math.round), scene: await dbg(page, 'scene'), hp: (await dbg(page, 'player')).hp }));
 
   // --- roar: pushes away; gold also stuns ---
   await fresh(page, baseUrl);

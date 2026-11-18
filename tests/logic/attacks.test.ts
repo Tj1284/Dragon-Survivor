@@ -64,7 +64,12 @@ it('attack numbers follow the plan tables', () => {
 });
 it('every level changes something and every gold version differs from level 5', () => {
   for (const id of ATTACK_IDS) {
-    for (let l = 2; l <= 5; l++) expect(attackParams(id, l, false), `${id} L${l}`).not.toEqual(attackParams(id, l - 1, false));
+    for (let l = 2; l <= 5; l++) {
+      // more damage alone doesn't count: every level must also change shots, area, reach or cooldown
+      const { damage: _a, ...now } = attackParams(id, l, false);
+      const { damage: _b, ...before } = attackParams(id, l - 1, false);
+      expect(now, `${id} L${l}`).not.toEqual(before);
+    }
     if (ATTACKS[id].key) expect(attackParams(id, 5, true), id).not.toEqual(attackParams(id, 5, false));
   }
 });
