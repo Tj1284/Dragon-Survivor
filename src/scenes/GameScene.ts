@@ -9,6 +9,7 @@ import { BOSS_AI, BOSSES } from '../logic/bosses';
 import { t } from '../i18n';
 import { Decor } from '../game/Decor';
 import { Juice } from '../game/Juice';
+import { DamageNumbers } from '../game/DamageNumbers';
 import { Evolution } from '../game/Evolution';
 import { createAttack, createUltimate } from '../game/weapons';
 import { lightningStats } from '../game/weapons/LightningBreath';
@@ -65,6 +66,7 @@ export class GameScene extends Phaser.Scene {
   /** Permanent Lair bonuses, read from the save at the start of each run. */
   private meta!: MetaBonus;
   juice!: Juice;
+  damageNumbers!: DamageNumbers;
   decor!: Decor;
   /** Seconds of evolution pause left; counted down with real frame time so a scene pause can't skip it. */
   private evolvePauseLeft = 0;
@@ -104,8 +106,10 @@ export class GameScene extends Phaser.Scene {
     this.evolution = new Evolution(this.ctx, () => this.askElement(), (from, to) => this.onEvolved(from, to));
     this.juice = new Juice(this, this.player);
     this.decor = new Decor(this);
-    this.enemies.onHit = (e, _dmg, source) => {
+    this.damageNumbers = new DamageNumbers(this);
+    this.enemies.onHit = (e, dmg, source) => {
       this.juice.hit(e.x, e.y);
+      this.damageNumbers.show(e.x, e.y - e.radius, dmg, e.boss !== null);
       audio.play('hit');
       if (source) this.hitCounts[source] = (this.hitCounts[source] ?? 0) + 1;
       if (source && this.debugLog && this.hitLog.length < 500) this.hitLog.push({ source, dx: e.x - this.player.x, dy: e.y - this.player.y });
@@ -325,6 +329,7 @@ export class GameScene extends Phaser.Scene {
     });
     registerDebug('bosses', () => this.bosses.alive());
     registerDebug('damageBoss', (n: number) => { for (const e of this.enemies.active) if (e.boss && e.alive) this.enemies.hit(e, n, this.now, 'debug'); });
+    registerDebug('damageNumbers', () => ({ active: this.damageNumbers.active }));
     registerDebug('dropChestAt', (dx: number, dy: number) => this.pickups.dropChest(this.player.x + dx, this.player.y + dy));
     registerDebug('resetBossFlash', () => { this.enemies.bossFrames = 0; this.enemies.bossFlashFrames = 0; });
     registerDebug('bossFlashRatio', () => this.enemies.bossFlashFrames / Math.max(1, this.enemies.bossFrames));
@@ -394,6 +399,7 @@ export class GameScene extends Phaser.Scene {
     const boss = this.bosses.current();
     this.hud.setBoss(boss ? t(`boss_${boss.def.id}`) : null, boss ? boss.e.hp / boss.e.maxHp : 0);
     this.juice.update(dt, this.now);
+    this.damageNumbers.update(dt);
     this.decor.update();
     if (this.victoryIn > 0) {
       this.victoryIn -= dt;
