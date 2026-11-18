@@ -25,6 +25,7 @@ import { createRng } from '../logic/rng';
 import { clampDelta } from '../logic/time';
 import { metaBonus, type MetaBonus } from '../logic/meta';
 import { storage } from '../platform/storage';
+import { hideLoading } from '../ui/loading';
 import { addForms, addRunResult } from '../logic/save';
 import { formId } from '../logic/evolution';
 import { FALLBACK, computeStats, heldAttacks, rollChoices, spitToBreath, tagOf, type AttackId, type Choice, type UpgradeId } from '../logic/attacks';
@@ -58,6 +59,8 @@ export class GameScene extends Phaser.Scene {
   bosses!: Bosses;
   /** Seconds left before the victory screen once the final boss is down; 0 = not won yet. */
   private victoryIn = 0;
+  /** Where the first-run controls hint started; null once it is gone. */
+  private hintFrom: { x: number; y: number; until: number } | null = null;
   /** Permanent Lair bonuses, read from the save at the start of each run. */
   private meta!: MetaBonus;
   juice!: Juice;
@@ -133,7 +136,11 @@ export class GameScene extends Phaser.Scene {
       this.bosses.destroy();
     });
     this.registerDebugCommands();
+    // first run only: teach the controls by play, hide the hint once the dragon has moved
+    this.hintFrom = storage.load().played ? null : { x: this.player.x, y: this.player.y, until: 8 };
+    if (this.hintFrom) this.hud.showHint(t(this.sys.game.device.input.touch ? 'hint_touch' : 'hint_keys'));
     setDebugReady(true);
+    hideLoading();
   }
 
   private onResize(size: Phaser.Structs.Size): void {
@@ -356,6 +363,13 @@ export class GameScene extends Phaser.Scene {
     const cam = this.cameras.main;
     this.ground.setTilePosition(cam.scrollX, cam.scrollY);
     this.hud.update(this.run, this.player);
+    if (this.hintFrom) {
+      this.hintFrom.until -= dt;
+      if (this.hintFrom.until <= 0 || Math.hypot(this.player.x - this.hintFrom.x, this.player.y - this.hintFrom.y) >= 60) {
+        this.hud.hideHint();
+        this.hintFrom = null;
+      }
+    }
     const boss = this.bosses.current();
     this.hud.setBoss(boss ? t(`boss_${boss.def.id}`) : null, boss ? boss.e.hp / boss.e.maxHp : 0);
     this.juice.update(dt, this.now);

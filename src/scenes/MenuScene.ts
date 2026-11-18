@@ -7,6 +7,7 @@ import { ALL_FORMS } from '../logic/evolution';
 import { storage } from '../platform/storage';
 import { describeButtons, makeButton, type Button } from '../ui/button';
 import { TEXT } from '../ui/style';
+import { hideLoading } from '../ui/loading';
 
 /** Title screen: play, Lair, Collection, gold. Players reach it from their second visit on. */
 export class MenuScene extends Phaser.Scene {
@@ -44,5 +45,6 @@ export class MenuScene extends Phaser.Scene {
     this.input.keyboard?.once('keydown-ENTER', () => this.scene.start('Game'));
     registerDebug('buttons', () => describeButtons(buttons));
     setDebugReady(true);
+    hideLoading();
   }
 }

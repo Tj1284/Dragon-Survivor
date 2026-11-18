@@ -32,6 +32,8 @@ export class Hud {
   private readonly bossFill: Phaser.GameObjects.Rectangle;
   private readonly bossName: Phaser.GameObjects.Text;
   private bossW = 0;
+  private readonly hint: Phaser.GameObjects.Text;
+  private hintTween: Phaser.Tweens.Tween | null = null;
 
   constructor(scene: Phaser.Scene, onPause: () => void) {
     const fixed = <T extends Phaser.GameObjects.Components.ScrollFactor & Phaser.GameObjects.Components.Depth>(o: T): T => { o.setScrollFactor(0); o.setDepth(500); return o; };
@@ -48,6 +50,7 @@ export class Hud {
     this.bossBg = fixed(scene.add.rectangle(0, 0, 10, 6, 0x000000, 0.65).setOrigin(0.5).setStrokeStyle(1, 0xffffff, 0.7).setVisible(false));
     this.bossFill = fixed(scene.add.rectangle(0, 0, 10, 4, 0xc8302a).setOrigin(0, 0.5).setVisible(false));
     this.bossName = fixed(scene.add.text(0, 0, '', { ...TEXT, fontSize: '8px' }).setOrigin(0.5, 1).setVisible(false));
+    this.hint = fixed(scene.add.text(0, 0, '', { ...TEXT, fontSize: '8px', align: 'center', backgroundColor: '#1d1b2acc', padding: { x: 6, y: 4 } }).setOrigin(0.5).setVisible(false));
     for (let i = 0; i < MAX_SLOTS; i++) {
       const x = 13 + i * 21, y = 27;
       this.slots.push({
@@ -74,6 +77,17 @@ export class Hud {
     this.bossBg.setPosition(Math.round(width / 2), by).setSize(this.bossW + 2, 6);
     this.bossFill.setPosition(Math.round(width / 2 - this.bossW / 2), by);
     this.bossName.setPosition(Math.round(width / 2), by - 4);
+    this.hint.setPosition(Math.round(width / 2), Math.round(_height * 0.72));
+  }
+
+  showHint(text: string): void {
+    this.hint.setText(text).setVisible(true).setAlpha(1);
+    this.hintTween = this.hint.scene.tweens.add({ targets: this.hint, alpha: 0.55, duration: 600, yoyo: true, repeat: -1 });
+  }
+
+  hideHint(): void {
+    this.hintTween?.stop();
+    this.hint.setVisible(false);
   }
 
   /** Shows the boss health bar, or hides it when `ratio` is null. */
@@ -119,6 +133,7 @@ export class Hud {
       gold: { x: this.gold.x, y: this.gold.y },
       pause: { x: this.pauseHit.x, y: this.pauseHit.y },
       bossBar: { visible: this.bossBg.visible, name: this.bossName.text },
+      hint: { visible: this.hint.visible, text: this.hint.text },
       attacks: this.slots.filter((s) => s.id !== null).map((s) => ({ id: s.id, level: s.level, gold: s.gold, x: s.frame.x, y: s.frame.y })),
     };
   }
