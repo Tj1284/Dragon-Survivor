@@ -51,8 +51,6 @@ export class GameScene extends Phaser.Scene {
   bosses!: Bosses;
   /** Seconds left before the victory screen once the final boss is down; 0 = not won yet. */
   private victoryIn = 0;
-  /** Debug only: health set by setHp() above the normal maximum survives stat recalculation. */
-  private debugHpFloor = 0;
   juice!: Juice;
   decor!: Decor;
   /** Seconds of evolution pause left; counted down with real frame time so a scene pause can't skip it. */
@@ -97,7 +95,6 @@ export class GameScene extends Phaser.Scene {
     };
     this.bosses = new Bosses(this, this.enemies, this.player);
     this.victoryIn = 0;
-    this.debugHpFloor = 0;
     this.enemies.onKilled = (e) => {
       if (e.boss) { this.onBossKilled(e.boss, e.x, e.y); return; }
       this.juice.death(e.x, e.y);
@@ -231,7 +228,7 @@ export class GameScene extends Phaser.Scene {
     this.player.stats = computeStats(this.run.stage, this.run.owned);
     const gained = this.player.stats.maxHp - before;
     if (gained > 0) this.player.hp += gained;
-    this.player.hp = Math.min(this.player.hp, Math.max(this.player.stats.maxHp, this.debugHpFloor));
+    this.player.hp = Math.min(this.player.hp, this.player.hpLimit);
   }
 
   // ---- debug ----
@@ -262,7 +259,7 @@ export class GameScene extends Phaser.Scene {
     registerDebug('enemies', () => this.enemies.active.filter((e) => e.alive).length);
     registerDebug('enemyTypes', () => ENEMY_IDS.filter((id) => this.enemies.active.some((e) => e.alive && e.type === id)));
     registerDebug('setEnemyHp', (hp: number) => { for (const e of this.enemies.active) { e.hp = hp; e.maxHp = Math.max(e.maxHp, hp); } });
-    registerDebug('setHp', (hp: number) => { this.player.hp = hp; this.debugHpFloor = hp > this.player.stats.maxHp ? hp : 0; });
+    registerDebug('setHp', (hp: number) => { this.player.hp = hp; this.player.debugHpFloor = hp > this.player.stats.maxHp ? hp : 0; });
     registerDebug('setElapsed', (s: number) => { this.run.elapsed = s; });
     registerDebug('addXp', (n: number) => this.gainXp(n));
     registerDebug('give', (id: UpgradeId) => this.applyChoice({ type: 'upgrade', id }));
