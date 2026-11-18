@@ -1,7 +1,11 @@
 /** Tiny retro synth on Web Audio: square/triangle tones with pitch slides, filtered noise bursts. */
 export interface Voice { ctx: AudioContext; out: AudioNode }
 
+/** Notes started so far (debug: proves nothing plays while the tab is hidden). */
+export const synthStats = { notes: 0 };
+
 export function tone(v: Voice, t: number, freq: number, dur: number, opts: { type?: OscillatorType; vol?: number; slideTo?: number } = {}): void {
+  synthStats.notes++;
   const osc = v.ctx.createOscillator();
   const gain = v.ctx.createGain();
   osc.type = opts.type ?? 'square';
@@ -23,6 +27,7 @@ export function noise(v: Voice, t: number, dur: number, opts: { vol?: number; fr
     const data = noiseBuffer.getChannelData(0);
     for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
   }
+  synthStats.notes++;
   const src = v.ctx.createBufferSource();
   src.buffer = noiseBuffer;
   const filter = v.ctx.createBiquadFilter();

@@ -329,7 +329,8 @@ export class GameScene extends Phaser.Scene {
     });
     registerDebug('bosses', () => this.bosses.alive());
     registerDebug('damageBoss', (n: number) => { for (const e of this.enemies.active) if (e.boss && e.alive) this.enemies.hit(e, n, this.now, 'debug'); });
-    registerDebug('damageNumbers', () => ({ active: this.damageNumbers.active }));
+    registerDebug('damageNumbers', () => ({ active: this.damageNumbers.active, shownTotal: this.damageNumbers.shownTotal, recycledYoung: this.damageNumbers.recycledYoung }));
+    registerDebug('burstDamageNumbers', (n: number) => { for (let i = 0; i < n; i++) this.damageNumbers.show(this.player.x, this.player.y, 10, false); });
     registerDebug('dropChestAt', (dx: number, dy: number) => this.pickups.dropChest(this.player.x + dx, this.player.y + dy));
     registerDebug('resetBossFlash', () => { this.enemies.bossFrames = 0; this.enemies.bossFlashFrames = 0; });
     registerDebug('bossFlashRatio', () => this.enemies.bossFlashFrames / Math.max(1, this.enemies.bossFrames));

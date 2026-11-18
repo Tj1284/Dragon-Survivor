@@ -22,6 +22,23 @@ export default async function (page, baseUrl) {
   const a = await dbg(page, 'audio');
   if (a.maxInWindow > 8) throw new Error('too many sounds at once: ' + a.maxInWindow);
 
+  // hidden tab: sound stops (no new notes) and comes back when visible again (Playgama 3.3.5)
+  const setHidden = (hidden) => page.evaluate((h) => {
+    Object.defineProperty(document, 'hidden', { value: h, configurable: true });
+    Object.defineProperty(document, 'visibilityState', { value: h ? 'hidden' : 'visible', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  }, hidden);
+  await setHidden(true);
+  await sleep(300);
+  const before = (await dbg(page, 'audio')).notes;
+  await sleep(1500);
+  const after = (await dbg(page, 'audio')).notes;
+  if (after !== before) throw new Error(`sound kept playing in a hidden tab: ${after - before} new notes`);
+  if ((await dbg(page, 'audio')).state === 'running') throw new Error('audio context should be suspended while hidden');
+  await setHidden(false);
+  await waitFor(page, () => window.__dbg.audio().state === 'running', null, 2000)
+    .catch(() => { throw new Error('audio should resume when the tab is visible again'); });
+
   // mute from the pause menu is saved and survives a reload
   await page.keyboard.press('Escape');
   await waitFor(page, () => window.__dbg.scene().includes('Pause'), null, 2000);
