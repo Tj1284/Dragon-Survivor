@@ -46,6 +46,9 @@ export default async function (page, baseUrl) {
   await page.reload();
   await page.waitForFunction(() => window.__dbg?.ready === true, null, { timeout: 5000 });
   if (!(await scenes(page)).includes('Menu')) throw new Error('a returning player should land on the menu');
+  await page.mouse.click(5, 5); // first gesture unlocks audio
+  await waitFor(page, () => window.__dbg.audio().music === 'title', null, 8000)
+    .catch(async () => { throw new Error('the menu should play the title track: ' + JSON.stringify(await dbg(page, 'audio'))); });
   await page.screenshot({ path: 'e2e/out/menu.png' });
 
   // lair: buying spends gold and persists; rapid taps can't overspend (risk 5)

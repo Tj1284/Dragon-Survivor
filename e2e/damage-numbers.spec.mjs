@@ -20,8 +20,6 @@ export default async function (page, baseUrl) {
   const stats = await dbg(page, 'damageNumbers');
   if (stats.recycledYoung > 0) throw new Error('damage numbers recycled before 0.2 s: ' + stats.recycledYoung);
   // one burst in a single frame shows at most 6
-  const n0 = (await dbg(page, 'damageNumbers')).shownTotal;
-  await dbg(page, 'burstDamageNumbers', 50);
-  const n1 = (await dbg(page, 'damageNumbers')).shownTotal;
-  if (n1 - n0 > 6) throw new Error('more than 6 numbers in one frame: ' + (n1 - n0));
+  const shown = await dbg(page, 'burstDamageNumbers', 50);
+  if (shown > 6) throw new Error('more than 6 numbers in one frame: ' + shown);
 }

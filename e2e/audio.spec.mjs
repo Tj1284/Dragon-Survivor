@@ -11,6 +11,10 @@ export default async function (page, baseUrl) {
 
   await page.keyboard.press('d');
   await waitFor(page, () => window.__dbg.audio().unlocked, null, 2000);
+  await waitFor(page, () => window.__dbg.audio().loaded >= 14, null, 5000)
+    .catch(async () => { throw new Error('sound files should be decoded after the first gesture: ' + JSON.stringify(await dbg(page, 'audio'))); });
+  await waitFor(page, () => /^level[123]$/.test(window.__dbg.audio().music ?? ''), null, 8000)
+    .catch(async () => { throw new Error('a level track should play during a run: ' + (await dbg(page, 'audio')).music); });
   await dbg(page, 'spawn', 'squire', 3, 40);
   await waitFor(page, () => (window.__dbg.audio().played.kill ?? 0) > 0, null, 4000)
     .catch(async () => { throw new Error('killing should play a sound: ' + JSON.stringify(await dbg(page, 'audio'))); });

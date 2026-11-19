@@ -52,5 +52,6 @@ export class MenuScene extends Phaser.Scene {
     registerDebug('buttons', () => describeButtons(buttons));
     setDebugReady(true);
     hideLoading();
+    audio.playMusic('title');
   }
 }

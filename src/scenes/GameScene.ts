@@ -141,7 +141,6 @@ export class GameScene extends Phaser.Scene {
       for (const w of this.attacks.values()) w.destroy();
       this.ultimate?.destroy();
       this.bosses.destroy();
-      audio.stopMusic();
     });
     this.registerDebugCommands();
     // first run only: teach the controls by play, hide the hint once the dragon has moved
@@ -149,7 +148,8 @@ export class GameScene extends Phaser.Scene {
     if (this.hintFrom) this.hud.showHint(t(this.sys.game.device.input.touch ? 'hint_touch' : 'hint_keys'));
     setDebugReady(true);
     hideLoading();
-    audio.startMusic();
+    // a different level track each run
+    audio.playMusic((['level1', 'level2', 'level3'] as const)[Math.floor(Math.random() * 3)]);
   }
 
   private onResize(size: Phaser.Structs.Size): void {
@@ -330,7 +330,11 @@ export class GameScene extends Phaser.Scene {
     registerDebug('bosses', () => this.bosses.alive());
     registerDebug('damageBoss', (n: number) => { for (const e of this.enemies.active) if (e.boss && e.alive) this.enemies.hit(e, n, this.now, 'debug'); });
     registerDebug('damageNumbers', () => ({ active: this.damageNumbers.active, shownTotal: this.damageNumbers.shownTotal, recycledYoung: this.damageNumbers.recycledYoung }));
-    registerDebug('burstDamageNumbers', (n: number) => { for (let i = 0; i < n; i++) this.damageNumbers.show(this.player.x, this.player.y, 10, false); });
+    registerDebug('burstDamageNumbers', (n: number) => {
+      const before = this.damageNumbers.shownTotal;
+      for (let i = 0; i < n; i++) this.damageNumbers.show(this.player.x, this.player.y, 10, false);
+      return this.damageNumbers.shownTotal - before;
+    });
     registerDebug('dropChestAt', (dx: number, dy: number) => this.pickups.dropChest(this.player.x + dx, this.player.y + dy));
     registerDebug('resetBossFlash', () => { this.enemies.bossFrames = 0; this.enemies.bossFlashFrames = 0; });
     registerDebug('bossFlashRatio', () => this.enemies.bossFlashFrames / Math.max(1, this.enemies.bossFrames));

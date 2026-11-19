@@ -29,6 +29,7 @@ export class GameOverScene extends Phaser.Scene {
     if (!savedRuns.has(data.runId)) {
       savedRuns.add(data.runId);
       audio.play(data.won ? 'victory' : 'defeat');
+      audio.playMusic(data.won ? 'ending' : null);
       storage.save(addRunResult(storage.load(), { gold: data.gold - data.banked, time: data.time, won: data.won, forms: data.forms }));
     }
     const { width: w, height: h } = this.scale.gameSize;
