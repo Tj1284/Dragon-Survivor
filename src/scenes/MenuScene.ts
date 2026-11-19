@@ -7,6 +7,9 @@ import { ALL_FORMS } from '../logic/evolution';
 import { storage } from '../platform/storage';
 import { describeButtons, makeButton, type Button } from '../ui/button';
 import { TEXT } from '../ui/style';
+import { hideLoading } from '../ui/loading';
+import { audio } from '../audio';
+import { toggleMute } from '../audio/mute';
 
 /** Title screen: play, Lair, Collection, gold. Players reach it from their second visit on. */
 export class MenuScene extends Phaser.Scene {
@@ -41,8 +44,14 @@ export class MenuScene extends Phaser.Scene {
     buttons.push(makeButton(this, 'collection', colX, landscape ? smallY : smallY + 34, 112, 26,
       `${t('collection')} ${save.collection.length}/${ALL_FORMS.length}`, 0x5a3f8f, () => this.scene.start('Collection'), '8px'));
 
+    const mute = makeButton(this, 'mute', 34, 18, 56, 20, t(audio.muted ? 'sound_off' : 'sound_on'), 0x3a4a6a, () => {
+      mute.label.setText(t(toggleMute() ? 'sound_off' : 'sound_on'));
+    }, '8px');
+    buttons.push(mute);
     this.input.keyboard?.once('keydown-ENTER', () => this.scene.start('Game'));
     registerDebug('buttons', () => describeButtons(buttons));
     setDebugReady(true);
+    hideLoading();
+    audio.playMusic('title');
   }
 }

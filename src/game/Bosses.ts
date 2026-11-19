@@ -1,8 +1,9 @@
-import type * as Phaser from 'phaser';
+import * as Phaser from 'phaser';
 import { BOSS_AI, bossesDue, type BossDef, type BossId, type BossPattern } from '../logic/bosses';
 import { hpMult } from '../logic/spawn';
 import type { Enemy, EnemyManager } from './EnemyManager';
 import type { Player } from './Player';
+import { audio } from '../audio';
 
 interface Active {
   def: BossDef; e: Enemy;
@@ -24,6 +25,7 @@ export class Bosses {
 
   spawn(def: BossDef, elapsed: number): Enemy {
     this.spawned.add(def.id);
+    audio.play('boss');
     const view = this.scene.scale.gameSize;
     const a = Math.random() * Math.PI * 2;
     const r = Math.hypot(view.width, view.height) / 2 + 30;
@@ -87,6 +89,7 @@ export class Bosses {
         if (b.t <= 0) {
           if (Math.hypot(p.x - b.slamX, p.y - b.slamY) <= BOSS_AI.slam.radius) p.damage(BOSS_AI.slam.damage);
           this.scene.cameras.main.shake(120, 0.006);
+          audio.play('slam');
           this.toChase(b);
         }
         break;
@@ -98,7 +101,11 @@ export class Bosses {
     e.ice = { ...e.ice, frozenUntil: 0 };
     e.stunUntil = 0;
     e.sprite.setFlipX(dx < 0).setPosition(e.x, e.y);
-    if (b.state === 'windup') e.sprite.setTint(0xff8080);
+    // the charge wind-up blinks red so it reads as a warning
+    if (b.state === 'windup') {
+      if (Math.floor(b.t * 10) % 2 === 0) e.sprite.setTint(0xff6060).setTintMode(Phaser.TintModes.FILL);
+      else e.sprite.clearTint().setTintMode(Phaser.TintModes.MULTIPLY);
+    }
   }
 
   private startPattern(b: Active, ux: number, uy: number): void {

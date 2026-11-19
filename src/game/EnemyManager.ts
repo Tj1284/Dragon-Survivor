@@ -16,6 +16,8 @@ export interface Enemy {
   contactReadyAt: number; flashUntil: number;
   /** Stunned enemies don't move or act (gold roar). */
   stunUntil: number;
+  /** Bosses only flash white at most every 0.25 s, so they stay readable under constant fire. */
+  nextFlashAt: number;
   /** Extra slow (0..1) applied this frame by auras; reset every frame. */
   auraSlow: number;
   /** Set for bosses: the Bosses system moves them, they never relocate and don't count towards the horde size. */
@@ -29,6 +31,9 @@ export class EnemyManager {
   onKilled: (e: Enemy) => void = () => {};
   onHit: (e: Enemy, damage: number, source?: string) => void = () => {};
   spawningPaused = false;
+  /** Frames a boss was drawn / drawn white (debug readability check). */
+  bossFrames = 0;
+  bossFlashFrames = 0;
   /** Slow applied by ice hits. */
   iceSlow = 0.5;
   shatterLevel = 0;
@@ -43,7 +48,7 @@ export class EnemyManager {
         id: 0, type: 'squire', x: 0, y: 0, hp: 0, maxHp: 0, radius: 8, alive: false,
         sprite: scene.add.sprite(0, 0, ENEMY_SHEETS.squire.key).setDepth(5).setVisible(false),
         ice: newIceStatus(), hitCooldowns: new Map(), state: 'move', timer: 0, dashX: 0, dashY: 0,
-        contactReadyAt: 0, flashUntil: 0, stunUntil: 0, auraSlow: 0, boss: null,
+        contactReadyAt: 0, flashUntil: 0, nextFlashAt: 0, stunUntil: 0, auraSlow: 0, boss: null,
       }),
       (e) => { e.alive = false; e.sprite.setVisible(false).stop(); e.hitCooldowns.clear(); },
     );
@@ -65,6 +70,7 @@ export class EnemyManager {
     e.contactReadyAt = 0;
     e.flashUntil = 0;
     e.stunUntil = 0;
+    e.nextFlashAt = 0;
     e.auraSlow = 0;
     e.boss = null;
     e.sprite.setTexture(ENEMY_SHEETS[type].key, 0).setVisible(true).setPosition(x, y).setScale(1).setDepth(5).clearTint();
@@ -90,7 +96,8 @@ export class EnemyManager {
     if (!e.alive) return false;
     const dealt = damage * damageMultiplier(e.ice, now, this.shatterLevel);
     e.hp -= dealt;
-    e.flashUntil = now + 0.06;
+    if (!e.boss) e.flashUntil = now + 0.06;
+    else if (now >= e.nextFlashAt) { e.flashUntil = now + 0.04; e.nextFlashAt = now + 0.25; }
     this.onHit(e, dealt, source);
     if (e.hp <= 0) {
       e.alive = false;
@@ -194,6 +201,7 @@ export class EnemyManager {
     for (const e of this.active) {
       e.sprite.setPosition(e.x, e.y);
       const flashing = now < e.flashUntil;
+      if (e.boss && e.alive) { this.bossFrames++; if (flashing) this.bossFlashFrames++; }
       const frozen = now < e.ice.frozenUntil;
       if (flashing) e.sprite.setTint(0xffffff).setTintMode(Phaser.TintModes.FILL);
       else if (frozen) e.sprite.setTint(0x9fdcff).setTintMode(Phaser.TintModes.MULTIPLY);

@@ -12,7 +12,8 @@ export async function dbg(page, fn, ...args) {
   }
 }
 export async function open(page, baseUrl, query = '') {
-  await page.goto(baseUrl + '/?debug=1' + query);
+  // play=1 skips the menu: a page reload banks gold and marks the save as played, which would land on the menu
+  await page.goto(baseUrl + '/?debug=1&play=1' + query);
   await page.waitForFunction(() => window.__dbg?.ready === true, null, { timeout: 5000 });
 }
 export async function waitFor(page, predicate, arg, timeout = 5000) {

@@ -2,6 +2,7 @@ import * as Phaser from 'phaser';
 import { COLORS } from '../assets/manifest';
 import type { Element } from '../logic/types';
 import type { Player } from './Player';
+import { audio } from '../audio';
 
 /** Visual feedback that doesn't affect the rules: sparks, puffs, screen shake, hurt flash, aura, vignette. */
 export class Juice {
@@ -64,6 +65,7 @@ export class Juice {
     this.aura.setPosition(p.x, p.y).setAlpha(0.35 + Math.sin(this.t * 3) * 0.1);
     if (this.lastHp >= 0 && p.hp < this.lastHp - 0.01) {
       p.sprite.setTint(0xff6060);
+      audio.play('hurt');
       this.scene.time.delayedCall(90, () => p.sprite.clearTint());
       this.hurtFlash.setAlpha(0.18);
       if (now >= this.shakeReadyAt) {

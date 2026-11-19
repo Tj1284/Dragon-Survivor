@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
 import { onTap } from './ui';
 import { ICON_SHEETS } from '../assets/manifest';
-import { MAX_SLOTS, heldAttacks, type AttackId } from '../logic/attacks';
+import { MAX_SLOTS, type AttackId } from '../logic/attacks';
 import { t } from '../i18n';
 import { xpToNext } from '../logic/xp';
 import { formatTime } from '../scenes/GameOverScene';
@@ -32,6 +32,9 @@ export class Hud {
   private readonly bossFill: Phaser.GameObjects.Rectangle;
   private readonly bossName: Phaser.GameObjects.Text;
   private bossW = 0;
+  private readonly hint: Phaser.GameObjects.Text;
+  private readonly chestArrow: Phaser.GameObjects.Triangle;
+  private hintTween: Phaser.Tweens.Tween | null = null;
 
   constructor(scene: Phaser.Scene, onPause: () => void) {
     const fixed = <T extends Phaser.GameObjects.Components.ScrollFactor & Phaser.GameObjects.Components.Depth>(o: T): T => { o.setScrollFactor(0); o.setDepth(500); return o; };
@@ -48,6 +51,8 @@ export class Hud {
     this.bossBg = fixed(scene.add.rectangle(0, 0, 10, 6, 0x000000, 0.65).setOrigin(0.5).setStrokeStyle(1, 0xffffff, 0.7).setVisible(false));
     this.bossFill = fixed(scene.add.rectangle(0, 0, 10, 4, 0xc8302a).setOrigin(0, 0.5).setVisible(false));
     this.bossName = fixed(scene.add.text(0, 0, '', { ...TEXT, fontSize: '8px' }).setOrigin(0.5, 1).setVisible(false));
+    this.chestArrow = fixed(scene.add.triangle(0, 0, 0, -6, 12, 0, 0, 6, 0xf2c230).setStrokeStyle(1, 0x2a1608).setVisible(false));
+    this.hint = fixed(scene.add.text(0, 0, '', { ...TEXT, fontSize: '8px', align: 'center', backgroundColor: '#1d1b2acc', padding: { x: 6, y: 4 } }).setOrigin(0.5).setVisible(false));
     for (let i = 0; i < MAX_SLOTS; i++) {
       const x = 13 + i * 21, y = 27;
       this.slots.push({
@@ -74,6 +79,29 @@ export class Hud {
     this.bossBg.setPosition(Math.round(width / 2), by).setSize(this.bossW + 2, 6);
     this.bossFill.setPosition(Math.round(width / 2 - this.bossW / 2), by);
     this.bossName.setPosition(Math.round(width / 2), by - 4);
+    this.hint.setPosition(Math.round(width / 2), Math.round(_height * 0.72));
+  }
+
+  /** Points at an off-screen chest from the edge of the screen; pass null to hide. */
+  pointTo(target: { dx: number; dy: number } | null, width: number, height: number): void {
+    if (!target) { this.chestArrow.setVisible(false); return; }
+    const angle = Math.atan2(target.dy, target.dx);
+    const cx = width / 2, cy = height / 2;
+    const margin = 18;
+    const sx = (cx - margin) / Math.max(1e-6, Math.abs(Math.cos(angle)));
+    const sy = (cy - margin) / Math.max(1e-6, Math.abs(Math.sin(angle)));
+    const r = Math.min(sx, sy);
+    this.chestArrow.setVisible(true).setPosition(Math.round(cx + Math.cos(angle) * r), Math.round(cy + Math.sin(angle) * r)).setRotation(angle);
+  }
+
+  showHint(text: string): void {
+    this.hint.setText(text).setVisible(true).setAlpha(1);
+    this.hintTween = this.hint.scene.tweens.add({ targets: this.hint, alpha: 0.55, duration: 600, yoyo: true, repeat: -1 });
+  }
+
+  hideHint(): void {
+    this.hintTween?.stop();
+    this.hint.setVisible(false);
   }
 
   /** Shows the boss health bar, or hides it when `ratio` is null. */
@@ -95,7 +123,7 @@ export class Hud {
 
   /** Call whenever the held attacks, their levels or their gold state change. */
   refreshAttacks(run: RunState): void {
-    const held = heldAttacks(run.owned);
+    const held = run.attackOrder.filter((id) => (run.owned[id] ?? 0) > 0);
     this.slots.forEach((slot, i) => {
       const id = held[i] ?? null;
       slot.id = id;
@@ -119,6 +147,8 @@ export class Hud {
       gold: { x: this.gold.x, y: this.gold.y },
       pause: { x: this.pauseHit.x, y: this.pauseHit.y },
       bossBar: { visible: this.bossBg.visible, name: this.bossName.text },
+      hint: { visible: this.hint.visible, text: this.hint.text },
+      chestArrow: { visible: this.chestArrow.visible, x: this.chestArrow.x, y: this.chestArrow.y },
       attacks: this.slots.filter((s) => s.id !== null).map((s) => ({ id: s.id, level: s.level, gold: s.gold, x: s.frame.x, y: s.frame.y })),
     };
   }
