@@ -20,6 +20,8 @@ const es: Dict = {
   el_fire: 'Fuego', el_fire_d: 'Deja zonas ardiendo',
   el_ice: 'Hielo', el_ice_d: 'Ralentiza y congela',
   el_lightning: 'Rayo', el_lightning_d: 'Salta entre enemigos',
+  el_poison: 'Veneno', el_poison_d: 'Envenena y contagia',
+  el_shadow: 'Sombra', el_shadow_d: 'Persigue, remata y absorbe',
   // attacks
   up_spit: 'Escupitajo', up_spit_d: 'Dispara al enemigo más cercano',
   up_tail_swipe: 'Coletazo', up_tail_swipe_d: 'Golpea en arco hacia donde miras',
@@ -75,6 +77,8 @@ const en: Dict = {
   el_fire: 'Fire', el_fire_d: 'Leaves burning zones',
   el_ice: 'Ice', el_ice_d: 'Slows and freezes',
   el_lightning: 'Lightning', el_lightning_d: 'Chains between enemies',
+  el_poison: 'Poison', el_poison_d: 'Poisons and spreads',
+  el_shadow: 'Shadow', el_shadow_d: 'Seeks, executes and drains',
   up_spit: 'Spit', up_spit_d: 'Shoots the nearest enemy',
   up_tail_swipe: 'Tail swipe', up_tail_swipe_d: 'Hits in an arc where you face',
   up_roar: 'Roar', up_roar_d: 'Pushes and hurts nearby enemies',

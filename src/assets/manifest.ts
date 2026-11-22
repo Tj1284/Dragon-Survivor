@@ -5,7 +5,7 @@ import { UPGRADE_IDS, tagOf, type UpgradeId } from '../logic/attacks';
 
 export interface SheetDef { key: string; path: string; frameWidth: number; frameHeight: number; frames: number; color: number }
 
-export const COLORS: Record<Tag, number> = { fire: 0xe8542a, ice: 0x6cc6f0, lightning: 0xf5d742, neutral: 0xb08cff };
+export const COLORS: Record<Tag, number> = { fire: 0xe8542a, ice: 0x6cc6f0, lightning: 0xf5d742, poison: 0x8fe04a, shadow: 0xc23a6e, neutral: 0xb08cff };
 
 const sheet = (key: string, path: string, size: number, frames: number, color: number): SheetDef =>
   ({ key, path, frameWidth: size, frameHeight: size, frames, color });

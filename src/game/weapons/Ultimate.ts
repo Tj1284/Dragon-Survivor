@@ -37,7 +37,7 @@ export class Ultimate implements Weapon {
       for (const e of visibleEnemies(this.ctx, this.scratch)) e.ice = { ...e.ice, frozenUntil: now + U.iceFreeze };
       const view = this.ctx.scene.cameras.main.worldView;
       this.g.fillStyle(COLORS.ice, 0.25).fillRect(view.x, view.y, view.width, view.height);
-    } else {
+    } else if (this.element === 'lightning') {
       strikeRandom(this.ctx, this.g, this.scratch, U.lightningStrikes, U.lightningDamage * dm, 16, now, 'ultimate');
     }
     this.clearAt = now + 0.3;

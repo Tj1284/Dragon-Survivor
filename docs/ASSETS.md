@@ -6,7 +6,7 @@ Esta guía explica cómo preparar cada dibujo del juego para que el código lo c
 
 - **Formato:** PNG con fondo transparente.
 - **Estilo:** pixel art. El juego lo escala sin suavizado, así que dibuja a tamaño real (1 píxel del archivo = 1 píxel del juego).
-- **Spritesheets:** todos los frames de una animación en **una sola fila horizontal**, del mismo tamaño y **sin separación** entre ellos. Ejemplo: el ciclo de vuelo de la cría son 6 frames de 24×24, así que el PNG mide 144×24.
+- **Spritesheets:** todos los frames de una animación en **una sola fila horizontal**, del mismo tamaño y **sin separación** entre ellos. Ejemplo: el ciclo de vuelo de la cría son 6 frames de 32×32, así que el PNG mide 192×32.
 - **Dirección:** los personajes **miran a la derecha**. El juego los voltea solo cuando van a la izquierda.
 - **Centrado:** cada personaje centrado en su frame, con el cuerpo a la misma altura en todos los frames, para que no "salte" al animarse.
 - **Animaciones que NO hace falta dibujar:** el destello al recibir daño, la muerte, la transición de evolución y el aliento ya los hace el código.
@@ -24,7 +24,7 @@ No hace falta tocar código. Si quieres cambiar el tamaño de un frame o el núm
 
 ### Dragones (ciclo de vuelo)
 
-Cría = `hatchling`, joven = `young_*`, adulto = `adult_*`, legendario = `legendary_*`. fire = fuego, ice = hielo, lightning = rayo.
+Cría = `hatchling`, joven = `young_*`, adulto = `adult_*`, legendario = `legendary_*`. fire = fuego, ice = hielo, lightning = rayo, poison = veneno, shadow = sombra.
 
 | Archivo | Frame | Frames | Tamaño total del PNG |
 |---|---|---|---|
@@ -32,12 +32,18 @@ Cría = `hatchling`, joven = `young_*`, adulto = `adult_*`, legendario = `legend
 | `art/dragons/young_fire.png` | 32×32 | 6 | 192×32 |
 | `art/dragons/young_ice.png` | 32×32 | 6 | 192×32 |
 | `art/dragons/young_lightning.png` | 32×32 | 6 | 192×32 |
+| `art/dragons/young_poison.png` | 32×32 | 6 | 192×32 |
+| `art/dragons/young_shadow.png` | 32×32 | 6 | 192×32 |
 | `art/dragons/adult_fire.png` | 48×48 | 6 | 288×48 |
 | `art/dragons/adult_ice.png` | 48×48 | 6 | 288×48 |
 | `art/dragons/adult_lightning.png` | 48×48 | 6 | 288×48 |
+| `art/dragons/adult_poison.png` | 48×48 | 6 | 288×48 |
+| `art/dragons/adult_shadow.png` | 48×48 | 6 | 288×48 |
 | `art/dragons/legendary_fire.png` | 64×64 | 6 | 384×64 |
 | `art/dragons/legendary_ice.png` | 64×64 | 6 | 384×64 |
 | `art/dragons/legendary_lightning.png` | 64×64 | 6 | 384×64 |
+| `art/dragons/legendary_poison.png` | 64×64 | 6 | 384×64 |
+| `art/dragons/legendary_shadow.png` | 64×64 | 6 | 384×64 |
 
 ### Enemigos (ciclo de andar)
 

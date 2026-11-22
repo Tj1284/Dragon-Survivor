@@ -23,7 +23,7 @@ it('dragon flight cycles actually animate', () => {
 });
 it('evolved forms of different elements look different', () => {
   const h = (k: keyof typeof DRAGON_SHEETS) => renderSheet(DRAGON_SHEETS[k]).hash();
-  expect(new Set([h('adult_fire'), h('adult_ice'), h('adult_lightning')]).size).toBe(3);
+  expect(new Set([h('adult_fire'), h('adult_ice'), h('adult_lightning'), h('adult_poison'), h('adult_shadow')]).size).toBe(5);
 });
 
 import { lookFor } from '../../src/art/dragon';

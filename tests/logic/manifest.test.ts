@@ -3,8 +3,8 @@ import { expect, it } from 'vitest';
 import { ALL_SHEETS, DRAGON_SHEETS, ENEMY_SHEETS, ICON_SHEETS } from '../../src/assets/manifest';
 import { UPGRADE_IDS } from '../../src/logic/attacks';
 
-it('has the 10 dragon forms with the agreed frame sizes', () => {
-  expect(Object.keys(DRAGON_SHEETS)).toHaveLength(10);
+it('has the 16 dragon forms with the agreed frame sizes', () => {
+  expect(Object.keys(DRAGON_SHEETS)).toHaveLength(16);
   expect(DRAGON_SHEETS.hatchling.frameWidth).toBe(32);
   expect(DRAGON_SHEETS.young_fire.frameWidth).toBe(32);
   expect(DRAGON_SHEETS.adult_ice.frameWidth).toBe(48);
