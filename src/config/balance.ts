@@ -48,4 +48,7 @@ export const PLAYER_WEAPONS = {
   evolution: { pause: 0.8, pushRadius: 100, pushDistance: 60 },
 };
 
+/** Rewarded revive: health given back, enemies pushed away, seconds of invulnerability. */
+export const REVIVE = { hpFraction: 0.5, pushRadius: 110, pushDistance: 70, shield: 2 };
+
 export const PICKUPS = { goldChance: 0.1, flySpeed: 200, collectDistance: 6 };

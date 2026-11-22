@@ -2,6 +2,9 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 export default async function (page, baseUrl) {
   await page.goto(baseUrl + '/?debug=1');
   await page.waitForFunction(() => window.__dbg?.ready === true, null, { timeout: 5000 });
+  await sleep(300);
+  // the Bridge covers the page with its own loading screen until the game sends game_ready
+  if (await page.evaluate(() => !!document.getElementById('loading-overlay') && getComputedStyle(document.getElementById('loading-overlay')).display !== 'none')) throw new Error('platform loading overlay still covers the game');
   await page.evaluate(() => window.__dbg.pauseSpawns?.(true));
   const x0 = (await page.evaluate(() => window.__dbg.player())).x;
   await page.keyboard.down('d'); await sleep(1000); await page.keyboard.up('d');

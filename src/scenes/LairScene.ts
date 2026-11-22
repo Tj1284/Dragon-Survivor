@@ -46,7 +46,6 @@ export class LairScene extends Phaser.Scene {
     });
     this.buttons.push(makeButton(this, 'back', w / 2, h - 16, 100, 22, t('back'), 0x5a3f8f, () => this.scene.start('Menu'), '8px'));
     this.refresh();
-    this.input.keyboard?.once('keydown-ESC', () => this.scene.start('Menu'));
     registerDebug('buttons', () => describeButtons(this.buttons));
     registerDebug('lairRows', () => rows.map((r) => ({
       id: r.id, top: r.top, bottom: r.bottom,

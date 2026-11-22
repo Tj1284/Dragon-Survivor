@@ -1,8 +1,8 @@
 import { expect, it } from 'vitest';
 import { computeStats } from '../../src/logic/attacks';
 import { buyMeta, metaBonus, metaCost } from '../../src/logic/meta';
-import { addRunResult, defaultSave, parseSave, serializeSave } from '../../src/logic/save';
-import { createLocalStorage } from '../../src/platform/storage';
+import { addRunResult, defaultSave, mergeSaves, parseSave, serializeSave } from '../../src/logic/save';
+import { createCachedStorage } from '../../src/platform/storage';
 
 it('reading a missing or broken save gives a fresh one', () => {
   expect(parseSave(null)).toEqual(defaultSave());
@@ -38,16 +38,33 @@ it('lair bonuses feed the run stats', () => {
   expect(s.maxHp).toBe(110);
   expect(s.speed).toBeCloseTo(70 * 1.12);
 });
-it('a storage that throws (private mode, blocked) still loads and saves without crashing', () => {
-  const broken = createLocalStorage('k', { getItem() { throw new Error('blocked'); }, setItem() { throw new Error('blocked'); } });
-  expect(broken.load()).toEqual(defaultSave());
-  expect(() => broken.save(defaultSave())).not.toThrow();
-  const mem = new Map<string, string>();
-  const ok = createLocalStorage('k', { getItem: (k) => mem.get(k) ?? null, setItem: (k, v) => { mem.set(k, v); } });
-  ok.save({ ...defaultSave(), gold: 7 });
-  expect(ok.load().gold).toBe(7);
+it('the cached platform storage loads the startup value, survives garbage and writes JSON on save', () => {
+  expect(createCachedStorage(null, () => {}).load()).toEqual(defaultSave());
+  expect(createCachedStorage('{not json', () => {}).load()).toEqual(defaultSave());
+  expect(createCachedStorage(JSON.stringify({ gold: 9 }), () => {}).load().gold).toBe(9);
+  const writes: string[] = [];
+  const st = createCachedStorage(null, (json) => writes.push(json));
+  st.save({ ...defaultSave(), gold: 7 });
+  expect(st.load().gold).toBe(7);
+  expect(writes).toHaveLength(1);
+  expect(JSON.parse(writes[0]).gold).toBe(7);
+  const throwing = createCachedStorage(null, () => { throw new Error('offline'); });
+  expect(() => throwing.save(defaultSave())).not.toThrow();
 });
 
 it('accepts the new poison and shadow forms and drops unknown ones', () => {
   expect(parseSave(JSON.stringify({ collection: ['hatchling', 'young_poison', 'bogus', 'legendary_shadow'] })).collection).toEqual(['hatchling', 'young_poison', 'legendary_shadow']);
+});
+
+it('a late cloud save and this session progress merge without losing or duplicating anything', () => {
+  const cloud = { ...defaultSave(), gold: 120, meta: { might: 2, vitality: 1 }, collection: ['hatchling' as const, 'young_fire' as const], bestTime: 300, wins: 2, played: true };
+  const session = { ...defaultSave(), gold: 30, meta: { might: 1, swiftness: 1 }, collection: ['hatchling' as const, 'young_ice' as const], bestTime: 400, wins: 0, played: true, muted: true };
+  const m = mergeSaves(cloud, session);
+  expect(m.gold).toBe(150); // the session started from an empty save, so its gold is all new
+  expect(m.meta).toEqual({ might: 2, vitality: 1, swiftness: 1 });
+  expect([...m.collection].sort()).toEqual(['hatchling', 'young_fire', 'young_ice']);
+  expect(m.bestTime).toBe(400);
+  expect(m.wins).toBe(2);
+  expect(m.played).toBe(true);
+  expect(m.muted).toBe(true);
 });

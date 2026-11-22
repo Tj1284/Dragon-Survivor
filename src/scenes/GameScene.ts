@@ -1,6 +1,6 @@
 import * as Phaser from 'phaser';
 import { GROUND } from '../assets/manifest';
-import { ENEMIES, ENEMY_IDS, PICKUPS, PLAYER_WEAPONS, type EnemyTypeId } from '../config/balance';
+import { ENEMIES, ENEMY_IDS, PICKUPS, PLAYER_WEAPONS, REVIVE, type EnemyTypeId } from '../config/balance';
 import { isDebug, registerDebug, setDebugReady } from '../debug';
 import { EnemyManager } from '../game/EnemyManager';
 import { Hud } from '../game/Hud';
@@ -27,10 +27,13 @@ import { clampDelta } from '../logic/time';
 import { metaBonus, type MetaBonus } from '../logic/meta';
 import { storage } from '../platform/storage';
 import { hideLoading } from '../ui/loading';
+import { REVIVE_EVENTS } from './ReviveScene';
+import type { Enemy } from '../game/EnemyManager';
+import { platform } from '../platform/bridge';
 import { audio } from '../audio';
 import { addForms, addRunResult } from '../logic/save';
 import { formId } from '../logic/evolution';
-import { FALLBACK, computeStats, heldAttacks, nextOrder, rollChoices, spitToBreath, tagOf, type AttackId, type Choice, type UpgradeId } from '../logic/attacks';
+import { FALLBACK, computeStats, fallbackHeal, heldAttacks, nextOrder, rollChoices, spitToBreath, tagOf, type AttackId, type Choice, type UpgradeId } from '../logic/attacks';
 import { applyXp } from '../logic/xp';
 import type { GameOverData } from './GameOverScene';
 import { LEVELUP_EVENTS, type LevelUpData } from './LevelUpScene';
@@ -72,6 +75,8 @@ export class GameScene extends Phaser.Scene {
   private evolvePauseLeft = 0;
   private chooseNext: Element | null = null;
   private killCount = 0;
+  private revives = 0;
+  private readonly reviveNear: Enemy[] = [];
   private readonly timings: Record<string, number> = {};
   private readonly debugLog = isDebug();
 
@@ -79,6 +84,7 @@ export class GameScene extends Phaser.Scene {
 
   create(): void {
     this.killCount = 0;
+    this.revives = 0;
     this.now = 0;
     this.ended = false;
     this.levelUpOpen = false;
@@ -130,15 +136,18 @@ export class GameScene extends Phaser.Scene {
 
     this.hud = new Hud(this, () => this.openPause());
     this.hud.refreshAttacks(this.run);
-    this.input.keyboard?.on('keydown-ESC', () => this.openPause());
     this.input.keyboard?.on('keydown-P', () => this.openPause());
     this.game.events.on(LEVELUP_EVENTS.picked, this.onUpgradePicked, this);
     this.game.events.on(QUIT_EVENT, this.quitRun, this);
+    this.game.events.on(REVIVE_EVENTS.yes, this.revive, this);
+    this.game.events.on(REVIVE_EVENTS.no, this.declineRevive, this);
     document.addEventListener('visibilitychange', this.onVisibility);
     this.scale.on(Phaser.Scale.Events.RESIZE, this.onResize, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.game.events.off(LEVELUP_EVENTS.picked, this.onUpgradePicked, this);
       this.game.events.off(QUIT_EVENT, this.quitRun, this);
+      this.game.events.off(REVIVE_EVENTS.yes, this.revive, this);
+      this.game.events.off(REVIVE_EVENTS.no, this.declineRevive, this);
       document.removeEventListener('visibilitychange', this.onVisibility);
       this.scale.off(Phaser.Scale.Events.RESIZE, this.onResize, this);
       this.inputCtl.destroy();
@@ -152,6 +161,7 @@ export class GameScene extends Phaser.Scene {
     if (this.hintFrom) this.hud.showHint(t(this.sys.game.device.input.touch ? 'hint_touch' : 'hint_keys'));
     setDebugReady(true);
     hideLoading();
+    platform.message('level_started');
     // a different level track each run
     audio.playMusic((['level1', 'level2', 'level3'] as const)[Math.floor(Math.random() * 3)]);
   }
@@ -168,6 +178,7 @@ export class GameScene extends Phaser.Scene {
     this.inputCtl.releaseAll();
     this.scene.pause();
     this.scene.launch('Pause');
+    platform.message('level_paused');
   }
 
   // ---- experience and level-ups ----
@@ -203,7 +214,7 @@ export class GameScene extends Phaser.Scene {
 
   applyChoice(choice: Choice): void {
     if (choice.type === 'fallback') {
-      this.player.hp = Math.min(this.player.stats.maxHp, this.player.hp + FALLBACK.healFraction * this.player.stats.maxHp);
+      this.player.hp = fallbackHeal(this.player.hp, this.player.stats.maxHp);
       this.run.gold += FALLBACK.gold;
       return;
     }
@@ -354,6 +365,10 @@ export class GameScene extends Phaser.Scene {
     registerDebug('hitsBy', (source: string) => (source === 'lightning' ? lightningStats.maxChain : 0));
     registerDebug('frozenCount', () => this.enemies.active.filter((e) => e.alive && this.now < e.ice.frozenUntil).length);
     registerDebug('kills', () => this.killCount);
+    registerDebug('revives', () => this.revives);
+    registerDebug('interstitialMock', (ms: number | null) => platform.setInterstitialMock(ms));
+    registerDebug('interstitials', () => platform.interstitialsShown);
+    registerDebug('adMock', (m: 'rewarded' | 'slow' | 'closed' | 'failed' | 'hang' | null) => platform.setAdMock(m));
     registerDebug('ambient', () => this.juice.ambientAlive);
     registerDebug('poisonedCount', () => this.enemies.poisonedCount);
     registerDebug('poisonAll', (dps: number, dur: number) => { for (const e of this.enemies.active) this.enemies.poison(e, dps, dur, this.now); });
@@ -419,7 +434,7 @@ export class GameScene extends Phaser.Scene {
       this.victoryIn -= dt;
       if (this.victoryIn <= 0) { this.endRun(); return; }
     }
-    if (this.player.hp <= 0 && !this.run.won) this.endRun();
+    if (this.player.hp <= 0 && !this.run.won) this.onDeath();
   }
 
   /** Exponential moving average (ms) of a system's update time, for the debug timings() command. */
@@ -464,9 +479,35 @@ export class GameScene extends Phaser.Scene {
     this.openNextLevelUp();
   }
 
+  /** First fall of a run: offer a rewarded revive (once per run, only where rewarded ads exist). */
+  private onDeath(): void {
+    if (this.ended || this.scene.isPaused()) return;
+    if (this.run.reviveOffered || !platform.rewardedSupported) { this.endRun(); return; }
+    this.run.reviveOffered = true;
+    this.inputCtl.releaseAll();
+    this.scene.pause();
+    this.scene.launch('Revive');
+  }
+
+  private revive(): void {
+    const { player } = this;
+    player.hp = player.stats.maxHp * REVIVE.hpFraction;
+    player.shield = REVIVE.shield;
+    for (const e of this.enemies.inRadius(player.x, player.y, REVIVE.pushRadius, this.reviveNear)) this.enemies.knockback(e, player.x, player.y, REVIVE.pushDistance);
+    this.projectiles.clear();
+    this.revives++;
+    this.scene.resume();
+  }
+
+  private declineRevive(): void {
+    this.scene.resume();
+    this.endRun();
+  }
+
   private endRun(): void {
     this.ended = true;
     this.scene.stop('LevelUp');
+    platform.message(this.run.won ? 'level_completed' : 'level_failed');
     const data: GameOverData = { time: this.run.elapsed, level: this.run.level, formId: this.player.formId, gold: Math.round(this.run.gold * this.meta.goldMult), won: this.run.won, runId: this.run.id, forms: [...this.run.forms], banked: this.run.bankedGold };
     this.scene.start('GameOver', data);
   }

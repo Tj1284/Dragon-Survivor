@@ -24,8 +24,8 @@ export default async function (page, baseUrl) {
   if (Math.abs(p.x - cam.midX) > 2 || Math.abs(p.y - cam.midY) > 2) throw new Error(`dragon not centered: ${JSON.stringify({ p, cam })}`);
   await page.screenshot({ path: 'e2e/out/hud-portrait.png' });
 
-  // pause with Escape: time stops; Resume continues
-  await page.keyboard.press('Escape');
+  // pause with P (Esc is reserved for leaving full screen, Playgama 1.5.2): time stops; Resume continues
+  await page.keyboard.press('p');
   await waitFor(page, () => window.__dbg.scene().includes('Pause'), null, 2000);
   const t0 = (await dbg(page, 'run')).elapsed;
   await sleep(1000);

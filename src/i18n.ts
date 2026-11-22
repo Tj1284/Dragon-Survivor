@@ -20,6 +20,8 @@ const es: Dict = {
   el_fire: 'Fuego', el_fire_d: 'Deja zonas ardiendo',
   el_ice: 'Hielo', el_ice_d: 'Ralentiza y congela',
   el_lightning: 'Rayo', el_lightning_d: 'Salta entre enemigos',
+  revive_title: '¿Revivir?', revive_ad: 'Revivir (ver anuncio)', revive_no: 'No, gracias', ad_failed: 'Anuncio no disponible',
+  double_gold: 'Oro x2 (ver anuncio)', gold_doubled: '¡Oro doblado!',
   el_poison: 'Veneno', el_poison_d: 'Envenena y contagia',
   el_shadow: 'Sombra', el_shadow_d: 'Persigue, remata y absorbe',
   // attacks
@@ -89,6 +91,8 @@ const en: Dict = {
   el_fire: 'Fire', el_fire_d: 'Leaves burning zones',
   el_ice: 'Ice', el_ice_d: 'Slows and freezes',
   el_lightning: 'Lightning', el_lightning_d: 'Chains between enemies',
+  revive_title: 'Revive?', revive_ad: 'Revive (watch an ad)', revive_no: 'No, thanks', ad_failed: 'Ad not available',
+  double_gold: 'Gold x2 (watch an ad)', gold_doubled: 'Gold doubled!',
   el_poison: 'Poison', el_poison_d: 'Poisons and spreads',
   el_shadow: 'Shadow', el_shadow_d: 'Seeks, executes and drains',
   up_spit: 'Spit', up_spit_d: 'Shoots the nearest enemy',

@@ -226,3 +226,8 @@ export function computeStats(stage: Stage, owned: Owned, meta: MetaBonus = NO_BO
     armor: BASE_STATS.armor + n('armor'),
   };
 }
+
+/** Health after the fallback card's heal. A dragon at 0 HP stays down: only the revive ad brings it back. */
+export function fallbackHeal(hp: number, maxHp: number): number {
+  return hp <= 0 ? hp : Math.min(maxHp, hp + FALLBACK.healFraction * maxHp);
+}

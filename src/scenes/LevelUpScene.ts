@@ -4,6 +4,7 @@ import { COLORS, DRAGON_SHEETS, ICON_SHEETS } from '../assets/manifest';
 import { registerDebug } from '../debug';
 import { t } from '../i18n';
 import { ELEMENTS, type Element } from '../logic/types';
+import { cardLayout } from '../logic/cardLayout';
 import { isAttack, tagOf, type Choice, type Owned } from '../logic/attacks';
 
 export type LevelUpData =
@@ -29,16 +30,12 @@ export class LevelUpScene extends Phaser.Scene {
     this.cards = data.mode === 'upgrade' ? this.upgradeCards(data.choices, data.owned) : this.elementCards();
     const { width: w, height: h } = this.scale.gameSize;
     this.add.rectangle(0, 0, w, h, 0x000000, 0.6).setOrigin(0);
-    this.add.text(w / 2, 18, data.mode === 'upgrade' ? t('choose_upgrade') : t('choose_element'), { ...TEXT, fontSize: '16px' }).setOrigin(0.5);
+    this.add.text(w / 2, 18, data.mode === 'upgrade' ? t('choose_upgrade') : t('choose_element'), { ...TEXT, fontSize: w < 400 ? '8px' : '16px' }).setOrigin(0.5);
 
-    const landscape = w >= h;
-    const n = this.cards.length;
-    const cw = landscape ? Math.min(140, (w - 24 - (n - 1) * 8) / n) : w - 32;
-    const ch = landscape ? Math.min(170, h - 60) : Math.min(90, (h - 60 - (n - 1) * 8) / n);
+    const layout = cardLayout(w, h, this.cards.length);
     this.cards.forEach((card, i) => {
-      const cx = landscape ? w / 2 + (i - (n - 1) / 2) * (cw + 8) : w / 2;
-      const cy = landscape ? h / 2 + 12 : 40 + ch / 2 + i * (ch + 8);
-      this.drawCard(card, i, cx, cy, cw, ch, landscape);
+      const r = layout.cards[i];
+      this.drawCard(card, i, r.x, r.y, r.w, r.h, layout.mode !== 'list');
     });
 
     this.input.keyboard?.on('keydown', (ev: KeyboardEvent) => {
@@ -59,13 +56,16 @@ export class LevelUpScene extends Phaser.Scene {
     bg.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OUT, () => bg.setFillStyle(fill));
     const wrap = { width: landscape ? cw - 12 : cw - 70 };
     if (landscape) {
-      if (card.dragon) this.add.sprite(cx, cy - ch / 2 + 28, card.dragon, 0).play(`${card.dragon}_loop`).setScale(Math.min(1.5, 44 / DRAGON_SHEETS.young_fire.frameHeight));
-      else if (card.icon) this.add.image(cx, cy - ch / 2 + 28, card.icon).setScale(2);
-      else this.add.circle(cx, cy - ch / 2 + 28, 12, card.color);
-      this.add.text(cx, cy - ch / 2 + 54, card.title, { ...TEXT, fontSize: '8px', align: 'center', wordWrap: wrap }).setOrigin(0.5, 0);
-      this.add.text(cx, cy - ch / 2 + 82, card.level, { ...TEXT, fontSize: '8px', color: '#ffd76a' }).setOrigin(0.5, 0);
-      this.add.text(cx, cy - ch / 2 + 98, card.desc, { ...TEXT, fontSize: '8px', color: '#cfc8e6', align: 'center', wordWrap: wrap }).setOrigin(0.5, 0);
-      this.add.text(cx, cy + ch / 2 - 12, `${i + 1}`, { ...TEXT, fontSize: '8px', color: '#8a84a0' }).setOrigin(0.5);
+      // offsets from the card top; short cards (square-screen grid) squeeze them proportionally
+      const k = Math.min(1, ch / 150);
+      const top = cy - ch / 2;
+      if (card.dragon) this.add.sprite(cx, top + 28 * k, card.dragon, 0).play(`${card.dragon}_loop`).setScale(k < 1 ? 1 : Math.min(1.5, 44 / DRAGON_SHEETS.young_fire.frameHeight));
+      else if (card.icon) this.add.image(cx, top + 28 * k, card.icon).setScale(2);
+      else this.add.circle(cx, top + 28 * k, 12, card.color);
+      this.add.text(cx, top + 54 * k, card.title, { ...TEXT, fontSize: '8px', align: 'center', wordWrap: wrap }).setOrigin(0.5, 0);
+      if (card.level) this.add.text(cx, top + 82 * k, card.level, { ...TEXT, fontSize: '8px', color: '#ffd76a' }).setOrigin(0.5, 0);
+      this.add.text(cx, top + (card.level ? 98 : 72) * k, card.desc, { ...TEXT, fontSize: '8px', color: '#cfc8e6', align: 'center', wordWrap: wrap }).setOrigin(0.5, 0);
+      if (k === 1) this.add.text(cx, cy + ch / 2 - 12, `${i + 1}`, { ...TEXT, fontSize: '8px', color: '#8a84a0' }).setOrigin(0.5);
     } else {
       const left = cx - cw / 2;
       if (card.dragon) this.add.sprite(left + 24, cy, card.dragon, 0).play(`${card.dragon}_loop`);

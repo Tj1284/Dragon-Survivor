@@ -44,7 +44,7 @@ export default async function (page, baseUrl) {
     .catch(() => { throw new Error('audio should resume when the tab is visible again'); });
 
   // mute from the pause menu is saved and survives a reload
-  await page.keyboard.press('Escape');
+  await page.keyboard.press('p');
   await waitFor(page, () => window.__dbg.scene().includes('Pause'), null, 2000);
   const mute = (await dbg(page, 'buttons')).find((b) => b.id === 'mute');
   if (!mute) throw new Error('pause menu should have a mute button');

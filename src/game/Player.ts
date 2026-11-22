@@ -13,6 +13,8 @@ export class Player {
   hp = this.stats.maxHp;
   formId: FormId = 'hatchling';
   slowUntil = 0;
+  /** Seconds of invulnerability left (after a revive). */
+  shield = 0;
   /** Debug only: setHp() above the normal maximum is kept by regen and stat changes. */
   debugHpFloor = 0;
   private r = 0;
@@ -41,11 +43,16 @@ export class Player {
     this.x += move.x * speed * dt;
     this.y += move.y * speed * dt;
     if (move.x !== 0) this.sprite.setFlipX(move.x < 0);
+    if (this.shield > 0) {
+      this.shield = Math.max(0, this.shield - dt);
+      this.sprite.setAlpha(this.shield > 0 && Math.floor(this.shield * 10) % 2 === 0 ? 0.4 : 1);
+    }
     if (this.hp > 0 && this.stats.regen > 0) this.hp = Math.min(this.hpLimit, this.hp + this.stats.regen * dt);
     this.sprite.setPosition(this.x, this.y);
   }
 
   damage(amount: number): void {
+    if (this.shield > 0) return;
     this.hp = Math.max(0, this.hp - armorReduce(amount, this.stats.armor));
   }
 }
