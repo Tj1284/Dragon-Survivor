@@ -13,9 +13,11 @@ it('chooseElement asks the player when there are no element picks', () => {
   expect(chooseElement(['neutral', 'neutral'])).toBe('choose');
   expect(chooseElement([])).toBe('choose');
 });
-it('formId maps stage and element to the 10 forms', () => {
+it('formId maps stage and element to the 16 forms', () => {
   expect(formId(0, null)).toBe('hatchling');
   expect(formId(2, 'ice')).toBe('adult_ice');
   expect(() => formId(1, null)).toThrow();
-  expect(new Set(ALL_FORMS).size).toBe(10);
+  expect(new Set(ALL_FORMS).size).toBe(16);
+  expect(ALL_FORMS).toContain('legendary_shadow');
+  expect(formId(1, 'poison')).toBe('young_poison');
 });

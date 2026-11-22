@@ -19,7 +19,7 @@ export class CollectionScene extends Phaser.Scene {
     this.add.rectangle(0, 0, w, h, 0x1d1b2a).setOrigin(0);
     this.add.text(w / 2, 14, `${t('collection')} ${owned.size}/${ALL_FORMS.length}`, { ...TEXT, fontSize: '16px', color: '#f2c230' }).setOrigin(0.5);
 
-    const cols = w >= h ? 5 : 3;
+    const cols = w >= h ? 8 : 4;
     const cell = Math.min(80, (w - 16) / cols, (h - 70) / Math.ceil(ALL_FORMS.length / cols));
     const rows = Math.ceil(ALL_FORMS.length / cols);
     const top = 34 + (h - 70 - rows * cell) / 2;

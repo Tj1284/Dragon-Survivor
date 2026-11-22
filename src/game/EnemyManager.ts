@@ -2,16 +2,17 @@ import * as Phaser from 'phaser';
 import { ENEMY_SHEETS } from '../assets/manifest';
 import { ENEMIES, ENEMY_AI, type EnemyTypeId } from '../config/balance';
 import { MAX_ENEMY_RADIUS, type BossDef, type BossId } from '../logic/bosses';
-import { damageMultiplier, newIceStatus, type IceStatus } from '../logic/combat';
+import { applyPoison, damageMultiplier, newIceStatus, newPoison, tickPoison, type IceStatus, type PoisonStatus } from '../logic/combat';
 import { Pool } from '../logic/pool';
 import { hpMult, pickEnemyType, spawnPosition, spawnRadius, stepSpawnBudget, targetAlive } from '../logic/spawn';
 import { SpatialGrid } from '../logic/spatialGrid';
+import { enemyTint } from '../logic/visuals';
 import type { Player } from './Player';
 import type { Projectiles } from './Projectiles';
 
 export interface Enemy {
   id: number; type: EnemyTypeId; x: number; y: number; hp: number; maxHp: number; radius: number; alive: boolean;
-  sprite: Phaser.GameObjects.Sprite; ice: IceStatus; hitCooldowns: Map<string, number>;
+  sprite: Phaser.GameObjects.Sprite; ice: IceStatus; poison: PoisonStatus; hitCooldowns: Map<string, number>;
   state: 'move' | 'windup' | 'dash'; timer: number; dashX: number; dashY: number;
   contactReadyAt: number; flashUntil: number;
   /** Stunned enemies don't move or act (gold roar). */
@@ -37,6 +38,9 @@ export class EnemyManager {
   /** Slow applied by ice hits. */
   iceSlow = 0.5;
   shatterLevel = 0;
+  /** When > 0 (gold poison breath), a poisoned enemy that dies passes its poison to enemies this close. */
+  plagueRadius = 0;
+  private readonly plagueNear: Enemy[] = [];
 
   private readonly pool: Pool<Enemy>;
   private nextId = 1;
@@ -47,7 +51,7 @@ export class EnemyManager {
       () => ({
         id: 0, type: 'squire', x: 0, y: 0, hp: 0, maxHp: 0, radius: 8, alive: false,
         sprite: scene.add.sprite(0, 0, ENEMY_SHEETS.squire.key).setDepth(5).setVisible(false),
-        ice: newIceStatus(), hitCooldowns: new Map(), state: 'move', timer: 0, dashX: 0, dashY: 0,
+        ice: newIceStatus(), poison: newPoison(), hitCooldowns: new Map(), state: 'move', timer: 0, dashX: 0, dashY: 0,
         contactReadyAt: 0, flashUntil: 0, nextFlashAt: 0, stunUntil: 0, auraSlow: 0, boss: null,
       }),
       (e) => { e.alive = false; e.sprite.setVisible(false).stop(); e.hitCooldowns.clear(); },
@@ -65,6 +69,7 @@ export class EnemyManager {
     e.radius = def.radius;
     e.alive = true;
     e.ice = newIceStatus();
+    e.poison = newPoison();
     e.state = 'move';
     e.timer = this.rng() * 2;
     e.contactReadyAt = 0;
@@ -96,16 +101,36 @@ export class EnemyManager {
     if (!e.alive) return false;
     const dealt = damage * damageMultiplier(e.ice, now, this.shatterLevel);
     e.hp -= dealt;
-    if (!e.boss) e.flashUntil = now + 0.06;
+    if (source === 'poison') { /* ticks don't flash, so poisoned crowds stay readable */ }
+    else if (!e.boss) e.flashUntil = now + 0.06;
     else if (now >= e.nextFlashAt) { e.flashUntil = now + 0.04; e.nextFlashAt = now + 0.25; }
     this.onHit(e, dealt, source);
     if (e.hp <= 0) {
       e.alive = false;
       e.sprite.setVisible(false);
+      if (this.plagueRadius > 0 && now < e.poison.until) this.spreadPoison(e, now);
       this.onKilled(e);
       return true;
     }
     return false;
+  }
+
+  /** Poisons an enemy: the stronger dps and the later end time win. Works on bosses too. */
+  poison(e: Enemy, dps: number, duration: number, now: number): void {
+    if (e.alive) e.poison = applyPoison(e.poison, dps, duration, now);
+  }
+
+  get poisonedCount(): number {
+    let n = 0;
+    for (const e of this.active) if (e.alive && e.poison.dps > 0 && e.poison.until > this.lastNow) n++;
+    return n;
+  }
+
+  private lastNow = 0;
+
+  private spreadPoison(from: Enemy, now: number): void {
+    this.inRadius(from.x, from.y, this.plagueRadius, this.plagueNear);
+    for (const o of this.plagueNear) if (o !== from && now >= o.poison.until) this.poison(o, from.poison.dps, from.poison.until - now, now);
   }
 
   /** Pushes an enemy `dist` px directly away from a point. */
@@ -197,17 +222,22 @@ export class EnemyManager {
       e.sprite.setFlipX(dx < 0);
     }
 
+    this.lastNow = now;
+    for (const e of this.active) {
+      if (!e.alive || e.poison.until <= now - dt) continue;
+      const r = tickPoison(e.poison, dt, now);
+      e.poison = r.s;
+      if (r.damage > 0) this.hit(e, r.damage, now, 'poison');
+    }
+
     this.separate();
     for (const e of this.active) {
       e.sprite.setPosition(e.x, e.y);
       const flashing = now < e.flashUntil;
       if (e.boss && e.alive) { this.bossFrames++; if (flashing) this.bossFlashFrames++; }
-      const frozen = now < e.ice.frozenUntil;
-      if (flashing) e.sprite.setTint(0xffffff).setTintMode(Phaser.TintModes.FILL);
-      else if (frozen) e.sprite.setTint(0x9fdcff).setTintMode(Phaser.TintModes.MULTIPLY);
-      else if (now < e.stunUntil) e.sprite.setTint(0xfff2a8).setTintMode(Phaser.TintModes.MULTIPLY);
-      else if (e.state === 'windup') e.sprite.setTint(0xff8080).setTintMode(Phaser.TintModes.MULTIPLY);
-      else e.sprite.clearTint().setTintMode(Phaser.TintModes.MULTIPLY);
+      const tint = enemyTint({ flashing, frozen: now < e.ice.frozenUntil, stunned: now < e.stunUntil, poisoned: now < e.poison.until, windup: e.state === 'windup' });
+      if (!tint) e.sprite.clearTint().setTintMode(Phaser.TintModes.MULTIPLY);
+      else e.sprite.setTint(tint.color).setTintMode(tint.mode === 'fill' ? Phaser.TintModes.FILL : Phaser.TintModes.MULTIPLY);
     }
   }
 

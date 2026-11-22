@@ -6,7 +6,7 @@ Esta guía explica cómo preparar cada dibujo del juego para que el código lo c
 
 - **Formato:** PNG con fondo transparente.
 - **Estilo:** pixel art. El juego lo escala sin suavizado, así que dibuja a tamaño real (1 píxel del archivo = 1 píxel del juego).
-- **Spritesheets:** todos los frames de una animación en **una sola fila horizontal**, del mismo tamaño y **sin separación** entre ellos. Ejemplo: el ciclo de vuelo de la cría son 6 frames de 24×24, así que el PNG mide 144×24.
+- **Spritesheets:** todos los frames de una animación en **una sola fila horizontal**, del mismo tamaño y **sin separación** entre ellos. Ejemplo: el ciclo de vuelo de la cría son 6 frames de 32×32, así que el PNG mide 192×32.
 - **Dirección:** los personajes **miran a la derecha**. El juego los voltea solo cuando van a la izquierda.
 - **Centrado:** cada personaje centrado en su frame, con el cuerpo a la misma altura en todos los frames, para que no "salte" al animarse.
 - **Animaciones que NO hace falta dibujar:** el destello al recibir daño, la muerte, la transición de evolución y el aliento ya los hace el código.
@@ -24,7 +24,7 @@ No hace falta tocar código. Si quieres cambiar el tamaño de un frame o el núm
 
 ### Dragones (ciclo de vuelo)
 
-Cría = `hatchling`, joven = `young_*`, adulto = `adult_*`, legendario = `legendary_*`. fire = fuego, ice = hielo, lightning = rayo.
+Cría = `hatchling`, joven = `young_*`, adulto = `adult_*`, legendario = `legendary_*`. fire = fuego, ice = hielo, lightning = rayo, poison = veneno, shadow = sombra.
 
 | Archivo | Frame | Frames | Tamaño total del PNG |
 |---|---|---|---|
@@ -32,12 +32,18 @@ Cría = `hatchling`, joven = `young_*`, adulto = `adult_*`, legendario = `legend
 | `art/dragons/young_fire.png` | 32×32 | 6 | 192×32 |
 | `art/dragons/young_ice.png` | 32×32 | 6 | 192×32 |
 | `art/dragons/young_lightning.png` | 32×32 | 6 | 192×32 |
+| `art/dragons/young_poison.png` | 40×40 | 6 | 240×40 |
+| `art/dragons/young_shadow.png` | 40×40 | 6 | 240×40 |
 | `art/dragons/adult_fire.png` | 48×48 | 6 | 288×48 |
 | `art/dragons/adult_ice.png` | 48×48 | 6 | 288×48 |
 | `art/dragons/adult_lightning.png` | 48×48 | 6 | 288×48 |
-| `art/dragons/legendary_fire.png` | 64×64 | 6 | 384×64 |
-| `art/dragons/legendary_ice.png` | 64×64 | 6 | 384×64 |
-| `art/dragons/legendary_lightning.png` | 64×64 | 6 | 384×64 |
+| `art/dragons/adult_poison.png` | 48×48 | 6 | 288×48 |
+| `art/dragons/adult_shadow.png` | 48×48 | 6 | 288×48 |
+| `art/dragons/legendary_fire.png` | 96×96 | 6 | 576×96 |
+| `art/dragons/legendary_ice.png` | 96×96 | 6 | 576×96 |
+| `art/dragons/legendary_lightning.png` | 96×96 | 6 | 576×96 |
+| `art/dragons/legendary_poison.png` | 96×96 | 6 | 576×96 |
+| `art/dragons/legendary_shadow.png` | 96×96 | 6 | 576×96 |
 
 ### Enemigos (ciclo de andar)
 
@@ -55,7 +61,7 @@ squire = escudero, archer = arquero, lancer = lancero, netter = lanzarredes, hea
 
 ### Efectos y proyectiles
 
-spit = escupitajo de la cría, fire_zone = zona ardiendo, ice_shard = fragmento de hielo, lightning_bolt = chispa de rayo, arrow = flecha, net = red, fire_orb = orbe de fuego.
+spit = escupitajo de la cría, fire_zone = zona ardiendo, ice_shard = fragmento de hielo, lightning_bolt = chispa de rayo, arrow = flecha, net = red, fire_orb = orbe de fuego, poison_glob = bola de veneno, spine = púa venenosa, shadow_bolt = espíritu de sombra.
 
 | Archivo | Frame | Frames | Tamaño total del PNG |
 |---|---|---|---|
@@ -66,6 +72,9 @@ spit = escupitajo de la cría, fire_zone = zona ardiendo, ice_shard = fragmento 
 | `art/fx/arrow.png` | 8×8 | 1 | 8×8 |
 | `art/fx/net.png` | 16×16 | 1 | 16×16 |
 | `art/fx/fire_orb.png` | 12×12 | 2 | 24×12 |
+| `art/fx/poison_glob.png` | 8×8 | 2 | 16×8 |
+| `art/fx/spine.png` | 8×8 | 1 | 8×8 |
+| `art/fx/shadow_bolt.png` | 10×10 | 2 | 20×10 |
 
 ### Recogibles
 
@@ -97,6 +106,12 @@ El nombre de cada icono es el del ataque o la estadística (ver la tabla de más
 | `art/icons/lightning_breath.png` | 16×16 | 1 | 16×16 |
 | `art/icons/thunder_strike.png` | 16×16 | 1 | 16×16 |
 | `art/icons/static_field.png` | 16×16 | 1 | 16×16 |
+| `art/icons/poison_breath.png` | 16×16 | 1 | 16×16 |
+| `art/icons/toxic_cloud.png` | 16×16 | 1 | 16×16 |
+| `art/icons/venom_spines.png` | 16×16 | 1 | 16×16 |
+| `art/icons/shadow_breath.png` | 16×16 | 1 | 16×16 |
+| `art/icons/reaper.png` | 16×16 | 1 | 16×16 |
+| `art/icons/void_rift.png` | 16×16 | 1 | 16×16 |
 | `art/icons/fury.png` | 16×16 | 1 | 16×16 |
 | `art/icons/thick_scales.png` | 16×16 | 1 | 16×16 |
 | `art/icons/quick_breath.png` | 16×16 | 1 | 16×16 |
@@ -111,7 +126,7 @@ Un tile que se repite en todas direcciones: tiene que encajar consigo mismo por 
 
 | Archivo | Frame | Frames | Tamaño total del PNG |
 |---|---|---|---|
-| `art/tiles/ground.png` | 32×32 | 1 | 32×32 |
+| `art/tiles/ground.png` | 64×64 | 1 | 64×64 |
 
 ## Ataques y estadísticas (para los iconos)
 
@@ -129,6 +144,12 @@ Un tile que se repite en todas direcciones: tiene que encajar consigo mismo por 
 | lightning_breath | Aliento de rayo: salta entre enemigos | rayo |
 | thunder_strike | Relámpago que cae sobre un enemigo | rayo |
 | static_field | Campo estático: descargas cercanas | rayo |
+| poison_breath | Aliento venenoso: bolas que envenenan | veneno |
+| toxic_cloud | Nube tóxica que envenena a quien la cruza | veneno |
+| venom_spines | Púas venenosas en anillo | veneno |
+| shadow_breath | Aliento de sombra: espíritus que persiguen | sombra |
+| reaper | Guadaña: barrido que remata a los débiles | sombra |
+| void_rift | Grieta del vacío: atrae y estalla | sombra |
 | fury | Furia: más daño | estadística |
 | thick_scales | Escamas gruesas: más vida | estadística |
 | quick_breath | Aliento rápido: menos recarga | estadística |

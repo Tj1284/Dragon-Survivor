@@ -1,16 +1,18 @@
-import type { FormId } from '../logic/types';
+import type { Element, FormId } from '../logic/types';
 import { hex, mix, PixelCanvas, shade, withAlpha, type Color } from './pixel';
 
 interface DragonLook {
   body: number; belly: number; wing: number; membrane: number; horn: number; accent: number; eye: number;
-  stage: 0 | 1 | 2 | 3; element: 'none' | 'fire' | 'ice' | 'lightning';
+  stage: 0 | 1 | 2 | 3; element: 'none' | Element;
 }
 
-const LOOKS: Record<'none' | 'fire' | 'ice' | 'lightning', Omit<DragonLook, 'stage' | 'element'>> = {
+const LOOKS: Record<'none' | Element, Omit<DragonLook, 'stage' | 'element'>> = {
   none: { body: 0x6fcf5a, belly: 0xf1e7a8, wing: 0x3f8f3a, membrane: 0x9fe08a, horn: 0xf5ead0, accent: 0xffd36b, eye: 0x1b2b1b },
   fire: { body: 0xd9452b, belly: 0xf7c04a, wing: 0x7a1f22, membrane: 0xf07a3a, horn: 0x3a2020, accent: 0xffd34a, eye: 0xfff1a8 },
   ice: { body: 0x58b4e6, belly: 0xeaf8ff, wing: 0x2b6aa8, membrane: 0xb2e9ff, horn: 0xffffff, accent: 0xd6f6ff, eye: 0x0e2a4a },
   lightning: { body: 0xf2c230, belly: 0xfff0c0, wing: 0xb87a14, membrane: 0xf7d96a, horn: 0xfff0c0, accent: 0x2a3a7a, eye: 0x1b1b3a },
+  poison: { body: 0x8a4fc2, belly: 0xb8f07a, wing: 0x4a2a78, membrane: 0x8fe04a, horn: 0xd8f8a0, accent: 0x8fe04a, eye: 0x3a7a10 },
+  shadow: { body: 0x34304a, belly: 0x5a3f7a, wing: 0x1a1824, membrane: 0x8a1f3c, horn: 0x9a90b0, accent: 0xff3d7f, eye: 0xff3d7f },
 };
 
 /** Wing angle per frame of the 6-frame flight cycle (radians, negative = raised). */
@@ -19,7 +21,7 @@ const BOB = [1, 0.5, 0, -0.5, 0, 0.5];
 
 export function lookFor(id: FormId): DragonLook {
   if (id === 'hatchling') return { ...LOOKS.none, stage: 0, element: 'none' };
-  const [stage, element] = id.split('_') as ['young' | 'adult' | 'legendary', 'fire' | 'ice' | 'lightning'];
+  const [stage, element] = id.split('_') as ['young' | 'adult' | 'legendary', Element];
   return { ...LOOKS[element], stage: stage === 'young' ? 1 : stage === 'adult' ? 2 : 3, element };
 }
 
@@ -102,7 +104,7 @@ export function drawDragon(S: number, frame: number, look: DragonLook): PixelCan
   pc.ellipse(ex, ey, eyeR, eyeR, hex(0xffffff));
   pc.set(ex + eyeR * 0.4, ey, hex(look.eye === 0xfff27a || look.eye === 0xfff1a8 ? 0x201010 : look.eye));
   if (eyeR > 1.5) pc.set(ex + eyeR * 0.4, ey + 1, hex(0x201010));
-  if (look.element === 'lightning' || look.element === 'fire') pc.set(ex - eyeR * 0.5, ey - eyeR * 0.5, hex(look.eye));
+  if (look.element !== 'ice' && look.element !== 'none') pc.set(ex - eyeR * 0.5, ey - eyeR * 0.5, hex(look.eye));
 
   // soft ground shadow, only where nothing else is drawn
   const sh = withAlpha(hex(0x000000), 70);
@@ -155,13 +157,23 @@ function drawTailTip(pc: PixelCanvas, x: number, y: number, u: number, look: Dra
     pc.poly([[x, y - 3 * u], [x + 1.6 * u, y], [x, y + 3 * u], [x - 1.6 * u, y]], a);
   } else if (look.element === 'lightning') {
     pc.poly([[x - 2 * u, y - 3 * u], [x + 0.5 * u, y - 0.5 * u], [x - 1 * u, y - 0.2 * u], [x + 1.5 * u, y + 3 * u], [x - 1 * u, y + 0.5 * u], [x, y]], a);
+  } else if (look.element === 'poison') {
+    pc.ellipse(x, y + 0.6 * u, 1.6 * u, 1.6 * u, a);
+    pc.poly([[x - 1.4 * u, y + 0.2 * u], [x + 1.4 * u, y + 0.2 * u], [x, y - 3 * u]], a);
+    pc.set(x - 0.5 * u, y, hex(0xffffff));
+  } else if (look.element === 'shadow') {
+    const smoke = withAlpha(hex(0x6a5a8a), 200);
+    pc.ellipse(x - 1.5 * u, y - 0.5 * u, 1.6 * u, 1.2 * u, smoke);
+    pc.ellipse(x - 3.2 * u, y - 1.8 * u, 1.2 * u, 0.9 * u, withAlpha(hex(0x6a5a8a), 150));
+    pc.ellipse(x - 4.6 * u, y - 3 * u, 0.8 * u, 0.7 * u, withAlpha(hex(0x6a5a8a), 100));
+    pc.set(x, y, a);
   } else {
     pc.poly([[x - 2 * u, y], [x, y - 1.6 * u], [x + 1 * u, y + 0.8 * u]], shade(hex(look.body), 0.8));
   }
 }
 
 function drawCrown(pc: PixelCanvas, cx: number, top: number, u: number, look: DragonLook): void {
-  const c = hex(look.element === 'lightning' ? 0xffffff : 0xffd34a);
+  const c = hex(look.element === 'lightning' ? 0xffffff : look.element === 'shadow' ? 0xff3d7f : look.element === 'poison' ? 0xb8f07a : 0xffd34a);
   for (let i = -1; i <= 1; i++) pc.poly([[cx + i * 2.2 * u - 1.1 * u, top], [cx + i * 2.2 * u + 1.1 * u, top], [cx + i * 2.2 * u, top - 2.6 * u]], c);
   pc.rect(cx - 3.3 * u, top - 0.6 * u, 6.6 * u, Math.max(1, 1.2 * u), c);
 }

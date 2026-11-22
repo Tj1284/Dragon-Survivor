@@ -37,7 +37,14 @@ export const PLAYER_WEAPONS = {
   fireOrbit: { hitRadius: 7 },
   frostShards: { speed: 160, life: 1.2, goldFreeze: 1.5 },
   frostAura: { goldFreeze: 1.5, goldFreezeEvery: 4 },
-  ultimate: { every: 20, fireRadius: 120, fireDamage: 80, iceFreeze: 3, lightningStrikes: 12, lightningDamage: 60 },
+  poison: { duration: 3, plagueRadius: 48 },
+  poisonBreath: { range: 160, speed: 190 },
+  toxicCloud: { tick: 0.5, poisonDps: 3, goldSlow: 0.4, triggerRange: 120, max: 6 },
+  venomSpines: { speed: 170, life: 0.9, triggerRange: 140, goldDelay: 0.3 },
+  shadowBreath: { range: 170, speed: 150, life: 1.6, goldPierce: 2, goldHeal: 1 },
+  reaper: { goldDelay: 0.25 },
+  voidRift: { duration: 1.5, max: 4 },
+  ultimate: { every: 20, fireRadius: 120, fireDamage: 80, iceFreeze: 3, lightningStrikes: 12, lightningDamage: 60, poisonDps: 20, poisonTime: 5, shadowDamage: 40, shadowHeal: 0.15 },
   evolution: { pause: 0.8, pushRadius: 100, pushDistance: 60 },
 };
 

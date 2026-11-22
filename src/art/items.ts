@@ -53,6 +53,23 @@ export function drawFx(key: string, S: number, frame: number): PixelCanvas {
     }
     case 'fire_zone':
       return drawFireZone(S, frame);
+    case 'poison_glob':
+      pc.ellipse(c, c + 0.5, S * 0.36, S * 0.32, (_dx, dy) => shade(hex(0x8fe04a), 1.15 - dy * 0.45));
+      pc.set(c - 1, c - 1, hex(0xeaffc0));
+      pc.set(c + 1 + (frame % 2), c + 1, hex(0x5aa02a));
+      break;
+    case 'spine':
+      pc.line(1, c, S - 3, c, 1, hex(0x8a4fc2));
+      pc.set(S - 2, c, hex(0x8fe04a)); pc.set(S - 1, c, hex(0xd8ff9a));
+      pc.set(1, c - 1, hex(0x5a2f8a)); pc.set(1, c + 1, hex(0x5a2f8a));
+      return pc;
+    case 'shadow_bolt': {
+      pc.ellipse(c + 1, c, S * 0.32, S * 0.3, hex(0x3a2a5a));
+      pc.ellipse(c - S * 0.2, c + (frame % 2 ? 1 : -1), S * 0.22, S * 0.16, withAlpha(hex(0x5a3f7a), 180));
+      pc.ellipse(c + 1.5, c, S * 0.16, S * 0.16, hex(0xff3d7f));
+      pc.set(c + 2, c - 1, hex(0xffd0e0));
+      break;
+    }
   }
   pc.outline(OUT);
   return pc;
@@ -133,6 +150,12 @@ const GLYPHS: Record<string, string[]> = {
   frost_aura: ['..######..', '.#......#.', '#..####..#', '#.#....#.#', '#.#.++.#.#', '#.#.++.#.#', '#.#....#.#', '#..####..#', '.#......#.', '..######..'],
   thunder_strike: ['.....###..', '....###...', '...###....', '..######..', '....###...', '...###....', '..##......', '.#........', '..........', '..........'],
   static_field: ['..........', '#.........', '.#...#....', '..#.#.#...', '...#...#..', '........#.', '.........#', '..........', '..........', '..........'],
+  poison_breath: ['..........', '..####....', '.#+####...', '.######.#.', '..####..#.', '......#.#.', '.....#+#..', '.....###..', '......#...', '..........'],
+  toxic_cloud: ['..........', '...##.....', '..####.##.', '.########.', '#########.', '##o##o###.', '.###o####.', '..######..', '..........', '..........'],
+  venom_spines: ['....#.....', '.#..#..#..', '..#.#.#...', '...+o+....', '####o####.', '...+o+....', '..#.#.#...', '.#..#..#..', '....#.....', '..........'],
+  shadow_breath: ['..........', '..####....', '.#+####...', '.######...', '..####.oo.', '......o##o', '.....o#++#', '......o##o', '.......oo.', '..........'],
+  reaper: ['..........', '.#######..', '#+......#.', '.......##.', '.......#..', '......#...', '.....#....', '....#.....', '...#......', '..........'],
+  void_rift: ['...####...', '..#....#..', '.#..##..#.', '#..#..#..#', '#.#.oo.#.#', '#.#.oo#..#', '#..#...#.#', '.#..###.#.', '..#.....#.', '...#####..'],
   lightning_breath: ['......##..', '.....##...', '.###.##...', '....####..', '.####.##..', '.....##...', '.###.#....', '....#.....', '..........', '..........'],
 };
 
@@ -184,7 +207,10 @@ export function drawDecor(frame: number): PixelCanvas {
   const stemG = hex(0x2e5a2c);
   switch (frame) {
     case 0:
-      for (const [x, h] of [[5, 5], [7, 7], [9, 6], [11, 4]]) pc.line(x, 14, x + (x > 8 ? 1 : -1), 14 - h, 1, hex(0x6fa85a));
+      for (const [x, h] of [[5, 5], [7, 7], [9, 6], [11, 4]]) {
+        pc.line(x, 14, x + (x > 8 ? 1 : -1), 14 - h, 1, hex(0x4a8a2a));
+        pc.set(x + (x > 8 ? 1 : -1), 14 - h, hex(0x9ad04a));
+      }
       break;
     case 1:
     case 2: {
@@ -204,11 +230,17 @@ export function drawDecor(frame: number): PixelCanvas {
       pc.ellipse(8, 9, 3.5, 2.2, hex(0xc8402a));
       pc.set(7, 8, hex(0xffffff)); pc.set(9, 9, hex(0xffffff));
       break;
-    case 5:
-      pc.ellipse(8, 10, 6, 4.5, (_dx, dy) => shade(hex(0x3f7a38), 1.15 - dy * 0.4));
-      pc.set(6, 8, hex(0x6fae5a)); pc.set(10, 9, hex(0x6fae5a));
+    case 5: {
+      // leafy clump: three overlapping blobs, lit from the top-left, with a couple of berries
+      const leaf = (dx: number, dy: number) => shade(hex(0x4f8f2c), 1.25 - dy * 0.5 - dx * 0.1);
+      pc.ellipse(5, 11, 4, 3.2, leaf);
+      pc.ellipse(11, 11, 4, 3.2, leaf);
+      pc.ellipse(8, 8.5, 4.5, 3.8, leaf);
+      for (const [x, y] of [[6, 7], [9, 6], [4, 10], [11, 9]]) pc.set(x, y, hex(0x9ad04a));
+      pc.set(10, 11, hex(0xd8443a)); pc.set(6, 12, hex(0xd8443a));
       break;
+    }
   }
-  pc.outline(withAlpha(hex(0x1e3a1e), 255));
+  pc.outline(withAlpha(hex(0x24421a), 255));
   return pc;
 }

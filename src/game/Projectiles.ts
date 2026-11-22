@@ -1,8 +1,11 @@
 import * as Phaser from 'phaser';
 import { MAX_ENEMY_RADIUS } from '../logic/bosses';
 import { Pool } from '../logic/pool';
+import { nearestTarget } from '../logic/visuals';
 import type { Enemy, EnemyManager } from './EnemyManager';
 import type { Player } from './Player';
+
+const HOMING_RANGE = 220;
 
 export type ProjectileOwner = 'player' | 'enemy';
 
@@ -16,6 +19,8 @@ export interface Projectile {
   onExpire?: (p: Projectile, now: number) => void;
   /** Source label for debug stats ('spit', 'fire', 'ice', ...). */
   source?: string;
+  /** Turn rate (rad/s) towards the nearest enemy; flies straight when there is none. */
+  homing?: number;
   alive: boolean;
   sprite: Phaser.GameObjects.Sprite;
   hits: number[];
@@ -24,6 +29,8 @@ export interface Projectile {
 export type FireOptions = Omit<Projectile, 'alive' | 'sprite' | 'hits'>;
 
 export class Projectiles {
+  /** Called every frame for each live player projectile (visual trails). */
+  onTrail: (p: Projectile) => void = () => {};
   private readonly pool: Pool<Projectile>;
   private readonly active: Projectile[] = [];
   private readonly near: number[] = [];
@@ -35,7 +42,7 @@ export class Projectiles {
         alive: false, hits: [],
         sprite: scene.add.sprite(0, 0, 'spit').setDepth(20).setVisible(false),
       }),
-      (p) => { p.alive = false; p.onHit = undefined; p.onExpire = undefined; p.hits.length = 0; p.sprite.setVisible(false).stop(); },
+      (p) => { p.alive = false; p.onHit = undefined; p.onExpire = undefined; p.homing = undefined; p.hits.length = 0; p.sprite.setVisible(false).stop(); },
     );
   }
 
@@ -56,10 +63,12 @@ export class Projectiles {
   update(dt: number, enemies: EnemyManager, player: Player, now: number): void {
     for (let i = this.active.length - 1; i >= 0; i--) {
       const p = this.active[i];
+      if (p.homing && p.owner === 'player') this.steer(p, enemies, dt);
       p.x += p.vx * dt;
       p.y += p.vy * dt;
       p.life -= dt;
       p.sprite.setPosition(p.x, p.y);
+      if (p.owner === 'player') this.onTrail(p);
       let spent = false;
       if (p.owner === 'player') {
         enemies.grid.queryRadius(p.x, p.y, p.radius + MAX_ENEMY_RADIUS, this.near);
@@ -84,6 +93,18 @@ export class Projectiles {
         this.pool.release(p);
       }
     }
+  }
+
+  private steer(p: Projectile, enemies: EnemyManager, dt: number): void {
+    const target = nearestTarget(enemies.active, p.x, p.y, HOMING_RANGE, p.hits);
+    if (!target) return;
+    const speed = Math.hypot(p.vx, p.vy);
+    const cur = Math.atan2(p.vy, p.vx);
+    let diff = Math.atan2(target.y - p.y, target.x - p.x) - cur;
+    diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+    const a = cur + Math.max(-p.homing! * dt, Math.min(p.homing! * dt, diff));
+    p.vx = Math.cos(a) * speed; p.vy = Math.sin(a) * speed;
+    p.sprite.setRotation(a);
   }
 
   clear(): void {

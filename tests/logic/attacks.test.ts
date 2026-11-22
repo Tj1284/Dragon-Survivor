@@ -94,3 +94,24 @@ it('HUD order follows acquisition; the breath takes the spit slot', () => {
   expect(nextOrder(['spit', 'tail_swipe', 'roar'], { fire_breath: 2, tail_swipe: 1, roar: 1 })).toEqual(['fire_breath', 'tail_swipe', 'roar']);
   expect(nextOrder(['fire_breath', 'tail_swipe'], { fire_breath: 2, tail_swipe: 1, frost_aura: 1 })).toEqual(['fire_breath', 'tail_swipe', 'frost_aura']);
 });
+
+it('poison attacks: numbers, gold versions and offers', () => {
+  expect(attackParams('toxic_cloud', 5, true).radius).toBe(54);
+  expect(attackParams('toxic_cloud', 5, true).count).toBe(2);
+  expect(attackParams('poison_breath', 1, false).extra).toBe(4);
+  expect(attackParams('poison_breath', 1, true).extra).toBe(6);
+  expect(spitToBreath({ spit: 3 }, 'poison')).toEqual({ poison_breath: 3 });
+  const offers = availableUpgrades({ owned: { poison_breath: 1 }, element: 'poison', gold: [] });
+  expect(offers).toContain('toxic_cloud');
+  expect(offers).toContain('venom_spines');
+  expect(offers).not.toContain('meteor');
+  expect(offers).not.toContain('reaper');
+});
+
+it('shadow attacks: numbers and gold versions', () => {
+  expect(attackParams('reaper', 5, true).extra).toBe(0.3);
+  expect(attackParams('void_rift', 1, true).radius).toBe(52);
+  expect(attackParams('void_rift', 1, true).count).toBe(2);
+  expect(spitToBreath({ spit: 2 }, 'shadow')).toEqual({ shadow_breath: 2 });
+  expect(ATTACKS.shadow_breath.offered).toBe(false);
+});

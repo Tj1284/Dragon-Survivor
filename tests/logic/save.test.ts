@@ -47,3 +47,7 @@ it('a storage that throws (private mode, blocked) still loads and saves without 
   ok.save({ ...defaultSave(), gold: 7 });
   expect(ok.load().gold).toBe(7);
 });
+
+it('accepts the new poison and shadow forms and drops unknown ones', () => {
+  expect(parseSave(JSON.stringify({ collection: ['hatchling', 'young_poison', 'bogus', 'legendary_shadow'] })).collection).toEqual(['hatchling', 'young_poison', 'legendary_shadow']);
+});

@@ -5,16 +5,18 @@ import { UPGRADE_IDS, tagOf, type UpgradeId } from '../logic/attacks';
 
 export interface SheetDef { key: string; path: string; frameWidth: number; frameHeight: number; frames: number; color: number }
 
-export const COLORS: Record<Tag, number> = { fire: 0xe8542a, ice: 0x6cc6f0, lightning: 0xf5d742, neutral: 0xb08cff };
+export const COLORS: Record<Tag, number> = { fire: 0xe8542a, ice: 0x6cc6f0, lightning: 0xf5d742, poison: 0x8fe04a, shadow: 0xc23a6e, neutral: 0xb08cff };
 
 const sheet = (key: string, path: string, size: number, frames: number, color: number): SheetDef =>
   ({ key, path, frameWidth: size, frameHeight: size, frames, color });
 
-const DRAGON_SIZE = { hatchling: 32, young: 32, adult: 48, legendary: 64 } as const;
+const DRAGON_SIZE = { hatchling: 32, young: 32, adult: 48, legendary: 96 } as const;
+/** Forms whose art is longer than the rest of their stage get a bigger frame, so they don't look tiny. */
+const FORM_SIZE: Partial<Record<FormId, number>> = { young_poison: 40, young_shadow: 40 };
 
 function dragonSheet(id: FormId): SheetDef {
   const [stage, element] = id.split('_') as [keyof typeof DRAGON_SIZE, Tag | undefined];
-  return sheet(id, `art/dragons/${id}.png`, DRAGON_SIZE[stage], 6, element ? COLORS[element] : 0x8fd16a);
+  return sheet(id, `art/dragons/${id}.png`, FORM_SIZE[id] ?? DRAGON_SIZE[stage], 6, element ? COLORS[element] : 0x8fd16a);
 }
 
 export const DRAGON_SHEETS = Object.fromEntries(ALL_FORMS.map((id) => [id, dragonSheet(id)])) as Record<FormId, SheetDef>;
@@ -30,7 +32,7 @@ export const ENEMY_SHEETS: Record<EnemyTypeId | 'boss', SheetDef> = {
   boss: enemy('boss', 96, 0x8a1f2c),
 };
 
-export type FxKey = 'spit' | 'fire_zone' | 'ice_shard' | 'lightning_bolt' | 'arrow' | 'net' | 'fire_orb';
+export type FxKey = 'spit' | 'fire_zone' | 'ice_shard' | 'lightning_bolt' | 'arrow' | 'net' | 'fire_orb' | 'poison_glob' | 'spine' | 'shadow_bolt';
 const fx = (key: FxKey, size: number, frames: number, color: number) => sheet(key, `art/fx/${key}.png`, size, frames, color);
 export const FX_SHEETS: Record<FxKey, SheetDef> = {
   spit: fx('spit', 8, 2, 0x8fd16a),
@@ -40,6 +42,9 @@ export const FX_SHEETS: Record<FxKey, SheetDef> = {
   arrow: fx('arrow', 8, 1, 0xd8c8a0),
   net: fx('net', 16, 1, 0xc0b090),
   fire_orb: fx('fire_orb', 12, 2, COLORS.fire),
+  poison_glob: fx('poison_glob', 8, 2, COLORS.poison),
+  spine: fx('spine', 8, 1, COLORS.poison),
+  shadow_bolt: fx('shadow_bolt', 10, 2, COLORS.shadow),
 };
 
 export type PickupKey = 'gem_s' | 'gem_m' | 'gem_l' | 'gold' | 'chest';
@@ -56,7 +61,7 @@ export const ICON_SHEETS = Object.fromEntries(
   UPGRADE_IDS.map((id) => [id, sheet(`icon_${id}`, `art/icons/${id}.png`, 16, 1, COLORS[tagOf(id)])]),
 ) as Record<UpgradeId, SheetDef>;
 
-export const GROUND: SheetDef = sheet('ground', 'art/tiles/ground.png', 32, 1, 0x3b5b3a);
+export const GROUND: SheetDef = sheet('ground', 'art/tiles/ground.png', 64, 1, 0x3b5b3a);
 
 export const ALL_SHEETS: readonly SheetDef[] = [
   ...Object.values(DRAGON_SHEETS),

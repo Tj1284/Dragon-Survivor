@@ -32,7 +32,7 @@ export default async function (page, baseUrl) {
   await dbg(page, 'setLevel', 5);
   await waitFor(page, () => window.__dbg.scene().includes('LevelUp'), null, 2000);
   const cards = await dbg(page, 'cards');
-  if (cards.length !== 3) throw new Error('element picker should show 3 cards');
+  if (cards.length !== 5) throw new Error('element picker should show 5 cards');
   await page.screenshot({ path: 'e2e/out/evo-element-picker.png' });
   await dbg(page, 'pick', 1);
   await waitForm(page, 'young_ice');

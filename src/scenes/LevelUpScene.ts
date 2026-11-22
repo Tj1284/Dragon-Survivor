@@ -1,6 +1,6 @@
 import * as Phaser from 'phaser';
 import { onTap, relayoutOnResize } from '../game/ui';
-import { COLORS, ICON_SHEETS } from '../assets/manifest';
+import { COLORS, DRAGON_SHEETS, ICON_SHEETS } from '../assets/manifest';
 import { registerDebug } from '../debug';
 import { t } from '../i18n';
 import { ELEMENTS, type Element } from '../logic/types';
@@ -13,7 +13,7 @@ export type LevelUpData =
 export const LEVELUP_EVENTS = { picked: 'levelup:picked', element: 'element:picked' } as const;
 
 export const GOLD_COLOR = 0xf2c230;
-interface Card { kind: 'attack' | 'stat' | 'gold' | 'fallback' | 'element'; id?: string; title: string; desc: string; level: string; color: number; icon?: string; onPick: () => void; x?: number; y?: number }
+interface Card { kind: 'attack' | 'stat' | 'gold' | 'fallback' | 'element'; id?: string; title: string; desc: string; level: string; color: number; icon?: string; dragon?: string; onPick: () => void; x?: number; y?: number }
 
 import { TEXT } from '../ui/style';
 
@@ -59,7 +59,8 @@ export class LevelUpScene extends Phaser.Scene {
     bg.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OUT, () => bg.setFillStyle(fill));
     const wrap = { width: landscape ? cw - 12 : cw - 70 };
     if (landscape) {
-      if (card.icon) this.add.image(cx, cy - ch / 2 + 28, card.icon).setScale(2);
+      if (card.dragon) this.add.sprite(cx, cy - ch / 2 + 28, card.dragon, 0).play(`${card.dragon}_loop`).setScale(Math.min(1.5, 44 / DRAGON_SHEETS.young_fire.frameHeight));
+      else if (card.icon) this.add.image(cx, cy - ch / 2 + 28, card.icon).setScale(2);
       else this.add.circle(cx, cy - ch / 2 + 28, 12, card.color);
       this.add.text(cx, cy - ch / 2 + 54, card.title, { ...TEXT, fontSize: '8px', align: 'center', wordWrap: wrap }).setOrigin(0.5, 0);
       this.add.text(cx, cy - ch / 2 + 82, card.level, { ...TEXT, fontSize: '8px', color: '#ffd76a' }).setOrigin(0.5, 0);
@@ -67,7 +68,8 @@ export class LevelUpScene extends Phaser.Scene {
       this.add.text(cx, cy + ch / 2 - 12, `${i + 1}`, { ...TEXT, fontSize: '8px', color: '#8a84a0' }).setOrigin(0.5);
     } else {
       const left = cx - cw / 2;
-      if (card.icon) this.add.image(left + 24, cy, card.icon).setScale(2);
+      if (card.dragon) this.add.sprite(left + 24, cy, card.dragon, 0).play(`${card.dragon}_loop`);
+      else if (card.icon) this.add.image(left + 24, cy, card.icon).setScale(2);
       else this.add.circle(left + 24, cy, 12, card.color);
       this.add.text(left + 48, cy - ch / 2 + 10, card.title, { ...TEXT, fontSize: '8px', wordWrap: wrap });
       this.add.text(cx + cw / 2 - 8, cy - ch / 2 + 10, card.level, { ...TEXT, fontSize: '8px', color: '#ffd76a' }).setOrigin(1, 0);
@@ -97,7 +99,7 @@ export class LevelUpScene extends Phaser.Scene {
 
   private elementCards(): Card[] {
     return ELEMENTS.map((el: Element): Card => ({
-      kind: 'element', id: el, title: t(`el_${el}`), desc: t(`el_${el}_d`), level: '', color: COLORS[el],
+      kind: 'element', id: el, title: t(`el_${el}`), desc: t(`el_${el}_d`), level: '', color: COLORS[el], dragon: DRAGON_SHEETS[`young_${el}`].key,
       onPick: () => this.game.events.emit(LEVELUP_EVENTS.element, el),
     }));
   }
