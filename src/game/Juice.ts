@@ -2,6 +2,7 @@ import * as Phaser from 'phaser';
 import { COLORS } from '../assets/manifest';
 import type { Element, Tag } from '../logic/types';
 import { isAttack, tagOf, type UpgradeId } from '../logic/attacks';
+import { shadowOffset } from '../logic/visuals';
 import type { Player } from './Player';
 import { audio } from '../audio';
 
@@ -132,7 +133,7 @@ export class Juice {
     this.t += dt;
     const p = this.player;
     const half = p.sprite.displayHeight / 2;
-    this.shadow.setPosition(p.x, p.y + half * 0.85).setScale(0.25 + p.sprite.displayWidth / 220, 0.1 + p.sprite.displayWidth / 900);
+    this.shadow.setPosition(p.x, p.y + shadowOffset(p.formId, p.sprite.displayHeight)).setScale(0.25 + p.sprite.displayWidth / 220, 0.1 + p.sprite.displayWidth / 900);
     if (this.ambient && this.ambientRate > 0) {
       this.ambientAcc += dt * this.ambientRate;
       const w = p.sprite.displayWidth * 0.4;

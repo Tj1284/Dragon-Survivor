@@ -6,6 +6,7 @@ import { applyPoison, damageMultiplier, newIceStatus, newPoison, tickPoison, typ
 import { Pool } from '../logic/pool';
 import { hpMult, pickEnemyType, spawnPosition, spawnRadius, stepSpawnBudget, targetAlive } from '../logic/spawn';
 import { SpatialGrid } from '../logic/spatialGrid';
+import { enemyTint } from '../logic/visuals';
 import type { Player } from './Player';
 import type { Projectiles } from './Projectiles';
 
@@ -234,13 +235,9 @@ export class EnemyManager {
       e.sprite.setPosition(e.x, e.y);
       const flashing = now < e.flashUntil;
       if (e.boss && e.alive) { this.bossFrames++; if (flashing) this.bossFlashFrames++; }
-      const frozen = now < e.ice.frozenUntil;
-      if (flashing) e.sprite.setTint(0xffffff).setTintMode(Phaser.TintModes.FILL);
-      else if (frozen) e.sprite.setTint(0x9fdcff).setTintMode(Phaser.TintModes.MULTIPLY);
-      else if (now < e.stunUntil) e.sprite.setTint(0xfff2a8).setTintMode(Phaser.TintModes.MULTIPLY);
-      else if (now < e.poison.until) e.sprite.setTint(0xb8ff9a).setTintMode(Phaser.TintModes.MULTIPLY);
-      else if (e.state === 'windup') e.sprite.setTint(0xff8080).setTintMode(Phaser.TintModes.MULTIPLY);
-      else e.sprite.clearTint().setTintMode(Phaser.TintModes.MULTIPLY);
+      const tint = enemyTint({ flashing, frozen: now < e.ice.frozenUntil, stunned: now < e.stunUntil, poisoned: now < e.poison.until, windup: e.state === 'windup' });
+      if (!tint) e.sprite.clearTint().setTintMode(Phaser.TintModes.MULTIPLY);
+      else e.sprite.setTint(tint.color).setTintMode(tint.mode === 'fill' ? Phaser.TintModes.FILL : Phaser.TintModes.MULTIPLY);
     }
   }
 

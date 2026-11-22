@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser';
 import { MAX_ENEMY_RADIUS } from '../logic/bosses';
 import { Pool } from '../logic/pool';
+import { nearestTarget } from '../logic/visuals';
 import type { Enemy, EnemyManager } from './EnemyManager';
 import type { Player } from './Player';
 
@@ -95,7 +96,7 @@ export class Projectiles {
   }
 
   private steer(p: Projectile, enemies: EnemyManager, dt: number): void {
-    const target = enemies.nearest(p.x, p.y, HOMING_RANGE);
+    const target = nearestTarget(enemies.active, p.x, p.y, HOMING_RANGE, p.hits);
     if (!target) return;
     const speed = Math.hypot(p.vx, p.vy);
     const cur = Math.atan2(p.vy, p.vx);
