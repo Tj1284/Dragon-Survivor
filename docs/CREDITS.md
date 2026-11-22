@@ -30,3 +30,7 @@ Todo el audio del juego es de **Juhani Junkala** (SubspaceAudio), publicado con 
 Los WAV originales se convirtieron a MP3 (efectos en mono a 64 kbps, música en estéreo a 96 kbps) con ffmpeg.
 
 Para cambiar un sonido, sustituye el MP3 manteniendo su nombre.
+
+## Fuente
+
+- **Silkscreen**, de Jason Kottke. Licencia SIL Open Font License 1.1. Se incluye en el juego desde el paquete `@fontsource/silkscreen` (no se carga de internet).

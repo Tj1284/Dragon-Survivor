@@ -38,6 +38,8 @@ const game = new Phaser.Game({
   parent: 'game',
   backgroundColor: '#1d1b2a',
   pixelArt: true,
+  // a long press must not open the browser menu (Playgama 1.4.5)
+  disableContextMenu: true,
   roundPixels: true,
   scale: {
     mode: Phaser.Scale.FIT,
