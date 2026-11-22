@@ -46,3 +46,28 @@ export function registerIceHit(s: IceStatus, now: number, slowDuration = 2): Ice
 export function damageMultiplier(s: IceStatus, now: number, shatterLevel: number): number {
   return now < s.frozenUntil ? 1.5 + 0.25 * shatterLevel : 1;
 }
+
+/** Damage over time. `acc` is the time poisoned since the last tick. */
+export interface PoisonStatus { until: number; dps: number; acc: number }
+
+export const POISON_TICK = 0.5;
+
+export function newPoison(): PoisonStatus {
+  return { until: 0, dps: 0, acc: 0 };
+}
+
+/** Keeps the stronger poison and the later end time. An expired poison is replaced. */
+export function applyPoison(s: PoisonStatus, dps: number, duration: number, now: number): PoisonStatus {
+  const active = now < s.until;
+  return { until: Math.max(active ? s.until : 0, now + duration), dps: active ? Math.max(s.dps, dps) : dps, acc: active ? s.acc : 0 };
+}
+
+/** Advances the poison by dt ending at `now`; damage comes out in POISON_TICK steps. */
+export function tickPoison(s: PoisonStatus, dt: number, now: number): { s: PoisonStatus; damage: number } {
+  const start = now - dt;
+  if (start >= s.until) return { s: s.acc === 0 ? s : { ...s, acc: 0 }, damage: 0 };
+  let acc = s.acc + Math.min(dt, s.until - start);
+  let damage = 0;
+  while (acc >= POISON_TICK - 1e-6) { acc -= POISON_TICK; damage += s.dps * POISON_TICK; }
+  return { s: { ...s, acc: Math.max(0, acc) }, damage };
+}

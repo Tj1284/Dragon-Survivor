@@ -71,12 +71,14 @@ export class GameScene extends Phaser.Scene {
   /** Seconds of evolution pause left; counted down with real frame time so a scene pause can't skip it. */
   private evolvePauseLeft = 0;
   private chooseNext: Element | null = null;
+  private killCount = 0;
   private readonly timings: Record<string, number> = {};
   private readonly debugLog = isDebug();
 
   constructor() { super('Game'); }
 
   create(): void {
+    this.killCount = 0;
     this.now = 0;
     this.ended = false;
     this.levelUpOpen = false;
@@ -117,6 +119,7 @@ export class GameScene extends Phaser.Scene {
     this.bosses = new Bosses(this, this.enemies, this.player);
     this.victoryIn = 0;
     this.enemies.onKilled = (e) => {
+      this.killCount++;
       if (e.boss) { this.onBossKilled(e.boss, e.x, e.y); return; }
       audio.play('kill');
       this.juice.death(e.x, e.y);
@@ -349,6 +352,10 @@ export class GameScene extends Phaser.Scene {
     registerDebug('allForms', () => [...ALL_FORMS]);
     registerDebug('hitsBy', (source: string) => (source === 'lightning' ? lightningStats.maxChain : 0));
     registerDebug('frozenCount', () => this.enemies.active.filter((e) => e.alive && this.now < e.ice.frozenUntil).length);
+    registerDebug('kills', () => this.killCount);
+    registerDebug('poisonedCount', () => this.enemies.poisonedCount);
+    registerDebug('poisonAll', (dps: number, dur: number) => { for (const e of this.enemies.active) this.enemies.poison(e, dps, dur, this.now); });
+    registerDebug('setPlague', (r: number) => { this.enemies.plagueRadius = r; });
     registerDebug('hud', () => this.hud.positions());
     registerDebug('camera', () => ({ midX: this.cameras.main.midPoint.x, midY: this.cameras.main.midPoint.y }));
     registerDebug('fps', () => this.game.loop.actualFps);
