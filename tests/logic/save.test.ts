@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { computeStats } from '../../src/logic/attacks';
 import { buyMeta, metaBonus, metaCost } from '../../src/logic/meta';
-import { addRunResult, defaultSave, parseSave, serializeSave } from '../../src/logic/save';
+import { addRunResult, defaultSave, mergeSaves, parseSave, serializeSave } from '../../src/logic/save';
 import { createCachedStorage } from '../../src/platform/storage';
 
 it('reading a missing or broken save gives a fresh one', () => {
@@ -54,4 +54,17 @@ it('the cached platform storage loads the startup value, survives garbage and wr
 
 it('accepts the new poison and shadow forms and drops unknown ones', () => {
   expect(parseSave(JSON.stringify({ collection: ['hatchling', 'young_poison', 'bogus', 'legendary_shadow'] })).collection).toEqual(['hatchling', 'young_poison', 'legendary_shadow']);
+});
+
+it('a late cloud save and this session progress merge without losing or duplicating anything', () => {
+  const cloud = { ...defaultSave(), gold: 120, meta: { might: 2, vitality: 1 }, collection: ['hatchling' as const, 'young_fire' as const], bestTime: 300, wins: 2, played: true };
+  const session = { ...defaultSave(), gold: 30, meta: { might: 1, swiftness: 1 }, collection: ['hatchling' as const, 'young_ice' as const], bestTime: 400, wins: 0, played: true, muted: true };
+  const m = mergeSaves(cloud, session);
+  expect(m.gold).toBe(150); // the session started from an empty save, so its gold is all new
+  expect(m.meta).toEqual({ might: 2, vitality: 1, swiftness: 1 });
+  expect([...m.collection].sort()).toEqual(['hatchling', 'young_fire', 'young_ice']);
+  expect(m.bestTime).toBe(400);
+  expect(m.wins).toBe(2);
+  expect(m.played).toBe(true);
+  expect(m.muted).toBe(true);
 });

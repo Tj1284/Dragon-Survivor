@@ -25,10 +25,17 @@ export function formatTime(seconds: number): string {
 import { TEXT } from '../ui/style';
 
 export class GameOverScene extends Phaser.Scene {
+  /** Bumped on every build of the screen (rotation rebuilds it): late ad results only touch the screen they came from. */
+  private build = 0;
+  private leaving = false;
+
   constructor() { super('GameOver'); }
 
   create(data: GameOverData): void {
     relayoutOnResize(this, data);
+    const build = ++this.build;
+    const current = () => build === this.build && this.scene.isActive();
+    this.leaving = false;
     if (!savedRuns.has(data.runId)) {
       savedRuns.add(data.runId);
       audio.play(data.won ? 'victory' : 'defeat');
@@ -46,7 +53,12 @@ export class GameOverScene extends Phaser.Scene {
 
     const btnY = h * 0.76;
     // an interstitial at this natural pause; Bridge decides whether one actually shows
-    const leave = (scene: string) => { platform.interstitial('game_over'); this.scene.start(scene); };
+    // an interstitial at this natural pause, played out before moving on so it never lands on the next run
+    const leave = (scene: string) => {
+      if (this.leaving) return;
+      this.leaving = true;
+      void platform.interstitial('game_over').then(() => { if (this.scene.isActive()) this.scene.start(scene); });
+    };
     const again = makeButton(this, 'again', w / 2, btnY, 130, 30, t('again'), 0xe8542a, () => leave('Game'));
     const lair = makeButton(this, 'lair', w / 2 - 58, btnY + 38, 100, 22, t('lair'), 0x5a3f8f, () => leave('Lair'), '8px');
     const menu = makeButton(this, 'menu', w / 2 + 58, btnY + 38, 100, 22, t('menu'), 0x5a3f8f, () => leave('Menu'), '8px');
@@ -58,12 +70,17 @@ export class GameOverScene extends Phaser.Scene {
         busy = true;
         void platform.rewarded('double_gold').then((ok) => {
           busy = false;
-          if (!this.scene.isActive()) return;
+          if (ok && !doubledRuns.has(data.runId)) {
+            doubledRuns.add(data.runId);
+            const s = storage.load();
+            storage.save({ ...s, gold: s.gold + data.gold });
+          }
+          if (!current()) {
+            // the screen was rebuilt (rotation) while the ad played: rebuild again to show the result
+            if (ok && this.scene.isActive() && !this.leaving) this.scene.restart(data);
+            return;
+          }
           if (!ok) { double.label.setText(t('ad_failed')); return; }
-          if (doubledRuns.has(data.runId)) return;
-          doubledRuns.add(data.runId);
-          const s = storage.load();
-          storage.save({ ...s, gold: s.gold + data.gold });
           lines[2] = goldLine();
           stats.setText(lines.join('\n'));
           double.label.setText(t('gold_doubled'));

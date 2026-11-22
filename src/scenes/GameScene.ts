@@ -33,7 +33,7 @@ import { platform } from '../platform/bridge';
 import { audio } from '../audio';
 import { addForms, addRunResult } from '../logic/save';
 import { formId } from '../logic/evolution';
-import { FALLBACK, computeStats, heldAttacks, nextOrder, rollChoices, spitToBreath, tagOf, type AttackId, type Choice, type UpgradeId } from '../logic/attacks';
+import { FALLBACK, computeStats, fallbackHeal, heldAttacks, nextOrder, rollChoices, spitToBreath, tagOf, type AttackId, type Choice, type UpgradeId } from '../logic/attacks';
 import { applyXp } from '../logic/xp';
 import type { GameOverData } from './GameOverScene';
 import { LEVELUP_EVENTS, type LevelUpData } from './LevelUpScene';
@@ -214,7 +214,7 @@ export class GameScene extends Phaser.Scene {
 
   applyChoice(choice: Choice): void {
     if (choice.type === 'fallback') {
-      this.player.hp = Math.min(this.player.stats.maxHp, this.player.hp + FALLBACK.healFraction * this.player.stats.maxHp);
+      this.player.hp = fallbackHeal(this.player.hp, this.player.stats.maxHp);
       this.run.gold += FALLBACK.gold;
       return;
     }
@@ -366,7 +366,9 @@ export class GameScene extends Phaser.Scene {
     registerDebug('frozenCount', () => this.enemies.active.filter((e) => e.alive && this.now < e.ice.frozenUntil).length);
     registerDebug('kills', () => this.killCount);
     registerDebug('revives', () => this.revives);
-    registerDebug('adMock', (m: 'rewarded' | 'closed' | 'failed' | null) => platform.setAdMock(m));
+    registerDebug('interstitialMock', (ms: number | null) => platform.setInterstitialMock(ms));
+    registerDebug('interstitials', () => platform.interstitialsShown);
+    registerDebug('adMock', (m: 'rewarded' | 'slow' | 'closed' | 'failed' | 'hang' | null) => platform.setAdMock(m));
     registerDebug('ambient', () => this.juice.ambientAlive);
     registerDebug('poisonedCount', () => this.enemies.poisonedCount);
     registerDebug('poisonAll', (dps: number, dur: number) => { for (const e of this.enemies.active) this.enemies.poison(e, dps, dur, this.now); });

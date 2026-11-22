@@ -70,3 +70,22 @@ export function addRunResult(s: SaveData, r: { gold: number; time: number; won: 
     collection,
   };
 }
+
+/**
+ * Joins the cloud save that arrived late with the progress made meanwhile. The session started from an
+ * empty save, so its gold is all newly earned and is added; everything else keeps the best of both.
+ */
+export function mergeSaves(cloud: SaveData, session: SaveData): SaveData {
+  const meta: SaveData['meta'] = { ...cloud.meta };
+  for (const [k, v] of Object.entries(session.meta) as [keyof SaveData['meta'], number][]) meta[k] = Math.max(meta[k] ?? 0, v);
+  return {
+    ...cloud,
+    gold: cloud.gold + session.gold,
+    meta,
+    collection: [...cloud.collection, ...session.collection.filter((f) => !cloud.collection.includes(f))],
+    bestTime: Math.max(cloud.bestTime, session.bestTime),
+    wins: Math.max(cloud.wins, session.wins),
+    played: cloud.played || session.played,
+    muted: session.muted,
+  };
+}

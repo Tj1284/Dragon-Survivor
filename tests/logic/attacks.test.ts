@@ -1,3 +1,4 @@
+import { fallbackHeal } from '../../src/logic/attacks';
 import { expect, it } from 'vitest';
 import {
   ATTACKS, ATTACK_IDS, BASE_STATS, STAT_IDS, attackParams, availableUpgrades, computeStats, eligibleGold,
@@ -114,4 +115,11 @@ it('shadow attacks: numbers and gold versions', () => {
   expect(attackParams('void_rift', 1, true).count).toBe(2);
   expect(spitToBreath({ spit: 2 }, 'shadow')).toEqual({ shadow_breath: 2 });
   expect(ATTACKS.shadow_breath.offered).toBe(false);
+});
+
+it('the fallback heal never brings a fallen dragon back (only the revive ad can)', () => {
+  expect(fallbackHeal(0, 100)).toBe(0);
+  expect(fallbackHeal(-3, 100)).toBe(-3);
+  expect(fallbackHeal(50, 100)).toBe(80);
+  expect(fallbackHeal(90, 100)).toBe(100);
 });
