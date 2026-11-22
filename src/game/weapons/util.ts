@@ -52,6 +52,7 @@ export function drawBolt(g: Phaser.GameObjects.Graphics, x1: number, y1: number,
 
 export interface FanShot {
   key: string; source: AttackId; count: number; spreadDeg: number; speed: number; damage: number; radius: number; life: number; pierce: number;
+  homing?: number;
   onHit?: (target: Enemy | Player, p: Projectile, now: number) => void;
   onExpire?: (p: Projectile, now: number) => void;
 }
@@ -64,7 +65,7 @@ export function fireFan(ctx: WeaponCtx, angle: number, s: FanShot): void {
     ctx.projectiles.fire({
       x: ctx.player.x, y: ctx.player.y, vx: Math.cos(a) * s.speed, vy: Math.sin(a) * s.speed,
       damage: s.damage, radius: s.radius, life: s.life, owner: 'player', key: s.key, pierce: s.pierce, source: s.source,
-      onHit: s.onHit, onExpire: s.onExpire,
+      onHit: s.onHit, onExpire: s.onExpire, homing: s.homing,
     });
   }
 }

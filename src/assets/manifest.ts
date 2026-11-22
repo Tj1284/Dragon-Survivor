@@ -30,7 +30,7 @@ export const ENEMY_SHEETS: Record<EnemyTypeId | 'boss', SheetDef> = {
   boss: enemy('boss', 96, 0x8a1f2c),
 };
 
-export type FxKey = 'spit' | 'fire_zone' | 'ice_shard' | 'lightning_bolt' | 'arrow' | 'net' | 'fire_orb';
+export type FxKey = 'spit' | 'fire_zone' | 'ice_shard' | 'lightning_bolt' | 'arrow' | 'net' | 'fire_orb' | 'poison_glob' | 'spine' | 'shadow_bolt';
 const fx = (key: FxKey, size: number, frames: number, color: number) => sheet(key, `art/fx/${key}.png`, size, frames, color);
 export const FX_SHEETS: Record<FxKey, SheetDef> = {
   spit: fx('spit', 8, 2, 0x8fd16a),
@@ -40,6 +40,9 @@ export const FX_SHEETS: Record<FxKey, SheetDef> = {
   arrow: fx('arrow', 8, 1, 0xd8c8a0),
   net: fx('net', 16, 1, 0xc0b090),
   fire_orb: fx('fire_orb', 12, 2, COLORS.fire),
+  poison_glob: fx('poison_glob', 8, 2, COLORS.poison),
+  spine: fx('spine', 8, 1, COLORS.poison),
+  shadow_bolt: fx('shadow_bolt', 10, 2, COLORS.shadow),
 };
 
 export type PickupKey = 'gem_s' | 'gem_m' | 'gem_l' | 'gold' | 'chest';

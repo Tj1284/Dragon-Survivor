@@ -61,7 +61,7 @@ squire = escudero, archer = arquero, lancer = lancero, netter = lanzarredes, hea
 
 ### Efectos y proyectiles
 
-spit = escupitajo de la cría, fire_zone = zona ardiendo, ice_shard = fragmento de hielo, lightning_bolt = chispa de rayo, arrow = flecha, net = red, fire_orb = orbe de fuego.
+spit = escupitajo de la cría, fire_zone = zona ardiendo, ice_shard = fragmento de hielo, lightning_bolt = chispa de rayo, arrow = flecha, net = red, fire_orb = orbe de fuego, poison_glob = bola de veneno, spine = púa venenosa, shadow_bolt = espíritu de sombra.
 
 | Archivo | Frame | Frames | Tamaño total del PNG |
 |---|---|---|---|
@@ -72,6 +72,9 @@ spit = escupitajo de la cría, fire_zone = zona ardiendo, ice_shard = fragmento 
 | `art/fx/arrow.png` | 8×8 | 1 | 8×8 |
 | `art/fx/net.png` | 16×16 | 1 | 16×16 |
 | `art/fx/fire_orb.png` | 12×12 | 2 | 24×12 |
+| `art/fx/poison_glob.png` | 8×8 | 2 | 16×8 |
+| `art/fx/spine.png` | 8×8 | 1 | 8×8 |
+| `art/fx/shadow_bolt.png` | 10×10 | 2 | 20×10 |
 
 ### Recogibles
 
@@ -103,6 +106,12 @@ El nombre de cada icono es el del ataque o la estadística (ver la tabla de más
 | `art/icons/lightning_breath.png` | 16×16 | 1 | 16×16 |
 | `art/icons/thunder_strike.png` | 16×16 | 1 | 16×16 |
 | `art/icons/static_field.png` | 16×16 | 1 | 16×16 |
+| `art/icons/poison_breath.png` | 16×16 | 1 | 16×16 |
+| `art/icons/toxic_cloud.png` | 16×16 | 1 | 16×16 |
+| `art/icons/venom_spines.png` | 16×16 | 1 | 16×16 |
+| `art/icons/shadow_breath.png` | 16×16 | 1 | 16×16 |
+| `art/icons/reaper.png` | 16×16 | 1 | 16×16 |
+| `art/icons/void_rift.png` | 16×16 | 1 | 16×16 |
 | `art/icons/fury.png` | 16×16 | 1 | 16×16 |
 | `art/icons/thick_scales.png` | 16×16 | 1 | 16×16 |
 | `art/icons/quick_breath.png` | 16×16 | 1 | 16×16 |
@@ -135,6 +144,12 @@ Un tile que se repite en todas direcciones: tiene que encajar consigo mismo por 
 | lightning_breath | Aliento de rayo: salta entre enemigos | rayo |
 | thunder_strike | Relámpago que cae sobre un enemigo | rayo |
 | static_field | Campo estático: descargas cercanas | rayo |
+| poison_breath | Aliento venenoso: bolas que envenenan | veneno |
+| toxic_cloud | Nube tóxica que envenena a quien la cruza | veneno |
+| venom_spines | Púas venenosas en anillo | veneno |
+| shadow_breath | Aliento de sombra: espíritus que persiguen | sombra |
+| reaper | Guadaña: barrido que remata a los débiles | sombra |
+| void_rift | Grieta del vacío: atrae y estalla | sombra |
 | fury | Furia: más daño | estadística |
 | thick_scales | Escamas gruesas: más vida | estadística |
 | quick_breath | Aliento rápido: menos recarga | estadística |

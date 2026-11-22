@@ -5,7 +5,9 @@ export type AttackId =
   | 'spit' | 'tail_swipe' | 'roar'
   | 'fire_breath' | 'fire_orbit' | 'meteor'
   | 'ice_breath' | 'frost_shards' | 'frost_aura'
-  | 'lightning_breath' | 'thunder_strike' | 'static_field';
+  | 'lightning_breath' | 'thunder_strike' | 'static_field'
+  | 'poison_breath' | 'toxic_cloud' | 'venom_spines'
+  | 'shadow_breath' | 'reaper' | 'void_rift';
 export type StatId = 'fury' | 'thick_scales' | 'quick_breath' | 'swift_wings' | 'regen' | 'armor' | 'magnet';
 export type UpgradeId = AttackId | StatId;
 
@@ -37,6 +39,12 @@ export const ATTACKS: Record<AttackId, AttackDef> = {
   lightning_breath: atk('lightning_breath', 'lightning', 'quick_breath', false),
   thunder_strike: atk('thunder_strike', 'lightning', 'fury', true),
   static_field: atk('static_field', 'lightning', 'swift_wings', true),
+  poison_breath: atk('poison_breath', 'poison', 'regen', false),
+  toxic_cloud: atk('toxic_cloud', 'poison', 'armor', true),
+  venom_spines: atk('venom_spines', 'poison', 'fury', true),
+  shadow_breath: atk('shadow_breath', 'shadow', 'regen', false),
+  reaper: atk('reaper', 'shadow', 'magnet', true),
+  void_rift: atk('void_rift', 'shadow', 'quick_breath', true),
 };
 
 export const ATTACK_IDS = Object.keys(ATTACKS) as AttackId[];
@@ -148,6 +156,17 @@ const TABLE: Record<AttackId, Row> = {
   frost_aura: { damage: [2, 3, 4, 5, 6], cooldown: five(0.5), count: five(1), radius: [40, 44, 48, 52, 56], extra: [0.2, 0.3, 0.4, 0.5, 0.6] },
   thunder_strike: { damage: [20, 24, 28, 32, 38], cooldown: [3.2, 2.9, 2.6, 2.3, 2], count: [1, 1, 1, 2, 2], radius: five(16), extra: five(0) },
   static_field: { damage: [8, 10, 12, 14, 16], cooldown: [1.5, 1.4, 1.3, 1.2, 1.1], count: five(1), radius: [50, 54, 58, 62, 66], extra: [2, 3, 4, 5, 6] },
+  // extra = poison damage per second
+  poison_breath: { damage: [9, 11, 11, 14, 14], cooldown: [0.8, 0.75, 0.75, 0.7, 0.65], count: [1, 1, 2, 2, 3], radius: five(4), extra: [4, 5, 6, 7, 8] },
+  // damage = per second inside the cloud; extra = how long a cloud lasts (s)
+  toxic_cloud: { damage: [6, 7, 8, 9, 10], cooldown: [3, 2.8, 2.6, 2.4, 2.2], count: five(1), radius: [28, 30, 32, 34, 36], extra: [3, 3, 3.5, 3.5, 4] },
+  venom_spines: { damage: [6, 7, 8, 9, 10], cooldown: [2.4, 2.3, 2.2, 2.1, 2], count: [6, 8, 8, 10, 12], radius: five(3), extra: [2, 2, 3, 3, 4] },
+  // extra = homing turn rate (rad/s)
+  shadow_breath: { damage: [13, 16, 16, 20, 20], cooldown: [0.9, 0.85, 0.85, 0.8, 0.75], count: [1, 1, 2, 2, 3], radius: five(5), extra: five(4) },
+  // extra = enemies left at or under this fraction of their health are executed
+  reaper: { damage: [18, 22, 26, 30, 36], cooldown: [2.5, 2.4, 2.3, 2.2, 2], count: five(1), radius: [44, 48, 52, 56, 60], extra: [0.1, 0.12, 0.14, 0.16, 0.2] },
+  // extra = pull speed (px/s)
+  void_rift: { damage: [20, 24, 28, 32, 40], cooldown: [4, 3.7, 3.4, 3.1, 2.8], count: five(1), radius: [40, 44, 48, 52, 56], extra: [40, 45, 50, 55, 60] },
 };
 
 /** Numeric changes of each gold version; behaviour changes (stun, pierce, freeze...) live in the weapon classes. */
@@ -163,6 +182,12 @@ const GOLD: Partial<Record<AttackId, (p: AttackParams) => AttackParams>> = {
   frost_aura: (p) => ({ ...p, count: 2 }),
   thunder_strike: (p) => ({ ...p, count: 5 }),
   static_field: (p) => ({ ...p, count: 3 }),
+  poison_breath: (p) => ({ ...p, extra: p.extra * 1.5 }),
+  toxic_cloud: (p) => ({ ...p, radius: p.radius * 1.5, count: 2 }),
+  venom_spines: (p) => ({ ...p, extra: p.extra * 1.5 }),
+  shadow_breath: (p) => ({ ...p, damage: p.damage * 1.25 }),
+  reaper: (p) => ({ ...p, extra: 0.3, count: 2 }),
+  void_rift: (p) => ({ ...p, count: 2, radius: p.radius * 1.3 }),
 };
 
 export function attackParams(id: AttackId, level: number, gold: boolean): AttackParams {

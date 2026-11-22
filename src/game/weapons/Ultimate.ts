@@ -39,6 +39,15 @@ export class Ultimate implements Weapon {
       this.g.fillStyle(COLORS.ice, 0.25).fillRect(view.x, view.y, view.width, view.height);
     } else if (this.element === 'lightning') {
       strikeRandom(this.ctx, this.g, this.scratch, U.lightningStrikes, U.lightningDamage * dm, 16, now, 'ultimate');
+    } else if (this.element === 'poison') {
+      for (const e of visibleEnemies(this.ctx, this.scratch)) this.ctx.enemies.poison(e, U.poisonDps * dm, U.poisonTime, now);
+      const view = this.ctx.scene.cameras.main.worldView;
+      this.g.fillStyle(COLORS.poison, 0.22).fillRect(view.x, view.y, view.width, view.height);
+    } else {
+      for (const e of visibleEnemies(this.ctx, this.scratch)) this.ctx.enemies.hit(e, U.shadowDamage * dm, now, 'ultimate');
+      player.hp = Math.min(player.hpLimit, player.hp + player.stats.maxHp * U.shadowHeal);
+      const view = this.ctx.scene.cameras.main.worldView;
+      this.g.fillStyle(0x1a1030, 0.45).fillRect(view.x, view.y, view.width, view.height);
     }
     this.clearAt = now + 0.3;
   }
