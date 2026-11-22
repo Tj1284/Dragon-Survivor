@@ -9,6 +9,7 @@ import { PauseScene } from './scenes/PauseScene';
 import { MenuScene } from './scenes/MenuScene';
 import { LairScene } from './scenes/LairScene';
 import { CollectionScene } from './scenes/CollectionScene';
+import { ReviveScene } from './scenes/ReviveScene';
 import { storage } from './platform/storage';
 import { audio } from './audio';
 import { defaultSave, type SaveData } from './logic/save';
@@ -44,7 +45,7 @@ const game = new Phaser.Game({
     width: initial.width,
     height: initial.height,
   },
-  scene: [BootScene, MenuScene, LairScene, CollectionScene, GameScene, LevelUpScene, PauseScene, GameOverScene],
+  scene: [BootScene, MenuScene, LairScene, CollectionScene, GameScene, LevelUpScene, PauseScene, ReviveScene, GameOverScene],
 });
 
 installDebug(game);

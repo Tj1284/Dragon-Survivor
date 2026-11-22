@@ -7,12 +7,15 @@ import { describeButtons, makeButton } from '../ui/button';
 import { DRAGON_SHEETS } from '../assets/manifest';
 import { registerDebug } from '../debug';
 import { t } from '../i18n';
+import { platform } from '../platform/bridge';
 import type { FormId } from '../logic/types';
 
 export interface GameOverData { time: number; level: number; formId: FormId; gold: number; won: boolean; runId: number; forms: FormId[]; banked: number }
 
 /** Runs already added to the save: rebuilding this screen (e.g. on rotation) must not add the gold twice. */
 const savedRuns = new Set<number>();
+/** Runs whose gold was already doubled by a rewarded ad. */
+const doubledRuns = new Set<number>();
 
 export function formatTime(seconds: number): string {
   const s = Math.floor(seconds);
@@ -36,17 +39,42 @@ export class GameOverScene extends Phaser.Scene {
     this.add.rectangle(0, 0, w, h, 0x000000, 0.75).setOrigin(0);
     this.add.text(w / 2, h * 0.16, t(data.won ? 'victory' : 'game_over'), { ...TEXT, fontSize: '16px', color: data.won ? '#f2c230' : '#ffffff' }).setOrigin(0.5);
     registerDebug('gameOver', () => ({ ...data }));
-    this.add.sprite(w / 2, h * 0.36, DRAGON_SHEETS[data.formId].key).play(`${DRAGON_SHEETS[data.formId].key}_loop`).setScale(2);
-    const lines = [`${t('time')}: ${formatTime(data.time)}`, t('level_n', { n: data.level }), `${t('gold')}: ${data.gold}`];
-    this.add.text(w / 2, h * 0.56, lines.join('\n'), { ...TEXT, fontSize: '8px', align: 'center' }).setOrigin(0.5);
+    this.add.sprite(w / 2, h * 0.36, DRAGON_SHEETS[data.formId].key).play(`${DRAGON_SHEETS[data.formId].key}_loop`).setScale(DRAGON_SHEETS[data.formId].frameHeight >= 64 ? 1 : 2);
+    const goldLine = () => `${t('gold')}: ${doubledRuns.has(data.runId) ? data.gold * 2 : data.gold}`;
+    const lines = [`${t('time')}: ${formatTime(data.time)}`, t('level_n', { n: data.level }), goldLine()];
+    const stats = this.add.text(w / 2, h * 0.53, lines.join('\n'), { ...TEXT, fontSize: '8px', align: 'center' }).setOrigin(0.5);
 
     const btnY = h * 0.76;
-    const again = makeButton(this, 'again', w / 2, btnY, 130, 30, t('again'), 0xe8542a, () => this.scene.start('Game'));
-    const lair = makeButton(this, 'lair', w / 2 - 58, btnY + 38, 100, 22, t('lair'), 0x5a3f8f, () => this.scene.start('Lair'), '8px');
-    const menu = makeButton(this, 'menu', w / 2 + 58, btnY + 38, 100, 22, t('menu'), 0x5a3f8f, () => this.scene.start('Menu'), '8px');
-    this.input.keyboard?.once('keydown-ENTER', () => this.scene.start('Game'));
-    this.input.keyboard?.once('keydown-SPACE', () => this.scene.start('Game'));
-    registerDebug('buttons', () => describeButtons([again, lair, menu]));
+    // an interstitial at this natural pause; Bridge decides whether one actually shows
+    const leave = (scene: string) => { platform.interstitial('game_over'); this.scene.start(scene); };
+    const again = makeButton(this, 'again', w / 2, btnY, 130, 30, t('again'), 0xe8542a, () => leave('Game'));
+    const lair = makeButton(this, 'lair', w / 2 - 58, btnY + 38, 100, 22, t('lair'), 0x5a3f8f, () => leave('Lair'), '8px');
+    const menu = makeButton(this, 'menu', w / 2 + 58, btnY + 38, 100, 22, t('menu'), 0x5a3f8f, () => leave('Menu'), '8px');
+    const buttons = [again, lair, menu];
+    if (data.gold > 0 && platform.rewardedSupported && !doubledRuns.has(data.runId)) {
+      let busy = false;
+      const double = makeButton(this, 'double', w / 2, h * 0.64, 170, 20, t('double_gold'), 0x8a6a10, () => {
+        if (busy) return;
+        busy = true;
+        void platform.rewarded('double_gold').then((ok) => {
+          busy = false;
+          if (!this.scene.isActive()) return;
+          if (!ok) { double.label.setText(t('ad_failed')); return; }
+          if (doubledRuns.has(data.runId)) return;
+          doubledRuns.add(data.runId);
+          const s = storage.load();
+          storage.save({ ...s, gold: s.gold + data.gold });
+          lines[2] = goldLine();
+          stats.setText(lines.join('\n'));
+          double.label.setText(t('gold_doubled'));
+          double.bg.disableInteractive();
+        });
+      }, '8px');
+      buttons.push(double);
+    }
+    this.input.keyboard?.once('keydown-ENTER', () => leave('Game'));
+    this.input.keyboard?.once('keydown-SPACE', () => leave('Game'));
+    registerDebug('buttons', () => describeButtons(buttons));
     const btn = again.bg;
     registerDebug('againButton', () => ({ x: btn.x, y: btn.y }));
   }

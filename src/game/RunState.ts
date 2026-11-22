@@ -15,10 +15,12 @@ export interface RunState {
   forms: FormId[];
   /** Gold already added to the save (when the app went to the background); the game-over screen adds the rest. */
   bankedGold: number;
+  /** The revive ad was already offered this run (Playgama 2.2.4: at most once per attempt). */
+  reviveOffered: boolean;
   /** Held attacks in the order they were picked (HUD icon order). */
   attackOrder: AttackId[];
 }
 
 export function createRunState(): RunState {
-  return { level: 1, xp: 0, gold: 0, elapsed: 0, owned: { spit: 1 }, picks: [], goldAttacks: [], element: null, stage: 0, pendingLevels: 0, won: false, id: Math.floor(Math.random() * 2 ** 31), forms: ['hatchling'], bankedGold: 0, attackOrder: ['spit'] };
+  return { level: 1, xp: 0, gold: 0, elapsed: 0, owned: { spit: 1 }, picks: [], goldAttacks: [], element: null, stage: 0, pendingLevels: 0, won: false, id: Math.floor(Math.random() * 2 ** 31), forms: ['hatchling'], bankedGold: 0, attackOrder: ['spit'], reviveOffered: false };
 }

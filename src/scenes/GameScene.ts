@@ -1,6 +1,6 @@
 import * as Phaser from 'phaser';
 import { GROUND } from '../assets/manifest';
-import { ENEMIES, ENEMY_IDS, PICKUPS, PLAYER_WEAPONS, type EnemyTypeId } from '../config/balance';
+import { ENEMIES, ENEMY_IDS, PICKUPS, PLAYER_WEAPONS, REVIVE, type EnemyTypeId } from '../config/balance';
 import { isDebug, registerDebug, setDebugReady } from '../debug';
 import { EnemyManager } from '../game/EnemyManager';
 import { Hud } from '../game/Hud';
@@ -27,6 +27,8 @@ import { clampDelta } from '../logic/time';
 import { metaBonus, type MetaBonus } from '../logic/meta';
 import { storage } from '../platform/storage';
 import { hideLoading } from '../ui/loading';
+import { REVIVE_EVENTS } from './ReviveScene';
+import type { Enemy } from '../game/EnemyManager';
 import { platform } from '../platform/bridge';
 import { audio } from '../audio';
 import { addForms, addRunResult } from '../logic/save';
@@ -73,6 +75,8 @@ export class GameScene extends Phaser.Scene {
   private evolvePauseLeft = 0;
   private chooseNext: Element | null = null;
   private killCount = 0;
+  private revives = 0;
+  private readonly reviveNear: Enemy[] = [];
   private readonly timings: Record<string, number> = {};
   private readonly debugLog = isDebug();
 
@@ -80,6 +84,7 @@ export class GameScene extends Phaser.Scene {
 
   create(): void {
     this.killCount = 0;
+    this.revives = 0;
     this.now = 0;
     this.ended = false;
     this.levelUpOpen = false;
@@ -134,11 +139,15 @@ export class GameScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-P', () => this.openPause());
     this.game.events.on(LEVELUP_EVENTS.picked, this.onUpgradePicked, this);
     this.game.events.on(QUIT_EVENT, this.quitRun, this);
+    this.game.events.on(REVIVE_EVENTS.yes, this.revive, this);
+    this.game.events.on(REVIVE_EVENTS.no, this.declineRevive, this);
     document.addEventListener('visibilitychange', this.onVisibility);
     this.scale.on(Phaser.Scale.Events.RESIZE, this.onResize, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.game.events.off(LEVELUP_EVENTS.picked, this.onUpgradePicked, this);
       this.game.events.off(QUIT_EVENT, this.quitRun, this);
+      this.game.events.off(REVIVE_EVENTS.yes, this.revive, this);
+      this.game.events.off(REVIVE_EVENTS.no, this.declineRevive, this);
       document.removeEventListener('visibilitychange', this.onVisibility);
       this.scale.off(Phaser.Scale.Events.RESIZE, this.onResize, this);
       this.inputCtl.destroy();
@@ -356,6 +365,8 @@ export class GameScene extends Phaser.Scene {
     registerDebug('hitsBy', (source: string) => (source === 'lightning' ? lightningStats.maxChain : 0));
     registerDebug('frozenCount', () => this.enemies.active.filter((e) => e.alive && this.now < e.ice.frozenUntil).length);
     registerDebug('kills', () => this.killCount);
+    registerDebug('revives', () => this.revives);
+    registerDebug('adMock', (m: 'rewarded' | 'closed' | 'failed' | null) => platform.setAdMock(m));
     registerDebug('ambient', () => this.juice.ambientAlive);
     registerDebug('poisonedCount', () => this.enemies.poisonedCount);
     registerDebug('poisonAll', (dps: number, dur: number) => { for (const e of this.enemies.active) this.enemies.poison(e, dps, dur, this.now); });
@@ -421,7 +432,7 @@ export class GameScene extends Phaser.Scene {
       this.victoryIn -= dt;
       if (this.victoryIn <= 0) { this.endRun(); return; }
     }
-    if (this.player.hp <= 0 && !this.run.won) this.endRun();
+    if (this.player.hp <= 0 && !this.run.won) this.onDeath();
   }
 
   /** Exponential moving average (ms) of a system's update time, for the debug timings() command. */
@@ -464,6 +475,31 @@ export class GameScene extends Phaser.Scene {
   private openChest(): void {
     this.run.pendingLevels++;
     this.openNextLevelUp();
+  }
+
+  /** First fall of a run: offer a rewarded revive (once per run, only where rewarded ads exist). */
+  private onDeath(): void {
+    if (this.ended || this.scene.isPaused()) return;
+    if (this.run.reviveOffered || !platform.rewardedSupported) { this.endRun(); return; }
+    this.run.reviveOffered = true;
+    this.inputCtl.releaseAll();
+    this.scene.pause();
+    this.scene.launch('Revive');
+  }
+
+  private revive(): void {
+    const { player } = this;
+    player.hp = player.stats.maxHp * REVIVE.hpFraction;
+    player.shield = REVIVE.shield;
+    for (const e of this.enemies.inRadius(player.x, player.y, REVIVE.pushRadius, this.reviveNear)) this.enemies.knockback(e, player.x, player.y, REVIVE.pushDistance);
+    this.projectiles.clear();
+    this.revives++;
+    this.scene.resume();
+  }
+
+  private declineRevive(): void {
+    this.scene.resume();
+    this.endRun();
   }
 
   private endRun(): void {
