@@ -103,7 +103,7 @@ export class Bosses {
     e.sprite.setFlipX(dx < 0).setPosition(e.x, e.y);
     // the charge wind-up blinks red so it reads as a warning
     if (b.state === 'windup') {
-      if (Math.floor(b.t * 10) % 2 === 0) e.sprite.setTint(0xff6060).setTintMode(Phaser.TintModes.FILL);
+      if (Math.floor(b.t * 10) % 2 === 0) e.sprite.setTint(0xff3030).setTintMode(Phaser.TintModes.MULTIPLY);
       else e.sprite.clearTint().setTintMode(Phaser.TintModes.MULTIPLY);
     }
   }

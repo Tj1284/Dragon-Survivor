@@ -28,6 +28,8 @@ export interface Projectile {
 export type FireOptions = Omit<Projectile, 'alive' | 'sprite' | 'hits'>;
 
 export class Projectiles {
+  /** Called every frame for each live player projectile (visual trails). */
+  onTrail: (p: Projectile) => void = () => {};
   private readonly pool: Pool<Projectile>;
   private readonly active: Projectile[] = [];
   private readonly near: number[] = [];
@@ -65,6 +67,7 @@ export class Projectiles {
       p.y += p.vy * dt;
       p.life -= dt;
       p.sprite.setPosition(p.x, p.y);
+      if (p.owner === 'player') this.onTrail(p);
       let spent = false;
       if (p.owner === 'player') {
         enemies.grid.queryRadius(p.x, p.y, p.radius + MAX_ENEMY_RADIUS, this.near);

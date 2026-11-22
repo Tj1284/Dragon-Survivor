@@ -107,10 +107,11 @@ export class GameScene extends Phaser.Scene {
     this.hitLog = [];
     this.evolution = new Evolution(this.ctx, () => this.askElement(), (from, to) => this.onEvolved(from, to));
     this.juice = new Juice(this, this.player);
+    this.projectiles.onTrail = (p) => this.juice.trail(p.x, p.y, p.key, p.source);
     this.decor = new Decor(this);
     this.damageNumbers = new DamageNumbers(this);
     this.enemies.onHit = (e, dmg, source) => {
-      this.juice.hit(e.x, e.y);
+      this.juice.hit(e.x, e.y, source === 'ultimate' ? this.run.element ? `${this.run.element}_breath` : undefined : source);
       this.damageNumbers.show(e.x, e.y - e.radius, dmg, e.boss !== null);
       audio.play('hit');
       if (source) this.hitCounts[source] = (this.hitCounts[source] ?? 0) + 1;
@@ -353,6 +354,7 @@ export class GameScene extends Phaser.Scene {
     registerDebug('hitsBy', (source: string) => (source === 'lightning' ? lightningStats.maxChain : 0));
     registerDebug('frozenCount', () => this.enemies.active.filter((e) => e.alive && this.now < e.ice.frozenUntil).length);
     registerDebug('kills', () => this.killCount);
+    registerDebug('ambient', () => this.juice.ambientAlive);
     registerDebug('poisonedCount', () => this.enemies.poisonedCount);
     registerDebug('poisonAll', (dps: number, dur: number) => { for (const e of this.enemies.active) this.enemies.poison(e, dps, dur, this.now); });
     registerDebug('setPlague', (r: number) => { this.enemies.plagueRadius = r; });
