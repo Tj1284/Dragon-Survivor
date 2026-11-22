@@ -1,3 +1,4 @@
+import { audioShouldRun, isSilent } from './state';
 import { MUSIC_VOLUME, SFX_NAMES, SFX_VOLUME, type MusicTrack, type SfxName } from './catalog';
 import { createLimiter } from './limiter';
 
@@ -33,7 +34,12 @@ class GameAudio {
 
   /** True once the context is actually running (it can exist but stay suspended or 'interrupted' on iOS). */
   get unlocked(): boolean { return this.ctx?.state === 'running'; }
-  get muted(): boolean { return this.limiter.muted; }
+  /** The player's own sound setting (what the sound button shows). */
+  get muted(): boolean { return this.userMuted; }
+  private userMuted = false;
+  private platformMuted = false;
+  private platformPaused = false;
+  private get running(): boolean { return audioShouldRun({ hidden: document.hidden, platformPaused: this.platformPaused }); }
 
   private fetchRaw(key: string, urls: Record<string, string>): Promise<ArrayBuffer> | null {
     const url = urls[key];
@@ -78,24 +84,42 @@ class GameAudio {
   }
 
   private resume(): void {
-    if (!this.ctx || document.hidden || this.ctx.state === 'running') return;
+    if (!this.ctx || !this.running || this.ctx.state === 'running') return;
     void this.ctx.resume().catch(() => {});
   }
 
   private onVisibility(): void {
     if (!this.ctx) return;
-    if (document.hidden) void this.ctx.suspend().catch(() => {});
+    if (!this.running) void this.ctx.suspend().catch(() => {});
     else this.resume();
   }
 
   setMuted(muted: boolean): void {
-    this.limiter.muted = muted;
-    if (this.master && this.ctx) this.master.gain.setValueAtTime(muted ? 0 : 1, this.ctx.currentTime);
+    this.userMuted = muted;
+    this.applyMute();
+  }
+
+  /** The platform asks for silence (its sound toggle, an ad); independent of the player's setting. */
+  setPlatformMuted(muted: boolean): void {
+    this.platformMuted = muted;
+    this.applyMute();
+  }
+
+  /** The platform paused the game (ad, tab switch): stop the audio clock until it resumes. */
+  setPlatformPaused(paused: boolean): void {
+    this.platformPaused = paused;
+    this.onVisibility();
+  }
+
+  private applyMute(): void {
+    const silent = isSilent({ user: this.userMuted, platform: this.platformMuted });
+    this.limiter.muted = silent;
+    if (this.master && this.ctx) this.master.gain.setValueAtTime(silent ? 0 : 1, this.ctx.currentTime);
   }
 
   play(name: SfxName): void {
     // nothing is queued while suspended or hidden: it would all burst out on resume
-    if (!this.ctx || !this.master || this.ctx.state !== 'running' || document.hidden) return;
+    if (!this.ctx || !this.master || this.ctx.state !== 'running' || !this.running) return;
     const buffer = this.buffers.get(`/audio/sfx/${name}.mp3`);
     if (!buffer || !this.limiter.allow(name, this.ctx.currentTime)) return;
     this.played[name] = (this.played[name] ?? 0) + 1;
@@ -144,7 +168,7 @@ class GameAudio {
 
   stats() {
     return {
-      unlocked: this.unlocked, state: this.ctx?.state ?? 'none', notes: this.sources, muted: this.muted,
+      unlocked: this.unlocked, state: this.ctx?.state ?? 'none', notes: this.sources, muted: this.muted, silent: this.limiter.muted, platformPaused: this.platformPaused,
       loaded: SFX_NAMES.filter((n) => this.buffers.has(`/audio/sfx/${n}.mp3`)).length,
       music: this.music?.track ?? null, played: { ...this.played }, maxInWindow: this.limiter.maxSeen,
     };

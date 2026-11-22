@@ -27,6 +27,7 @@ import { clampDelta } from '../logic/time';
 import { metaBonus, type MetaBonus } from '../logic/meta';
 import { storage } from '../platform/storage';
 import { hideLoading } from '../ui/loading';
+import { platform } from '../platform/bridge';
 import { audio } from '../audio';
 import { addForms, addRunResult } from '../logic/save';
 import { formId } from '../logic/evolution';
@@ -151,6 +152,7 @@ export class GameScene extends Phaser.Scene {
     if (this.hintFrom) this.hud.showHint(t(this.sys.game.device.input.touch ? 'hint_touch' : 'hint_keys'));
     setDebugReady(true);
     hideLoading();
+    platform.message('level_started');
     // a different level track each run
     audio.playMusic((['level1', 'level2', 'level3'] as const)[Math.floor(Math.random() * 3)]);
   }
@@ -167,6 +169,7 @@ export class GameScene extends Phaser.Scene {
     this.inputCtl.releaseAll();
     this.scene.pause();
     this.scene.launch('Pause');
+    platform.message('level_paused');
   }
 
   // ---- experience and level-ups ----
@@ -466,6 +469,7 @@ export class GameScene extends Phaser.Scene {
   private endRun(): void {
     this.ended = true;
     this.scene.stop('LevelUp');
+    platform.message(this.run.won ? 'level_completed' : 'level_failed');
     const data: GameOverData = { time: this.run.elapsed, level: this.run.level, formId: this.player.formId, gold: Math.round(this.run.gold * this.meta.goldMult), won: this.run.won, runId: this.run.id, forms: [...this.run.forms], banked: this.run.bankedGold };
     this.scene.start('GameOver', data);
   }

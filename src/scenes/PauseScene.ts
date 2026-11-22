@@ -6,6 +6,7 @@ import { audio } from '../audio';
 import { toggleMute } from '../audio/mute';
 import { registerDebug } from '../debug';
 import { t } from '../i18n';
+import { platform } from '../platform/bridge';
 
 import { TEXT } from '../ui/style';
 
@@ -19,7 +20,7 @@ export class PauseScene extends Phaser.Scene {
     this.add.text(w / 2, h * 0.35, t('paused'), { ...TEXT, fontSize: '16px' }).setOrigin(0.5);
     const btn = this.add.rectangle(w / 2, h * 0.6, 130, 32, 0x6cc6f0).setStrokeStyle(2, 0xffffff).setInteractive({ useHandCursor: true });
     this.add.text(w / 2, h * 0.6, t('resume'), { ...TEXT, fontSize: '16px', color: '#10202a' }).setOrigin(0.5);
-    const resume = () => { this.scene.stop(); this.scene.resume('Game'); };
+    const resume = () => { this.scene.stop(); this.scene.resume('Game'); platform.message('level_resumed'); };
     onTap(btn, resume);
     this.input.keyboard?.once('keydown-P', resume);
     const menu = makeButton(this, 'menu', w / 2, h * 0.6 + 42, 110, 22, t('menu'), 0x5a3f8f, () => this.game.events.emit(QUIT_EVENT), '8px');

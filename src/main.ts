@@ -50,6 +50,20 @@ const game = new Phaser.Game({
 installDebug(game);
 registerDebug('scene', () => game.scene.getScenes(true).map((sc) => sc.scene.key));
 audio.setMuted(storage.load().muted);
+
+// Playgama: start muted if the platform says so, and follow its pause/audio requests (ads, tab switches).
+// game.pause() stops the whole loop without touching scenes the player paused (pause menu, level-up), so resuming is safe.
+function applyPlatformAudio(enabled: boolean): void { audio.setPlatformMuted(!enabled); }
+function applyPlatformPause(paused: boolean): void {
+  audio.setPlatformPaused(paused);
+  if (paused) game.pause(); else game.resume();
+}
+applyPlatformAudio(platform.audioEnabled);
+platform.onAudio(applyPlatformAudio);
+platform.onPause(applyPlatformPause);
+registerDebug('platformAudio', applyPlatformAudio);
+registerDebug('platformPause', applyPlatformPause);
+registerDebug('gamePaused', () => game.isPaused);
 registerDebug('audio', () => audio.stats());
 registerDebug('save', () => storage.load());
 registerDebug('resetSave', () => storage.save(defaultSave()));
