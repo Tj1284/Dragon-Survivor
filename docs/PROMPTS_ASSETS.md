@@ -17,13 +17,14 @@ Los prompts están en inglés porque los generadores de imágenes les hacen más
 
 ## Dragones: 16 formas, 6 frames de vuelo cada una
 
-Ya tienes la cría y los 3 jóvenes. Faltan **12**. Orden recomendado (lo que más se ve antes): jóvenes nuevos → adultos → legendarios.
+Ya están las 16. Si rehaces alguna, usa estos tamaños; `tools/slice_sprites.py` recorta y reduce la imagen de ChatGPT al tamaño exacto. Orden recomendado (lo que más se ve antes): jóvenes nuevos → adultos → legendarios.
 
 | Archivo | Frame | Tamaño total del PNG |
 |---|---|---|
 | `young_*` | 32×32 | 192×32 |
 | `adult_*` | 48×48 | 288×48 |
-| `legendary_*` | 64×64 | 384×64 |
+| `legendary_*` | 96×96 | 576×96 |
+| `young_poison`, `young_shadow` | 40×40 | 240×40 |
 
 ### Jóvenes nuevos (veneno y sombra)
 
@@ -50,7 +51,7 @@ Pixel art sprite sheet of an ADULT dragon flying, the same dragon as the attache
 
 `art/dragons/legendary_ELEMENTO.png`
 ```
-Pixel art sprite sheet of a LEGENDARY dragon flying, the same dragon as the attached image but majestic and ancient: a crown of horns, five back spikes, huge wings, glowing accents and a small aura. Same art style and same colors as the attached image: COLORES. DETALLES. 6 frames of a wing-flap loop in one single horizontal row, frame 1 wings up, frame 4 wings down, smooth loop. Each frame exactly 64x64 pixels, total image 384x64. Clean 16-bit pixel art, max 16 colors, 1px dark outline, no anti-aliasing, no blur, no text. Side view facing RIGHT, transparent background, character centered with the body at the same height in every frame.
+Pixel art sprite sheet of a LEGENDARY dragon flying, the same dragon as the attached image but majestic and ancient: a crown of horns, five back spikes, huge wings, glowing accents and a small aura. Same art style and same colors as the attached image: COLORES. DETALLES. 6 frames of a wing-flap loop in one single horizontal row, frame 1 wings up, frame 4 wings down, smooth loop. Each frame exactly 96x96 pixels, total image 576x96. Clean 16-bit pixel art, max 16 colors, 1px dark outline, no anti-aliasing, no blur, no text. Side view facing RIGHT, transparent background, character centered with the body at the same height in every frame.
 ```
 
 | ELEMENTO | COLORES | DETALLES |
@@ -119,7 +120,7 @@ Los símbolos de los iconos antiguos están en la tabla "Ataques y estadísticas
 ## Suelo
 
 ```
-A seamless tileable pixel art grass texture, exactly 32x32 pixels, top-down view, soft green meadow with subtle color variation and a few grass blades, no flowers, no objects, tiles perfectly with itself on all four edges.
+A seamless tileable pixel art grass texture, exactly 64x64 pixels, top-down view, soft green meadow with subtle color variation and a few grass blades, no flowers, no objects, tiles perfectly with itself on all four edges.
 ```
 
 ## Problemas habituales y cómo pedir que los arregle

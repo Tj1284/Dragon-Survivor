@@ -10,11 +10,13 @@ export const COLORS: Record<Tag, number> = { fire: 0xe8542a, ice: 0x6cc6f0, ligh
 const sheet = (key: string, path: string, size: number, frames: number, color: number): SheetDef =>
   ({ key, path, frameWidth: size, frameHeight: size, frames, color });
 
-const DRAGON_SIZE = { hatchling: 32, young: 32, adult: 48, legendary: 64 } as const;
+const DRAGON_SIZE = { hatchling: 32, young: 32, adult: 48, legendary: 96 } as const;
+/** Forms whose art is longer than the rest of their stage get a bigger frame, so they don't look tiny. */
+const FORM_SIZE: Partial<Record<FormId, number>> = { young_poison: 40, young_shadow: 40 };
 
 function dragonSheet(id: FormId): SheetDef {
   const [stage, element] = id.split('_') as [keyof typeof DRAGON_SIZE, Tag | undefined];
-  return sheet(id, `art/dragons/${id}.png`, DRAGON_SIZE[stage], 6, element ? COLORS[element] : 0x8fd16a);
+  return sheet(id, `art/dragons/${id}.png`, FORM_SIZE[id] ?? DRAGON_SIZE[stage], 6, element ? COLORS[element] : 0x8fd16a);
 }
 
 export const DRAGON_SHEETS = Object.fromEntries(ALL_FORMS.map((id) => [id, dragonSheet(id)])) as Record<FormId, SheetDef>;
@@ -59,7 +61,7 @@ export const ICON_SHEETS = Object.fromEntries(
   UPGRADE_IDS.map((id) => [id, sheet(`icon_${id}`, `art/icons/${id}.png`, 16, 1, COLORS[tagOf(id)])]),
 ) as Record<UpgradeId, SheetDef>;
 
-export const GROUND: SheetDef = sheet('ground', 'art/tiles/ground.png', 32, 1, 0x3b5b3a);
+export const GROUND: SheetDef = sheet('ground', 'art/tiles/ground.png', 64, 1, 0x3b5b3a);
 
 export const ALL_SHEETS: readonly SheetDef[] = [
   ...Object.values(DRAGON_SHEETS),

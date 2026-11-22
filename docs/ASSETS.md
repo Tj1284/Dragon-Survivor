@@ -32,18 +32,18 @@ Cría = `hatchling`, joven = `young_*`, adulto = `adult_*`, legendario = `legend
 | `art/dragons/young_fire.png` | 32×32 | 6 | 192×32 |
 | `art/dragons/young_ice.png` | 32×32 | 6 | 192×32 |
 | `art/dragons/young_lightning.png` | 32×32 | 6 | 192×32 |
-| `art/dragons/young_poison.png` | 32×32 | 6 | 192×32 |
-| `art/dragons/young_shadow.png` | 32×32 | 6 | 192×32 |
+| `art/dragons/young_poison.png` | 40×40 | 6 | 240×40 |
+| `art/dragons/young_shadow.png` | 40×40 | 6 | 240×40 |
 | `art/dragons/adult_fire.png` | 48×48 | 6 | 288×48 |
 | `art/dragons/adult_ice.png` | 48×48 | 6 | 288×48 |
 | `art/dragons/adult_lightning.png` | 48×48 | 6 | 288×48 |
 | `art/dragons/adult_poison.png` | 48×48 | 6 | 288×48 |
 | `art/dragons/adult_shadow.png` | 48×48 | 6 | 288×48 |
-| `art/dragons/legendary_fire.png` | 64×64 | 6 | 384×64 |
-| `art/dragons/legendary_ice.png` | 64×64 | 6 | 384×64 |
-| `art/dragons/legendary_lightning.png` | 64×64 | 6 | 384×64 |
-| `art/dragons/legendary_poison.png` | 64×64 | 6 | 384×64 |
-| `art/dragons/legendary_shadow.png` | 64×64 | 6 | 384×64 |
+| `art/dragons/legendary_fire.png` | 96×96 | 6 | 576×96 |
+| `art/dragons/legendary_ice.png` | 96×96 | 6 | 576×96 |
+| `art/dragons/legendary_lightning.png` | 96×96 | 6 | 576×96 |
+| `art/dragons/legendary_poison.png` | 96×96 | 6 | 576×96 |
+| `art/dragons/legendary_shadow.png` | 96×96 | 6 | 576×96 |
 
 ### Enemigos (ciclo de andar)
 
@@ -126,7 +126,7 @@ Un tile que se repite en todas direcciones: tiene que encajar consigo mismo por 
 
 | Archivo | Frame | Frames | Tamaño total del PNG |
 |---|---|---|---|
-| `art/tiles/ground.png` | 32×32 | 1 | 32×32 |
+| `art/tiles/ground.png` | 64×64 | 1 | 64×64 |
 
 ## Ataques y estadísticas (para los iconos)
 
