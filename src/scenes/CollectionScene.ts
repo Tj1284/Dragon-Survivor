@@ -33,7 +33,6 @@ export class CollectionScene extends Phaser.Scene {
       else sprite.setTint(0x000000);
     });
     const back = makeButton(this, 'back', w / 2, h - 16, 100, 22, t('back'), 0x5a3f8f, () => this.scene.start('Menu'), '8px');
-    this.input.keyboard?.once('keydown-ESC', () => this.scene.start('Menu'));
     registerDebug('buttons', () => describeButtons([back]));
     registerDebug('collectionCount', () => owned.size);
   }

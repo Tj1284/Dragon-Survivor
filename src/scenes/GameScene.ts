@@ -130,7 +130,6 @@ export class GameScene extends Phaser.Scene {
 
     this.hud = new Hud(this, () => this.openPause());
     this.hud.refreshAttacks(this.run);
-    this.input.keyboard?.on('keydown-ESC', () => this.openPause());
     this.input.keyboard?.on('keydown-P', () => this.openPause());
     this.game.events.on(LEVELUP_EVENTS.picked, this.onUpgradePicked, this);
     this.game.events.on(QUIT_EVENT, this.quitRun, this);

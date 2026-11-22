@@ -2,7 +2,7 @@ import { expect, it } from 'vitest';
 import { computeStats } from '../../src/logic/attacks';
 import { buyMeta, metaBonus, metaCost } from '../../src/logic/meta';
 import { addRunResult, defaultSave, parseSave, serializeSave } from '../../src/logic/save';
-import { createLocalStorage } from '../../src/platform/storage';
+import { createCachedStorage } from '../../src/platform/storage';
 
 it('reading a missing or broken save gives a fresh one', () => {
   expect(parseSave(null)).toEqual(defaultSave());
@@ -38,14 +38,18 @@ it('lair bonuses feed the run stats', () => {
   expect(s.maxHp).toBe(110);
   expect(s.speed).toBeCloseTo(70 * 1.12);
 });
-it('a storage that throws (private mode, blocked) still loads and saves without crashing', () => {
-  const broken = createLocalStorage('k', { getItem() { throw new Error('blocked'); }, setItem() { throw new Error('blocked'); } });
-  expect(broken.load()).toEqual(defaultSave());
-  expect(() => broken.save(defaultSave())).not.toThrow();
-  const mem = new Map<string, string>();
-  const ok = createLocalStorage('k', { getItem: (k) => mem.get(k) ?? null, setItem: (k, v) => { mem.set(k, v); } });
-  ok.save({ ...defaultSave(), gold: 7 });
-  expect(ok.load().gold).toBe(7);
+it('the cached platform storage loads the startup value, survives garbage and writes JSON on save', () => {
+  expect(createCachedStorage(null, () => {}).load()).toEqual(defaultSave());
+  expect(createCachedStorage('{not json', () => {}).load()).toEqual(defaultSave());
+  expect(createCachedStorage(JSON.stringify({ gold: 9 }), () => {}).load().gold).toBe(9);
+  const writes: string[] = [];
+  const st = createCachedStorage(null, (json) => writes.push(json));
+  st.save({ ...defaultSave(), gold: 7 });
+  expect(st.load().gold).toBe(7);
+  expect(writes).toHaveLength(1);
+  expect(JSON.parse(writes[0]).gold).toBe(7);
+  const throwing = createCachedStorage(null, () => { throw new Error('offline'); });
+  expect(() => throwing.save(defaultSave())).not.toThrow();
 });
 
 it('accepts the new poison and shadow forms and drops unknown ones', () => {

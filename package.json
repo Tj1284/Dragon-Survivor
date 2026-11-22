@@ -11,6 +11,8 @@
     "size": "npm run build && node scripts/check-size.mjs"
   },
   "dependencies": {
+    "@fontsource/silkscreen": "^5.3.0",
+    "@playgama/bridge": "^2.4.4",
     "phaser": "4.2.1"
   },
   "devDependencies": {

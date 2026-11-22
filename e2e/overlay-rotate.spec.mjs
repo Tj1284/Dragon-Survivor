@@ -22,7 +22,7 @@ export default async function (page, baseUrl) {
   await dbg(page, 'pauseSpawns', true);
   await dbg(page, 'clearEnemies');
   await dbg(page, 'setHp', 1e9);
-  await page.keyboard.press('Escape');
+  await page.keyboard.press('p');
   await waitFor(page, () => window.__dbg.scene().includes('Pause'), null, 2000);
   await rotate(page, LANDSCAPE);
   const resume = await dbg(page, 'resumeButton');

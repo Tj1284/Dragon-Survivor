@@ -22,3 +22,16 @@ it('the audio credits name the CC0 source', () => {
   expect(credits).toMatch(/Juhani Junkala/);
   expect(credits).toMatch(/CC0/);
 });
+
+it('game code never touches browser storage or the Esc key (Playgama: saves go through Bridge storage; 1.5.2)', () => {
+  const offenders: string[] = [];
+  const walk = (dir: string) => {
+    for (const name of readdirSync(dir)) {
+      const p = join(dir, name);
+      if (statSync(p).isDirectory()) walk(p);
+      else if (/\.ts$/.test(name) && /localStorage|sessionStorage|indexedDB|document\.cookie|keydown-ESC|'Escape'/.test(readFileSync(p, 'utf8'))) offenders.push(p);
+    }
+  };
+  walk('src');
+  expect(offenders).toEqual([]);
+});

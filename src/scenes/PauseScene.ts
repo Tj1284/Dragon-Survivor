@@ -21,7 +21,6 @@ export class PauseScene extends Phaser.Scene {
     this.add.text(w / 2, h * 0.6, t('resume'), { ...TEXT, fontSize: '16px', color: '#10202a' }).setOrigin(0.5);
     const resume = () => { this.scene.stop(); this.scene.resume('Game'); };
     onTap(btn, resume);
-    this.input.keyboard?.once('keydown-ESC', resume);
     this.input.keyboard?.once('keydown-P', resume);
     const menu = makeButton(this, 'menu', w / 2, h * 0.6 + 42, 110, 22, t('menu'), 0x5a3f8f, () => this.game.events.emit(QUIT_EVENT), '8px');
     registerDebug('resumeButton', () => ({ x: btn.x, y: btn.y }));

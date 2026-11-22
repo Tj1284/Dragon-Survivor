@@ -1,0 +1,18 @@
+{
+    "advertisement": {
+        "interstitial": {
+            "placementFallback": "game_over",
+            "placements": [
+                { "id": "game_over" },
+                { "id": "quit" }
+            ]
+        },
+        "rewarded": {
+            "placementFallback": "revive",
+            "placements": [
+                { "id": "revive" },
+                { "id": "double_gold" }
+            ]
+        }
+    }
+}

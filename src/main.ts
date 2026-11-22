@@ -13,8 +13,14 @@ import { storage } from './platform/storage';
 import { audio } from './audio';
 import { defaultSave, type SaveData } from './logic/save';
 import { setLanguage } from './i18n';
+import { initStorage } from './platform/storage';
+import { platform } from './platform/bridge';
+import '@fontsource/silkscreen/400.css';
 
-setLanguage(navigator.language || 'en');
+// Playgama order: SDK ready → language → save → engine
+await platform.init();
+setLanguage(platform.language);
+await initStorage();
 
 async function waitForFont(): Promise<void> {
   try {
