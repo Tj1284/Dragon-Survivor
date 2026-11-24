@@ -23,6 +23,7 @@ export function formatTime(seconds: number): string {
 }
 
 import { TEXT } from '../ui/style';
+import { background, panel, stars } from '../ui/kit';
 
 export class GameOverScene extends Phaser.Scene {
   /** Bumped on every build of the screen (rotation rebuilds it): late ad results only touch the screen they came from. */
@@ -43,15 +44,34 @@ export class GameOverScene extends Phaser.Scene {
       storage.save(addRunResult(storage.load(), { gold: data.gold - data.banked, time: data.time, won: data.won, forms: data.forms }));
     }
     const { width: w, height: h } = this.scale.gameSize;
-    this.add.rectangle(0, 0, w, h, 0x000000, 0.75).setOrigin(0);
-    this.add.text(w / 2, h * 0.16, t(data.won ? 'victory' : 'game_over'), { ...TEXT, fontSize: '16px', color: data.won ? '#f2c230' : '#ffffff' }).setOrigin(0.5);
-    registerDebug('gameOver', () => ({ ...data }));
-    this.add.sprite(w / 2, h * 0.36, DRAGON_SHEETS[data.formId].key).play(`${DRAGON_SHEETS[data.formId].key}_loop`).setScale(DRAGON_SHEETS[data.formId].frameHeight >= 64 ? 1 : 2);
-    const goldLine = () => `${t('gold')}: ${doubledRuns.has(data.runId) ? data.gold * 2 : data.gold}`;
-    const lines = [`${t('time')}: ${formatTime(data.time)}`, t('level_n', { n: data.level }), goldLine()];
-    const stats = this.add.text(w / 2, h * 0.53, lines.join('\n'), { ...TEXT, fontSize: '8px', align: 'center' }).setOrigin(0.5);
+    const landscape = w >= h;
+    background(this, landscape ? 0.5 : 0.62, 0.45);
+    stars(this, 16, h * 0.25);
+    // vertical rhythm: fixed rows in landscape (270 px tall), proportional in portrait
+    const row = landscape
+      ? { title: 26, dragon: 78, stats: 124, double: 152, again: 186, small: 222 }
+      : { title: h * 0.13, dragon: h * 0.29, stats: h * 0.43, double: h * 0.52, again: h * 0.62, small: h * 0.7 };
 
-    const btnY = h * 0.76;
+    const title = this.add.text(w / 2, row.title, t(data.won ? 'victory' : 'game_over').toUpperCase(),
+      { ...TEXT, fontSize: '16px', color: data.won ? '#f2c230' : '#ffd76a', stroke: '#5a1010', strokeThickness: 4 }).setOrigin(0.5);
+    if (title.width * 2 <= w - 16) title.setScale(2);
+    registerDebug('gameOver', () => ({ ...data }));
+    const def = DRAGON_SHEETS[data.formId];
+    const scale = def.frameHeight >= 64 ? 1 : 2;
+    this.add.image(w / 2, row.dragon + def.frameHeight * scale * 0.42, 'glow').setTint(0xd8ff7a).setAlpha(0.35).setScale(1.2, 0.26);
+    const dragon = this.add.sprite(w / 2, row.dragon, def.key).play(`${def.key}_loop`).setScale(scale);
+    this.tweens.add({ targets: dragon, y: row.dragon - 4, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
+
+    // stats on a stone panel; the gold counts up
+    const shownGold = () => (doubledRuns.has(data.runId) ? data.gold * 2 : data.gold);
+    const statLine = (gold: number) => `${t('time')} ${formatTime(data.time)}  ·  ${t('level_n', { n: data.level })}  ·  ${t('gold')} ${gold}`;
+    const stats = this.add.text(w / 2, row.stats, statLine(shownGold()), { ...TEXT, fontSize: '8px', color: '#ffffff' }).setOrigin(0.5);
+    panel(this, w / 2, row.stats, Math.min(w - 12, stats.width + 28), 22);
+    this.children.bringToTop(stats);
+    const counter = { v: 0 };
+    this.tweens.add({ targets: counter, v: shownGold(), duration: 700, delay: 250, ease: 'Cubic.Out', onUpdate: () => stats.setText(statLine(Math.round(counter.v))) });
+    const setGoldShown = () => stats.setText(statLine(shownGold()));
+
     // an interstitial at this natural pause; Bridge decides whether one actually shows
     // an interstitial at this natural pause, played out before moving on so it never lands on the next run
     const leave = (scene: string) => {
@@ -59,13 +79,14 @@ export class GameOverScene extends Phaser.Scene {
       this.leaving = true;
       void platform.interstitial('game_over').then(() => { if (this.scene.isActive()) this.scene.start(scene); });
     };
-    const again = makeButton(this, 'again', w / 2, btnY, 130, 30, t('again'), 0xe8542a, () => leave('Game'));
-    const lair = makeButton(this, 'lair', w / 2 - 58, btnY + 38, 100, 22, t('lair'), 0x5a3f8f, () => leave('Lair'), '8px');
-    const menu = makeButton(this, 'menu', w / 2 + 58, btnY + 38, 100, 22, t('menu'), 0x5a3f8f, () => leave('Menu'), '8px');
+    const again = makeButton(this, 'again', w / 2, row.again, 170, 30, t('again'), 0xe8542a, () => leave('Game'), '16px', 'play');
+    const sw = Math.min(110, (w - 24) / 2 - 4);
+    const lair = makeButton(this, 'lair', w / 2 - sw / 2 - 4, row.small, sw, 22, t('lair'), 0x5a3f8f, () => leave('Lair'), '8px', 'lair');
+    const menu = makeButton(this, 'menu', w / 2 + sw / 2 + 4, row.small, sw, 22, t('menu'), 0x5a3f8f, () => leave('Menu'), '8px', 'back');
     const buttons = [again, lair, menu];
     if (data.gold > 0 && platform.rewardedSupported && !doubledRuns.has(data.runId)) {
       let busy = false;
-      const double = makeButton(this, 'double', w / 2, h * 0.64, 170, 20, t('double_gold'), 0x8a6a10, () => {
+      const double = makeButton(this, 'double', w / 2, row.double, 190, 22, t('double_gold'), 0xc8901a, () => {
         if (busy) return;
         busy = true;
         void platform.rewarded('double_gold').then((ok) => {
@@ -81,12 +102,13 @@ export class GameOverScene extends Phaser.Scene {
             return;
           }
           if (!ok) { double.label.setText(t('ad_failed')); return; }
-          lines[2] = goldLine();
-          stats.setText(lines.join('\n'));
+          this.tweens.killTweensOf(counter);
+          setGoldShown();
           double.label.setText(t('gold_doubled'));
           double.bg.disableInteractive();
         });
-      }, '8px');
+      }, '8px', 'coin');
+      this.tweens.add({ targets: double.bg, scaleX: 1.04, scaleY: 1.08, duration: 500, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
       buttons.push(double);
     }
     this.input.keyboard?.once('keydown-ENTER', () => leave('Game'));

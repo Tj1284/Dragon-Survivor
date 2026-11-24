@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { ALL_SHEETS } from '../assets/manifest';
+import { ALL_SHEETS, UI_SHEETS } from '../assets/manifest';
 import { registerDebug } from '../debug';
 import { storage } from '../platform/storage';
 import { DECOR_KEY, renderDecor, renderSheet } from '../art';
@@ -15,6 +15,10 @@ export class BootScene extends Phaser.Scene {
 
   preload(): void {
     for (const def of ALL_SHEETS) {
+      const url = ART['/' + def.path];
+      if (url) this.load.spritesheet(def.key, url, { frameWidth: def.frameWidth, frameHeight: def.frameHeight });
+    }
+    for (const def of UI_SHEETS) {
       const url = ART['/' + def.path];
       if (url) this.load.spritesheet(def.key, url, { frameWidth: def.frameWidth, frameHeight: def.frameHeight });
     }

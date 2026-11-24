@@ -7,6 +7,7 @@ import { META, META_IDS, buyMeta, metaCost, type MetaId } from '../logic/meta';
 import { storage } from '../platform/storage';
 import { describeButtons, makeButton, type Button } from '../ui/button';
 import { TEXT } from '../ui/style';
+import { background, icon, panel } from '../ui/kit';
 
 const ICON: Record<MetaId, string> = {
   vitality: ICON_SHEETS.thick_scales.key, might: ICON_SHEETS.fury.key, agility: ICON_SHEETS.swift_wings.key,
@@ -24,9 +25,11 @@ export class LairScene extends Phaser.Scene {
     relayoutOnResize(this);
     const { width: w, height: h } = this.scale.gameSize;
     this.buttons = [];
-    this.add.rectangle(0, 0, w, h, 0x1d1b2a).setOrigin(0);
-    this.add.text(w / 2, 14, t('lair'), { ...TEXT, fontSize: '16px', color: '#f2c230' }).setOrigin(0.5);
-    this.gold = this.add.text(w - 8, 8, '', { ...TEXT, fontSize: '8px', color: '#f2c230' }).setOrigin(1, 0);
+    background(this, 0.85, 0.55);
+    this.add.text(w / 2, 14, t('lair'), { ...TEXT, fontSize: '16px', color: '#f2c230', stroke: '#2a1608', strokeThickness: 4 }).setOrigin(0.5);
+    panel(this, w - 36, 13, 60, 20);
+    icon(this, w - 56, 13, 'coin');
+    this.gold = this.add.text(w - 10, 13, '', { ...TEXT, fontSize: '8px', color: '#f2c230' }).setOrigin(1, 0.5);
 
     const rowW = Math.min(440, w - 16);
     const rowH = Math.min(40, (h - 70) / META_IDS.length);
@@ -35,7 +38,7 @@ export class LairScene extends Phaser.Scene {
     META_IDS.forEach((id, i) => {
       const y = 36 + i * rowH + rowH / 2;
       // name and description on the left; the buy button shows the level and the price, so nothing collides on any screen
-      this.add.rectangle(w / 2, y, rowW, rowH - 4, 0x2a2638).setStrokeStyle(1, 0x5a5470);
+      panel(this, w / 2, y, rowW, rowH - 4, 0.95);
       this.add.image(left + 14, y, ICON[id]).setScale(id === 'greed' || id === 'wisdom' ? 1.6 : 1);
       const name = this.add.text(left + 28, y - 9, t(`meta_${id}`), { ...TEXT, fontSize: '8px' });
       const desc = this.add.text(left + 28, y + 1, t(`meta_${id}_d`), { ...TEXT, fontSize: '8px', color: '#cfc8e6' });
@@ -44,7 +47,7 @@ export class LairScene extends Phaser.Scene {
       this.buttons.push(button);
       rows.push({ id, top: y - (rowH - 4) / 2, bottom: y + (rowH - 4) / 2, texts: { name, desc, level: button.label } });
     });
-    this.buttons.push(makeButton(this, 'back', w / 2, h - 16, 100, 22, t('back'), 0x5a3f8f, () => this.scene.start('Menu'), '8px'));
+    this.buttons.push(makeButton(this, 'back', w / 2, h - 16, 100, 22, t('back'), 0x5a3f8f, () => this.scene.start('Menu'), '8px', 'back'));
     this.refresh();
     registerDebug('buttons', () => describeButtons(this.buttons));
     registerDebug('lairRows', () => rows.map((r) => ({
@@ -62,7 +65,7 @@ export class LairScene extends Phaser.Scene {
 
   private refresh(): void {
     const save = storage.load();
-    this.gold.setText(`● ${save.gold}`);
+    this.gold.setText(String(save.gold));
     for (const id of META_IDS) {
       const level = save.meta[id] ?? 0;
       const max = META[id].maxLevel;

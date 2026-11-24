@@ -63,6 +63,24 @@ export const ICON_SHEETS = Object.fromEntries(
 
 export const GROUND: SheetDef = sheet('ground', 'art/tiles/ground.png', 64, 1, 0x3b5b3a);
 
+/**
+ * Interface art (menus, buttons, panels, icons). It only exists as PNGs in art/ui: there is no drawn-by-code
+ * stand-in, so the UI falls back to plain shapes if a file is missing.
+ */
+const ui = (key: string, file: string, w: number, h: number, frames: number): SheetDef =>
+  ({ key: `ui_${key}`, path: `art/ui/${file}.png`, frameWidth: w, frameHeight: h, frames, color: 0x5a3f8f });
+export const UI = {
+  logo: ui('logo', 'logo', 240, 40, 1),
+  bg: ui('bg', 'bg', 600, 270, 1),
+  icons: ui('icons', 'icons', 16, 16, 12),
+  panel: ui('panel', 'panel', 48, 48, 1),
+  button: ui('button', 'button', 48, 16, 3),
+  card: ui('card', 'card', 48, 64, 2),
+} as const;
+export const UI_SHEETS: readonly SheetDef[] = Object.values(UI);
+/** Frame of each icon in art/ui/icons.png. */
+export const ICON = { coin: 0, pause: 1, play: 2, sound: 3, muted: 4, lair: 5, book: 6, back: 7, lock: 8, heart: 9, swords: 10, time: 11 } as const;
+
 export const ALL_SHEETS: readonly SheetDef[] = [
   ...Object.values(DRAGON_SHEETS),
   ...Object.values(ENEMY_SHEETS),

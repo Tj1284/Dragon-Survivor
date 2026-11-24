@@ -1,6 +1,6 @@
 import * as Phaser from 'phaser';
 import { onTap } from './ui';
-import { ICON_SHEETS } from '../assets/manifest';
+import { ICON, ICON_SHEETS, UI } from '../assets/manifest';
 import { MAX_SLOTS, type AttackId } from '../logic/attacks';
 import { t } from '../i18n';
 import { xpToNext } from '../logic/xp';
@@ -26,6 +26,8 @@ export class Hud {
   private readonly gold: Phaser.GameObjects.Text;
   private readonly pauseHit: Phaser.GameObjects.Rectangle;
   private readonly pauseBars: Phaser.GameObjects.Rectangle[];
+  private readonly pauseIcon: Phaser.GameObjects.Image | null;
+  private readonly coin: Phaser.GameObjects.Image | null;
   private width = 0;
   private readonly slots: Slot[] = [];
   private readonly bossBg: Phaser.GameObjects.Rectangle;
@@ -48,6 +50,11 @@ export class Hud {
     this.pauseHit = fixed(scene.add.rectangle(0, 0, 24, 24, 0x000000, 0.35).setStrokeStyle(1, 0xffffff, 0.6));
     this.pauseBars = [fixed(scene.add.rectangle(0, 0, 3, 10, 0xffffff)), fixed(scene.add.rectangle(0, 0, 3, 10, 0xffffff))];
     onTap(this.pauseHit.setInteractive({ useHandCursor: true }), onPause);
+    // interface art when it's there: a pause icon and a coin next to the gold
+    const hasIcons = scene.textures.exists(UI.icons.key);
+    this.pauseIcon = hasIcons ? fixed(scene.add.image(0, 0, UI.icons.key, ICON.pause)) : null;
+    this.coin = hasIcons ? fixed(scene.add.image(0, 11, UI.icons.key, ICON.coin)) : null;
+    if (hasIcons) this.pauseBars.forEach((b) => b.setVisible(false));
     this.bossBg = fixed(scene.add.rectangle(0, 0, 10, 6, 0x000000, 0.65).setOrigin(0.5).setStrokeStyle(1, 0xffffff, 0.7).setVisible(false));
     this.bossFill = fixed(scene.add.rectangle(0, 0, 10, 4, 0xc8302a).setOrigin(0, 0.5).setVisible(false));
     this.bossName = fixed(scene.add.text(0, 0, '', { ...TEXT, fontSize: '8px' }).setOrigin(0.5, 1).setVisible(false));
@@ -73,7 +80,9 @@ export class Hud {
     this.pauseHit.setPosition(px, py);
     this.pauseBars[0].setPosition(px - 3, py);
     this.pauseBars[1].setPosition(px + 3, py);
-    this.gold.setX(width - 32);
+    this.pauseIcon?.setPosition(px, py);
+    this.coin?.setX(width - 37);
+    this.gold.setX(this.coin ? width - 47 : width - 32);
     this.bossW = Math.min(200, width - 80);
     const by = 52;
     this.bossBg.setPosition(Math.round(width / 2), by).setSize(this.bossW + 2, 6);
@@ -118,7 +127,7 @@ export class Hud {
     this.hpFill.setSize(Math.round(HP_W * Phaser.Math.Clamp(player.hp / player.stats.maxHp, 0, 1)), 5);
     this.level.setText(t('lvl_short', { n: run.level }));
     this.timer.setText(formatTime(run.elapsed));
-    this.gold.setText(`● ${run.gold}`);
+    this.gold.setText(this.coin ? String(run.gold) : `● ${run.gold}`);
   }
 
   /** Call whenever the held attacks, their levels or their gold state change. */

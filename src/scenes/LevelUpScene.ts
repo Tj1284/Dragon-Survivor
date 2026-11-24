@@ -1,10 +1,11 @@
 import * as Phaser from 'phaser';
 import { onTap, relayoutOnResize } from '../game/ui';
-import { COLORS, DRAGON_SHEETS, ICON_SHEETS } from '../assets/manifest';
+import { COLORS, DRAGON_SHEETS, ICON_SHEETS, UI } from '../assets/manifest';
 import { registerDebug } from '../debug';
 import { t } from '../i18n';
 import { ELEMENTS, type Element } from '../logic/types';
 import { cardLayout } from '../logic/cardLayout';
+import { enter } from '../ui/kit';
 import { isAttack, tagOf, type Choice, type Owned } from '../logic/attacks';
 
 export type LevelUpData =
@@ -49,11 +50,28 @@ export class LevelUpScene extends Phaser.Scene {
 
   private drawCard(card: Card, i: number, cx: number, cy: number, cw: number, ch: number, landscape: boolean): void {
     card.x = cx; card.y = cy;
-    const fill = card.kind === 'gold' ? 0x3d3210 : 0x2a2638;
-    const bg = this.add.rectangle(cx, cy, cw, ch, fill).setStrokeStyle(2, card.color).setInteractive({ useHandCursor: true });
+    const first = this.children.list.length;
+    let bg: Phaser.GameObjects.Rectangle | Phaser.GameObjects.NineSlice;
+    if (this.textures.exists(UI.card.key)) {
+      // card art: normal or golden frame; dimmed a touch so hovering can brighten it
+      const nine = this.add.nineslice(cx, cy, UI.card.key, card.kind === 'gold' ? 1 : 0, cw, ch, 8, 8, 8, 8).setTint(0xdcdcdc).setInteractive({ useHandCursor: true });
+      nine.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OVER, () => nine.clearTint());
+      nine.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OUT, () => nine.setTint(0xdcdcdc));
+      this.add.rectangle(cx, cy - ch / 2 + 6, Math.max(8, cw - 20), 2, card.color);
+      bg = nine;
+    } else {
+      const fill = card.kind === 'gold' ? 0x3d3210 : 0x2a2638;
+      const rect = this.add.rectangle(cx, cy, cw, ch, fill).setStrokeStyle(2, card.color).setInteractive({ useHandCursor: true });
+      rect.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OVER, () => rect.setFillStyle(card.kind === 'gold' ? 0x5a4a18 : 0x3a3550));
+      rect.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OUT, () => rect.setFillStyle(fill));
+      bg = rect;
+    }
     onTap(bg, () => this.pick(i));
-    bg.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OVER, () => bg.setFillStyle(card.kind === 'gold' ? 0x5a4a18 : 0x3a3550));
-    bg.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OUT, () => bg.setFillStyle(fill));
+    // cards deal in one after another
+    this.time.delayedCall(0, () => {
+      const added = this.children.list.slice(first, first + this.cardObjects(first)) as unknown as Phaser.GameObjects.Components.Transform[];
+      enter(this, [added], i);
+    });
     const wrap = { width: landscape ? cw - 12 : cw - 70 };
     if (landscape) {
       // offsets from the card top; short cards (square-screen grid) squeeze them proportionally
@@ -75,6 +93,13 @@ export class LevelUpScene extends Phaser.Scene {
       this.add.text(cx + cw / 2 - 8, cy - ch / 2 + 10, card.level, { ...TEXT, fontSize: '8px', color: '#ffd76a' }).setOrigin(1, 0);
       this.add.text(left + 48, cy - ch / 2 + 30, card.desc, { ...TEXT, fontSize: '8px', color: '#cfc8e6', wordWrap: wrap });
     }
+  }
+
+  /** How many display objects the card starting at `first` owns (up to the next card's frame). */
+  private cardObjects(first: number): number {
+    const list = this.children.list;
+    for (let k = first + 1; k < list.length; k++) if (list[k].input && k > first) return k - first;
+    return list.length - first;
   }
 
   private upgradeCards(choices: Choice[], owned: Owned): Card[] {

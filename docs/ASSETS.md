@@ -128,6 +128,19 @@ Un tile que se repite en todas direcciones: tiene que encajar consigo mismo por 
 |---|---|---|---|
 | `art/tiles/ground.png` | 64×64 | 1 | 64×64 |
 
+### Interfaz (menú, botones, paneles e iconos)
+
+Estos no tienen sustituto dibujado por código: si falta alguno, el juego vuelve a los botones y rectángulos planos. `tools/slice_ui.py` los genera a partir de las imágenes de ChatGPT.
+
+| Archivo | Frame | Frames | Tamaño total del PNG | Qué es |
+|---|---|---|---|---|
+| `art/ui/logo.png` | 240×40 | 1 | 240×40 | Logo del título |
+| `art/ui/bg.png` | 600×270 | 1 | 600×270 | Fondo del menú y las pantallas |
+| `art/ui/icons.png` | 16×16 | 12 | 192×16 | Moneda, pausa, play, sonido, silencio, guarida, libro, atrás, candado, corazón, espadas, reloj |
+| `art/ui/panel.png` | 48×48 | 1 | 48×48 | Panel que se estira |
+| `art/ui/button.png` | 48×16 | 3 | 144×16 | Botón en gris (normal, encima, pulsado); el juego lo tiñe de cada color |
+| `art/ui/card.png` | 48×64 | 2 | 96×64 | Carta normal y dorada |
+
 ## Ataques y estadísticas (para los iconos)
 
 | Icono | Qué es | Elemento |

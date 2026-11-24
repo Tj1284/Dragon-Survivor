@@ -5,6 +5,7 @@ import { t } from '../i18n';
 import { platform } from '../platform/bridge';
 import { describeButtons, makeButton } from '../ui/button';
 import { TEXT } from '../ui/style';
+import { icon, panel } from '../ui/kit';
 
 export const REVIVE_EVENTS = { yes: 'revive:yes', no: 'revive:no' } as const;
 
@@ -21,10 +22,14 @@ export class ReviveScene extends Phaser.Scene {
     this.settled = false;
     relayoutOnResize(this);
     const { width: w, height: h } = this.scale.gameSize;
-    this.add.rectangle(0, 0, w, h, 0x000000, 0.7).setOrigin(0);
-    this.add.text(w / 2, h * 0.3, t('revive_title'), { ...TEXT, fontSize: '16px', color: '#f2c230' }).setOrigin(0.5);
-    const status = this.add.text(w / 2, h * 0.42, '', { ...TEXT, fontSize: '8px', color: '#ff8a8a' }).setOrigin(0.5);
-    const yes = makeButton(this, 'revive', w / 2, h * 0.56, 170, 30, t('revive_ad'), 0x3a9a4a, () => {
+    this.add.rectangle(0, 0, w, h, 0x0e0c18, 0.7).setOrigin(0);
+    const cy = h / 2;
+    panel(this, w / 2, cy, Math.min(230, w - 20), 140);
+    const heart = icon(this, w / 2, cy - 48, 'heart', 2);
+    if (heart) this.tweens.add({ targets: heart, scale: 2.4, duration: 420, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
+    this.add.text(w / 2, cy - 24, t('revive_title'), { ...TEXT, fontSize: '16px', color: '#f2c230', stroke: '#2a1608', strokeThickness: 4 }).setOrigin(0.5);
+    const status = this.add.text(w / 2, cy - 6, '', { ...TEXT, fontSize: '8px', color: '#ff8a8a' }).setOrigin(0.5);
+    const yes = makeButton(this, 'revive', w / 2, cy + 18, 190, 28, t('revive_ad'), 0x3a9a4a, () => {
       if (this.busy) return;
       this.busy = true;
       status.setText('');
@@ -34,8 +39,8 @@ export class ReviveScene extends Phaser.Scene {
         if (ok) this.finish(REVIVE_EVENTS.yes);
         else if (status.active) status.setText(t('ad_failed'));
       });
-    }, '8px');
-    const no = makeButton(this, 'no', w / 2, h * 0.56 + 40, 120, 22, t('revive_no'), 0x5a3f8f, () => this.finish(REVIVE_EVENTS.no), '8px');
+    }, '8px', 'play');
+    const no = makeButton(this, 'no', w / 2, cy + 50, 140, 22, t('revive_no'), 0x5a3f8f, () => this.finish(REVIVE_EVENTS.no), '8px');
     registerDebug('buttons', () => describeButtons([yes, no]));
   }
 
